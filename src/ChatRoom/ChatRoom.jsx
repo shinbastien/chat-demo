@@ -13,11 +13,11 @@ function ChatRoom() {
     const {roomId, userName}= location.state;
     //  console.log(roomId);
     // console.log(userName);
-    const { messages, sendMessage } = useChat(roomId, userName);
+    const { chat, sendMessage } = useChat(roomId, userName);
     const [newMessage, setNewMessage] = useState({message: "", name: ""});
     // console.log(JSON.stringify(newMessage));
-    console.log(newMessage);
-    console.log(messages);
+    console.log("newMessage", newMessage);
+    console.log("messages", chat);
 
   
 
@@ -39,29 +39,25 @@ function ChatRoom() {
         <h1 className="room-name">Room: {roomId}</h1>
         <div className="messages-container">
         <ol className="messages-list">
-            {messages && messages.map((message, i) => (
-                
-            <>
-            {console.log(messages)}
-            <li
-                key = {i}
+            {chat && chat.map((message, i) => (
+            <li key = {i}>
+            <div
                 className={`message-item ${
                 message.ownedByCurrentUser ? "my-message" : "received-message"
                 }`}
             >  
             {message.ownedByCurrentUser ? "Me" : message.name}
-            </li> 
+            </div> 
 
-            <li
-                key={i}
+            <div
                 className={`message-item ${
                 message.ownedByCurrentUser ? "my-message" : "received-message"
                 }`}
             >
                 
                 {message.body}
+            </div>
             </li>
-            </>
             ))}
         </ol>
         </div>

@@ -6,7 +6,7 @@ const SOCKET_SERVER_URL = "http://localhost:4000";
 
 const useChat = (roomId, userName) => {
   const [chat, setChat] = useState([]);
-  console.log(chat);
+  console.log("1", chat);
   const socketRef = useRef();
 
   useEffect(() => {
@@ -23,13 +23,13 @@ const useChat = (roomId, userName) => {
         ownedByCurrentUser: senderId === socketRef.current.id,
       };
       setChat((chat) => [...chat, incomingMessage]);
-      console.log(chat);
+      console.log("2", chat);
     });
 
     return () => {
       socketRef.current.disconnect();
     };
-  }, [roomId]);
+  }, [roomId, chat, userName]);
 
 
   const sendMessage = (messageBody, userName) => {
@@ -42,8 +42,8 @@ const useChat = (roomId, userName) => {
     console.log("send socket info");
   };
 
-  console.log(chat);
-  return {chat, sendMessage};
+  console.log("3", chat);
+  return { chat, sendMessage };
 };
 
 export default useChat;
