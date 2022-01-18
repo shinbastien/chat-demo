@@ -4,16 +4,18 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./index.css";
 import Home from "./Home/Home";
 import ChatRoom from "./ChatRoom/ChatRoom";
+import Mapwindow from "./Mapwindow/Mapwindow";
 
 function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route exact path="/" component={Home} />
-        <Route exact path="/:roomname" component={ChatRoom} />
-      </Routes>
-    </Router>
-  );
+	return (
+		<Router>
+			<Routes>
+				<Route path="/" component={Home} />
+				<Route path="/:roomname" component={ChatRoom} />
+				<Route path="/:roomname/map" component={Mapwindow} />
+			</Routes>
+		</Router>
+	);
 }
 
 export default App;
