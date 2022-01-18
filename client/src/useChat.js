@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import socketIOClient from "socket.io-client";
 
+let id = 0;
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
+const CHAT_FINISHED = "chatFinished";
+const REMOVE_CHAT = "removeChat";
 const SOCKET_SERVER_URL = "http://localhost:4000";
 
 const useChat = (roomId, userName) => {
@@ -17,13 +20,19 @@ const useChat = (roomId, userName) => {
       },
     });
 
-    socketRef.current.on(NEW_CHAT_MESSAGE_EVENT, ({body, senderId, senderName, ownedByCurrentUser}) => {
+    socketRef.current.on(NEW_CHAT_MESSAGE_EVENT, ({messageId, body, senderId, senderName, ownedByCurrentUser}) => {
       const incomingMessage = {
-        ...{body, senderName, ownedByCurrentUser},
+        ...{messageId, body, senderName, ownedByCurrentUser},
         ownedByCurrentUser: senderId === socketRef.current.id,
       };
       setChat((chat) => [...chat, incomingMessage]);
       console.log("2", chat);
+    });
+
+    socketRef.current.on(REMOVE_CHAT, (id) => {
+      setChat(chat.filter(message => message.messageId !== id));
+      console.log("check removed", chat);
+
     });
 
     return () => {
@@ -34,16 +43,26 @@ const useChat = (roomId, userName) => {
 
   const sendMessage = (messageBody, userName) => {
     socketRef.current.emit(NEW_CHAT_MESSAGE_EVENT, {
+      messageId: id,
       body: messageBody,
       senderId: socketRef.current.id,
       senderName: userName,
       ownedByCurrentUser: true,
     });
+    id += 1;
+    console.log(id);
     console.log("send socket info");
   };
 
+  const removeMessage = (id) => {
+    socketRef.current.emit(REMOVE_CHAT, {
+      messageId: id,
+    });
+    console.log("send socket remove chat");
+  };
+
   console.log("3", chat);
-  return { chat, sendMessage };
+  return { chat, sendMessage, removeMessage};
 };
 
 export default useChat;

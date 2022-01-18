@@ -5,15 +5,16 @@ import "./index.css";
 import App from "./App";
 import Home from "./Home/Home";
 import ChatRoom from "./ChatRoom/ChatRoom";
+import Main from "./Main/Main";
+import Mapwindow from "./MapWindow/MapWindow";
 import reportWebVitals from "./reportWebVitals";
-import Mapwindow from "./Mapwindow/Mapwindow";
 
 ReactDOM.render(
 	<BrowserRouter>
 		<Routes>
 			<Route exact path="/" element={<Home />} />
-			<Route path="/:roomId" element={<ChatRoom />} />
-			<Route path="/:roomId/map" element={<Mapwindow />} />
+			<Route exact path=":roomID" element={<Main />} />
+			<Route path=":roomId/map" element={<Mapwindow />} />
 		</Routes>
 	</BrowserRouter>,
 	document.getElementById("root"),

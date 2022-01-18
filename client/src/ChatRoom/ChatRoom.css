@@ -1,3 +1,9 @@
+/* @import "../Toast/toast.css"; */
+
+@custom-media --motionOK (prefers-reduced-motion: no-preference);
+@custom-media --dark (prefers-color-scheme: dark);
+
+
 .chat-room-container {
     position: fixed;
     left: 0;
@@ -35,12 +41,19 @@
 }
 
 .message-item {
+    --_duration: 3s;
+    --_travel-distance: 0;
     width: 55%;
     margin: 8px;
     padding: 12px 8px;
     word-break: break-word;
     border-radius: 4px;
     color: white;
+    animation: 
+    fade-in .3s ease,
+    slide-in .3s ease,
+    fade-out .3s ease var(--_duration);
+    animation-fill-mode: forwards;
 }
 
 .my-message {
@@ -64,4 +77,21 @@
 
 .messages-container, .new-message-input-field, .send-message-button {
     border-color: #9a9a9a;
+}
+
+@keyframes fade-in {
+    from { opacity: 0 }
+  }
+  
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes slide-in {
+from { transform: translateY(var(--_travel-distance, 10px)) }
 }
