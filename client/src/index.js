@@ -6,7 +6,7 @@ import App from "./App";
 import Home from "./Home/Home";
 import ChatRoom from "./ChatRoom/ChatRoom";
 import Main from "./Main/Main";
-import Mapwindow from "./MapWindow/MapWindow";
+import Mapwindow from "./Mapwindow/Mapwindow";
 import reportWebVitals from "./reportWebVitals";
 
 ReactDOM.render(

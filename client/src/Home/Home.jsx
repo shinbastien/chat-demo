@@ -9,7 +9,6 @@ import "./Home.css";
 // }
 
 function Home() {
-<<<<<<< HEAD:src/Home/Home.jsx
 	const [inputs, setInputs] = useState({
 		roomname: "",
 		username: "",
@@ -45,7 +44,7 @@ function Home() {
 			<Link
 				to={`/${roomname}`}
 				state={{
-					roomId: roomname,
+					groupID: roomname,
 					userName: username,
 				}}
 				className="enter-room-button"
@@ -57,51 +56,3 @@ function Home() {
 }
 
 export default Home;
-=======
-  const [inputs, setInputs] = useState({
-        roomname: '',
-        username: '',
-  });
-
-  const {roomname, username} = inputs;
-  const onChange = (e) => {
-    const {value, name} = e.target;
-    setInputs({
-        ...inputs,
-        [name]: value
-    });
-  };
-
-  return (
-    <div className="home-container">
-        <input
-            type="text"
-            name="roomname"
-            placeholder="Room"
-            value={roomname}
-            onChange={onChange}
-            className="text-input-field"
-        />
-        <input
-            type="text"
-            name="username"
-            placeholder="Name"
-            value={username}
-            onChange={onChange}
-            className="text-input-field"
-        />
-        <Link 
-        to={`/${roomname}`}
-        state={{
-            groupID: roomname,
-            userName:username,
-        }}
-        className="enter-room-button">
-        Join room
-        </Link>
-    </div>
-    );
-};
-
-export default Home;
->>>>>>> main:client/src/Home/Home.jsx

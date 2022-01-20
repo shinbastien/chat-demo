@@ -1,41 +1,94 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import styled from "styled-components";
 
 const Wrapper = styled.div`
-	width: 100vw;
-	height: 100vw;
+	width: 1000px;
+	height: 500px;
 `;
 
 const MenuWrapper = styled.div``;
 
-const destination = [
-	{
-		id: 1,
-		name: "KAIST N1",
-		coords: [],
-	},
-];
-
 export default function Mapwindow(params) {
 	const [lat, setLat] = useState(0);
 	const [log, setLog] = useState(0);
+	const [keep, setKeep] = useState(false);
+
+	const [keepPlace, setKeepPlace] = useState([
+		{
+			id: 1,
+			place: "place 1",
+			coords: {
+				lat: 36.368258636020634,
+				lng: 127.36385086076758,
+			},
+		},
+		{
+			id: 2,
+			place: "place 2",
+			coords: {
+				lat: 36.3737905724698,
+				lng: 127.36720858751144,
+			},
+		},
+	]);
+
 	const mapPlace = useRef();
 	const firstUpdate = useRef(true);
 
-	const getMap = () => {
-		const kakao = window.kakao;
-		console.log(kakao);
-		const locPosition = new kakao.maps.LatLng(lat, log);
-		const options = {
+	var kakao = window.kakao;
+	var map;
+
+	const getMap = useCallback(() => {
+		var locPosition = new kakao.maps.LatLng(lat, log);
+		var options = {
 			center: locPosition,
 			level: 3,
 		};
-		const map = new kakao.maps.Map(mapPlace.current, options);
+		map = new kakao.maps.Map(mapPlace.current, options);
+
 		if (lat !== 0 && log !== 0) {
-			const marker = new kakao.maps.Marker({
+			const currentMarker = new kakao.maps.Marker({
 				position: locPosition,
 			});
-			marker.setMap(map);
+			currentMarker.setMap(map);
+			kakao.maps.event.addListener(map, `click`, (mouseEvent) => {
+				const latlng = mouseEvent.latLng;
+				const keepMarker = new kakao.maps.Marker({
+					position: latlng,
+				});
+				console.log(latlng);
+				keepMarker.setMap(map);
+				keepMarker.setPosition(latlng);
+				// const message =
+				// 	`클릭한 위치의 경도는` +
+				// 	latlng.getLat() +
+				// 	`클릭한 위치의 위도는 ` +
+				// 	latlng.getLng();
+				// console.log(message);
+			});
+		}
+	}, [lat, log]);
+
+	//load destination
+	const onLoadDestination = () => {};
+
+	//loadkeep
+	const onLoadKeep = () => {
+		if (keep === false) {
+			keepPlace.forEach((element) => {
+				const mark_ = new kakao.maps.LatLng(
+					element.coords.lat,
+					element.coords.lng,
+				);
+				const newMarker = new kakao.maps.Marker({
+					map: map,
+					position: mark_,
+				});
+				newMarker.setPosition(mark_);
+			});
+			console.log("I am loading");
+
+			setKeep(!keep);
 		}
 	};
 
@@ -47,6 +100,7 @@ export default function Mapwindow(params) {
 		getMap();
 	}, [getMap, mapPlace]);
 
+	//load location
 	const getLocation = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
 			setLat(position.coords.latitude);
@@ -54,6 +108,7 @@ export default function Mapwindow(params) {
 		});
 	};
 
+	//load map
 	const onClickEvent = (e) => {
 		//confirm location
 		if ("geolocation" in navigator) {
@@ -68,14 +123,13 @@ export default function Mapwindow(params) {
 	return (
 		<div>
 			<div>
-				<MenuWrapper>
-					<button>Keep</button>
-					<button>공유 풍경</button>
-					<button>목적지</button>
-				</MenuWrapper>
-
 				<Wrapper className="map" ref={mapPlace}></Wrapper>
-				<button onClick={onClickEvent}>지도 불러오기</button>
+
+				<MenuWrapper>
+					<button onClick={onClickEvent}>지도 불러오기</button>
+					<button onClick={onLoadKeep}>Load Keep</button>
+					<button onClick={onLoadDestination}>Destination</button>
+				</MenuWrapper>
 			</div>
 		</div>
 	);
