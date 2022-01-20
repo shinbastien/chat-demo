@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import styled from "styled-components";
+import Peer from "simple-peer";
 
 const Wrapper = styled.div`
 	width: 1000px;
@@ -7,6 +8,8 @@ const Wrapper = styled.div`
 `;
 
 const MenuWrapper = styled.div``;
+
+const videoImg = () => {};
 
 export default function Mapwindow(params) {
 	const [lat, setLat] = useState(0);
@@ -17,7 +20,7 @@ export default function Mapwindow(params) {
 	const [keepPlace, setKeepPlace] = useState([
 		{
 			id: 1,
-			place: "place 1",
+			name: "place 1",
 			coords: {
 				lat: 36.368258636020634,
 				lng: 127.36385086076758,
@@ -25,7 +28,7 @@ export default function Mapwindow(params) {
 		},
 		{
 			id: 2,
-			place: "place 2",
+			name: "place 2",
 			coords: {
 				lat: 36.3737905724698,
 				lng: 127.36720858751144,
