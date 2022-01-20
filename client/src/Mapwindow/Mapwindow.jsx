@@ -12,6 +12,7 @@ export default function Mapwindow(params) {
 	const [lat, setLat] = useState(0);
 	const [log, setLog] = useState(0);
 	const [keep, setKeep] = useState(false);
+	const [dest, setDest] = useState("");
 
 	const [keepPlace, setKeepPlace] = useState([
 		{
@@ -51,20 +52,17 @@ export default function Mapwindow(params) {
 				position: locPosition,
 			});
 			currentMarker.setMap(map);
+
+			//setDestination
 			kakao.maps.event.addListener(map, `click`, (mouseEvent) => {
 				const latlng = mouseEvent.latLng;
-				const keepMarker = new kakao.maps.Marker({
+				const destMarker = new kakao.maps.Marker({
 					position: latlng,
 				});
-				console.log(latlng);
-				keepMarker.setMap(map);
-				keepMarker.setPosition(latlng);
-				// const message =
-				// 	`클릭한 위치의 경도는` +
-				// 	latlng.getLat() +
-				// 	`클릭한 위치의 위도는 ` +
-				// 	latlng.getLng();
-				// console.log(message);
+				destMarker.setMap(map);
+				destMarker.setPosition(latlng);
+				setDest(...dest, destMarker);
+				console.log("목적지가 지정되었습니다 " + dest);
 			});
 		}
 	}, [lat, log]);
@@ -124,11 +122,10 @@ export default function Mapwindow(params) {
 		<div>
 			<div>
 				<Wrapper className="map" ref={mapPlace}></Wrapper>
-
 				<MenuWrapper>
-					<button onClick={onClickEvent}>지도 불러오기</button>
+					<button onClick={onClickEvent}>Load Map</button>
 					<button onClick={onLoadKeep}>Load Keep</button>
-					<button onClick={onLoadDestination}>Destination</button>
+					<button onClick={onLoadDestination}>목적지 지정</button>
 				</MenuWrapper>
 			</div>
 		</div>
