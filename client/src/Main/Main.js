@@ -46,14 +46,10 @@ function Main() {
 
       navigator.mediaDevices.getUserMedia({video:videoConstraints, audio: true}).then(stream => {
         userVideo.current.srcObject = stream;
+        socket.current.emit("join group", groupID);
         socket.current.on("all users in group", users => {
           const peers = [];
-          console.log("get users from server", users);
-          // if (users.includes(userName)) {
-          //   is_new = false;
-          // }
-          // console.log("set is_new as false if included", is_new);
-          
+          console.log("get users from server", users);          
 
           users.filter(user => user.userName != userName).forEach(user => {
             // create Peers of the existing members for the newbie
@@ -102,7 +98,7 @@ function Main() {
     peer.on("signal", signal => {
         socket.current.emit("sending signal", {userIDToSignal, userNameToSignal, callerID, callerName, signal})
     })
-
+    console.log("create Peer of: ", userNameToSignal);
     return peer;
   } 
 
@@ -117,27 +113,25 @@ function Main() {
     peer.on("signal", signal => {
         socket.current.emit("returning signal", {signal, callerID, callerName})
     })
-
+    console.log("addPeer from: ", callerName);
     peer.signal(incomingSignal);
 
     return peer;
   } 
-
-  return (
-    <div>
-        Room name: {groupID}
-        <div>
-          <Container>
-            <StyledVideo muted ref={userVideo} autoPlay playsInline />
-            {peers.map((peer, index) => {
-              return (
-                <Video key={index} peer={peer} />
-              )
-            })}
-          </Container>
-        </div>
-    </div>
-  )
+	return (
+		<div>
+			Room name: {groupID}
+      User name: {userName}
+			<div>
+				<Container>
+					<StyledVideo muted ref={userVideo} autoPlay playsInline />
+					{peers.map((peer, index) => {
+						return <Video key={index} peer={peer} />;
+					})}
+				</Container>
+			</div>
+		</div>
+	);
 }
 
 export default Main;

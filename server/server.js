@@ -24,22 +24,24 @@ io.on("connection", (socket) => {
   console.log("1", GroupID);
   console.log("2", userName);
 
-  if (users[GroupID] && !users[GroupID].includes(userName)) {
-    users[GroupID].push({userName: userName, userID: socket.id})
-    console.log("user pushed in users in server")
-  }
+  socket.on("join group", GroupID => {
+    if (users[GroupID] && !users[GroupID].includes(userName)) {
+      users[GroupID].push({userName: userName, userID: socket.id})
+      console.log("user pushed in users in server")
+    }
 
-  else {
-    users[GroupID] = [{userName: userName, userID: socket.id}];
-  }
+    else {
+      users[GroupID] = [{userName: userName, userID: socket.id}];
+    }
 
-  console.log("users in room", users[GroupID]);
-
-  // const usersInRoom = io.sockets.adapter.rooms.get( GroupID );
-  // console.log("3", usersInRoom);
+    console.log("users in room", users[GroupID]);
   
-  // send list of group members to each member 
-  io.emit("all users in group", users[GroupID]);
+    // send list of group members to each member 
+    socket.emit("all users in group", users[GroupID]);
+
+  });
+
+
 
   // when a peer is created from newbie, the created peer sends a signal by socket and socket sends the signal to existing peers
   socket.on("sending signal", payload => {
@@ -51,6 +53,7 @@ io.on("connection", (socket) => {
 
   socket.on("returning signal", payload => {
     io.to(payload.callerID).emit('receiving returned signal', {signal: payload.signal, callerID: socket.id, callerName: userName})
+    console.log("returning signal to : ", payload.callerName);
   })
 
   // Listen for new messages
