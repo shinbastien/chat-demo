@@ -45,13 +45,10 @@ function Main() {
 			.getUserMedia({ video: videoConstraints, audio: true })
 			.then((stream) => {
 				userVideo.current.srcObject = stream;
+				socket.current.emit("join group", groupID);
 				socket.current.on("all users in group", (users) => {
 					const peers = [];
 					console.log("get users from server", users);
-					// if (users.includes(userName)) {
-					//   is_new = false;
-					// }
-					// console.log("set is_new as false if included", is_new);
 
 					users
 						.filter((user) => user.userName != userName)
@@ -128,7 +125,7 @@ function Main() {
 				signal,
 			});
 		});
-
+		console.log("create Peer of: ", userNameToSignal);
 		return peer;
 	}
 
@@ -143,12 +140,11 @@ function Main() {
 		peer.on("signal", (signal) => {
 			socket.current.emit("returning signal", { signal, callerID, callerName });
 		});
-
+		console.log("addPeer from: ", callerName);
 		peer.signal(incomingSignal);
 
 		return peer;
 	}
-
 	return (
 		<div>
 			Room name: {groupID}
