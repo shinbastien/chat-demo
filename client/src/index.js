@@ -8,6 +8,7 @@ import ChatRoom from "./ChatRoom/ChatRoom";
 import Main from "./Main/Main";
 import Mapwindow from "./Mapwindow/Mapwindow";
 import reportWebVitals from "./reportWebVitals";
+import Search from "./Search/Search";
 
 ReactDOM.render(
 	<BrowserRouter>
@@ -15,6 +16,7 @@ ReactDOM.render(
 			<Route exact path="/" element={<Home />} />
 			<Route exact path=":roomID" element={<Main />} />
 			<Route path=":roomId/map" element={<Mapwindow />} />
+			<Route path=":roomId/search" element={<Search />} />
 		</Routes>
 	</BrowserRouter>,
 	document.getElementById("root"),

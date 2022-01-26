@@ -14,8 +14,11 @@ const videoImg = () => {};
 export default function Mapwindow(params) {
 	const [lat, setLat] = useState(0);
 	const [log, setLog] = useState(0);
+
 	const [keep, setKeep] = useState(false);
-	const [dest, setDest] = useState("");
+	const [dest, setDest] = useState(true);
+
+	const [keeplist, setKeeplist] = useState([]);
 
 	const [keepPlace, setKeepPlace] = useState([
 		{
@@ -37,6 +40,7 @@ export default function Mapwindow(params) {
 	]);
 
 	const mapPlace = useRef();
+	const infoPlace = useRef();
 	const firstUpdate = useRef(true);
 
 	var kakao = window.kakao;
@@ -56,38 +60,73 @@ export default function Mapwindow(params) {
 			});
 			currentMarker.setMap(map);
 
-			//setDestination
-			kakao.maps.event.addListener(map, `click`, (mouseEvent) => {
-				const latlng = mouseEvent.latLng;
-				const destMarker = new kakao.maps.Marker({
-					position: latlng,
-				});
-				destMarker.setMap(map);
-				destMarker.setPosition(latlng);
-				setDest(...dest, destMarker);
-				console.log("목적지가 지정되었습니다 " + dest);
-			});
+			// kakao.maps.event.addListener(map, `click`, (e) => {
+			// 	const latlng = e.latLng;
+			// 	const destMarker = new kakao.maps.Marker({
+			// 		position: latlng,
+			// 	});
+
+			// 	destMarker.setMap(map);
+
+			// 	setDest((dest) => destMarker);
+			// 	console.log(dest);
+			// });
 		}
 	}, [lat, log]);
 
 	//load destination
-	const onLoadDestination = () => {};
+	//TODO: Need to revise
 
-	//loadkeep
-	const onLoadKeep = () => {
-		if (keep === false) {
+	const onLoadDestination = () => {
+		if (dest === true) {
 			keepPlace.forEach((element) => {
-				const mark_ = new kakao.maps.LatLng(
-					element.coords.lat,
-					element.coords.lng,
-				);
+				const { lat, lng } = element.coords;
+				const mark_ = new kakao.maps.LatLng(lat, lng);
 				const newMarker = new kakao.maps.Marker({
 					map: map,
 					position: mark_,
 				});
 				newMarker.setPosition(mark_);
+				setKeeplist((keeplist) => [...keeplist, element.name]);
 			});
-			console.log("I am loading");
+
+			setDest(!dest);
+		}
+	};
+
+	//TODO: Need to revise
+	const onLoadSharePicture = () => {
+		if (keep === false) {
+			keepPlace.forEach((element) => {
+				const { lat, lng } = element.coords;
+				console.log(element);
+				const mark_ = new kakao.maps.LatLng(lat, lng);
+				const newMarker = new kakao.maps.Marker({
+					map: map,
+					position: mark_,
+				});
+				newMarker.setPosition(mark_);
+				setKeeplist((keeplist) => [...keeplist, element.name]);
+			});
+
+			setKeep(!keep);
+		}
+	};
+
+	//loadkeep
+	const onLoadKeep = () => {
+		if (keep === false) {
+			keepPlace.forEach((element) => {
+				const { lat, lng } = element.coords;
+				console.log(element);
+				const mark_ = new kakao.maps.LatLng(lat, lng);
+				const newMarker = new kakao.maps.Marker({
+					map: map,
+					position: mark_,
+				});
+				newMarker.setPosition(mark_);
+				setKeeplist((keeplist) => [...keeplist, element.name]);
+			});
 
 			setKeep(!keep);
 		}
@@ -125,10 +164,18 @@ export default function Mapwindow(params) {
 		<div>
 			<div>
 				<Wrapper className="map" ref={mapPlace}></Wrapper>
+
 				<MenuWrapper>
 					<button onClick={onClickEvent}>Load Map</button>
-					<button onClick={onLoadKeep}>Load Keep</button>
-					<button onClick={onLoadDestination}>목적지 지정</button>
+					<button onClick={onLoadKeep}>Keep</button>
+					<button onClick={onLoadDestination}>목적지</button>
+					<button onClick={onLoadSharePicture}>공유 풍경</button>
+
+					<div ref={infoPlace}>
+						{keeplist.map((list, index) => (
+							<div key={index}>{list}</div>
+						))}
+					</div>
 				</MenuWrapper>
 			</div>
 		</div>

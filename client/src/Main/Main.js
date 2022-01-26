@@ -152,6 +152,7 @@ function Main() {
 	return (
 		<div>
 			Room name: {groupID}
+			User name: {userName}
 			<div>
 				<Container>
 					<StyledVideo muted ref={userVideo} autoPlay playsInline />
