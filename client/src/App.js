@@ -4,20 +4,17 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./index.css";
 import Home from "./Home/Home";
 import ChatRoom from "./ChatRoom/ChatRoom";
-import Mapwindow from "./Mapwindow/Mapwindow";
-import GlobalStyles from "./Styles/globalStyles";
-import Search from "./Search/Search";
+import Map from "./Pages/Map";
 
 function App() {
 	return (
 		<>
-			<GlobalStyles />
 			<Router>
 				<Routes>
 					<Route path="/" component={Home} />
 					<Route path="/:roomname" component={ChatRoom} />
-					<Route path="/:roomname/map" component={Mapwindow} />
-					<Route path="/:roomname/search" component={Search} />
+					<Route path="/:roomname/map" component={Map} />
+					{/* <Route path="/:roomname/search" component={Search} /> */}
 				</Routes>
 			</Router>
 		</>

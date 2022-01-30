@@ -6,17 +6,20 @@ import App from "./App";
 import Home from "./Home/Home";
 import ChatRoom from "./ChatRoom/ChatRoom";
 import Main from "./Main/Main";
-import Mapwindow from "./Mapwindow/Mapwindow";
+import Map from "./Pages/Map";
 import reportWebVitals from "./reportWebVitals";
-import Search from "./Search/Search";
+import Individual from "./Pages/Individual";
+import GlobalStyles from "./Styles/globalStyles";
 
 ReactDOM.render(
 	<BrowserRouter>
+		<GlobalStyles />
+
 		<Routes>
 			<Route exact path="/" element={<Home />} />
 			<Route exact path=":roomID" element={<Main />} />
-			<Route path=":roomId/map" element={<Mapwindow />} />
-			<Route path=":roomId/search" element={<Search />} />
+			<Route path=":roomId/map" element={<Map />} />
+			<Route path=":roomId/search" element={<Individual />} />
 		</Routes>
 	</BrowserRouter>,
 	document.getElementById("root"),

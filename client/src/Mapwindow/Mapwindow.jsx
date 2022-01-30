@@ -1,26 +1,91 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import Peer from "simple-peer";
 
 const Wrapper = styled.div`
-	width: 1000px;
+	position: relative;
+	width: 100%;
+`;
+
+const MenuWrapper = styled.div`
+	position: absolute;
+	z-index: 10;
+`;
+
+const MapWrapper = styled.div`
+	width: 100%;
 	height: 500px;
 `;
 
-const MenuWrapper = styled.div``;
+//이동시마다 받아옴
+function UseInterval(callback, delay) {
+	const savedCallback = useRef();
 
-const videoImg = () => {};
+	useEffect(() => {
+		savedCallback.current = callback;
+	});
+
+	useEffect(() => {
+		function tick() {
+			savedCallback.current();
+		}
+
+		let id = setInterval(tick, delay);
+		return () => clearInterval(id);
+	}, [delay]);
+}
 
 export default function Mapwindow(params) {
-	const [lat, setLat] = useState(0);
-	const [log, setLog] = useState(0);
-
-	const [keep, setKeep] = useState(false);
+	const [lat_, setLat] = useState(0);
+	const [lng_, setLog] = useState(0);
 	const [dest, setDest] = useState(true);
 
+	const [keep, setKeep] = useState(false);
 	const [keeplist, setKeeplist] = useState([]);
-
 	const [keepPlace, setKeepPlace] = useState([
+		{
+			id: 1,
+			name: "place 1",
+			coords: {
+				lat: 36.368258636020634,
+				lng: 127.36385086076758,
+			},
+		},
+		{
+			id: 2,
+			name: "place 2",
+			coords: {
+				lat: 36.3737905724698,
+				lng: 127.36720858751144,
+			},
+		},
+
+		{
+			id: 3,
+			name: "place 3",
+			coords: {
+				lat: 37.52852967338524,
+				lng: 126.96922791179354,
+			},
+		},
+		{
+			id: 4,
+			name: "place 4",
+			coords: {
+				lat: 37.42812509478836,
+				lng: 126.99524348235616,
+			},
+		},
+		{
+			id: 5,
+			name: "place 5",
+			coords: {
+				lat: 37.42887299230859,
+				lng: 126.99683648886092,
+			},
+		},
+	]);
+	const [share, setShare] = useState(false);
+	const [sharePlace, setSharePlace] = useState([
 		{
 			id: 1,
 			name: "place 1",
@@ -41,45 +106,105 @@ export default function Mapwindow(params) {
 
 	const mapPlace = useRef();
 	const infoPlace = useRef();
-	const firstUpdate = useRef(true);
+	const currentLoc = useRef();
+	const customLoc = useRef();
 
 	var kakao = window.kakao;
 	var map;
+	var locPosition;
+	var geocoder;
 
-	const getMap = useCallback(() => {
-		var locPosition = new kakao.maps.LatLng(lat, log);
+	const setMap = () => {
+		locPosition = new kakao.maps.LatLng(lat_, lng_);
 		var options = {
 			center: locPosition,
 			level: 3,
 		};
 		map = new kakao.maps.Map(mapPlace.current, options);
+		geocoder = new kakao.maps.services.Geocoder();
+	};
 
-		if (lat !== 0 && log !== 0) {
-			const currentMarker = new kakao.maps.Marker({
-				position: locPosition,
-			});
-			currentMarker.setMap(map);
+	const getMarker = () => {
+		const currentMarker = new kakao.maps.Marker({
+			position: locPosition,
+		});
+		const customOverlay = new kakao.maps.CustomOverlay({
+			position: locPosition,
+			content: `<div className ="label" style="color:blue; background-color:white;"><span class="left"></span><span class="center">${"현재 위치"}</span><span class="right"></span></div>`,
+		});
+		currentMarker.setMap(map);
+		customOverlay.setMap(map);
+		currentLoc.current = currentMarker;
+		customLoc.current = customOverlay;
+	};
 
-			// kakao.maps.event.addListener(map, `click`, (e) => {
-			// 	const latlng = e.latLng;
-			// 	const destMarker = new kakao.maps.Marker({
-			// 		position: latlng,
-			// 	});
-
-			// 	destMarker.setMap(map);
-
-			// 	setDest((dest) => destMarker);
-			// 	console.log(dest);
-			// });
+	//loadkeep
+	const onLoadKeep = (e) => {
+		if (keep == false) {
+			setMarker(map);
+			setKeep(!keep);
+		} else {
+			setMarker(null);
+			setKeep(!keep);
 		}
-	}, [lat, log]);
+	};
+
+	const setMarker = () => {
+		for (let i = 0; i < keepPlace.length; i++) {
+			const { lat, lng } = keepPlace[i].coords;
+			const mark_ = new kakao.maps.LatLng(lat, lng);
+			const newMarker = new kakao.maps.Marker({
+				position: mark_,
+			});
+			const customOverlayKeep = new kakao.maps.CustomOverlay({
+				position: mark_,
+				content: `<div className ="label" style="color:blue; background-color:white;"><span class="left"></span><span class="center">${keepPlace[i].name}</span><span class="right"></span></div>`,
+			});
+			newMarker.setMap(map);
+			customOverlayKeep.setMap(map);
+		}
+	};
+
+	const onClickKeep = (list) => {
+		const keepPlaceResult = keepPlace.find((place) => place.name == list);
+		const { lat, lng } = keepPlaceResult.coords;
+		const keepLocation = new kakao.maps.LatLng(lat, lng);
+		const newMarker = new kakao.maps.Marker({
+			map: map,
+			position: keepLocation,
+		});
+		const customOverlayKeep = new kakao.maps.CustomOverlay({
+			position: keepLocation,
+			content: `<div className ="label" style="color:blue; background-color:white;"><span class="left"></span><span class="center">${list}</span><span class="right"></span></div>`,
+		});
+
+		newMarker.setMap(map);
+		customOverlayKeep.setMap(map);
+		map.setCenter(keepLocation);
+	};
+
+	const onClickGeocoder = () => {
+		searchDetailAddrFromCoords(locPosition, function (result, status) {
+			if (status === kakao.maps.services.Status.OK) {
+				const detailAddr = !!result[0].address
+					? "<div>도로명주소 : " + result[0].address.address_name + "</div>"
+					: "";
+
+				console.log(detailAddr);
+			}
+		});
+	};
+
+	function searchDetailAddrFromCoords(coords, callback) {
+		// 좌표로 법정동 상세 주소 정보를 요청합니다
+		geocoder.coord2Address(coords.getLng(), coords.getLat(), callback);
+	}
 
 	//load destination
 	//TODO: Need to revise
-
 	const onLoadDestination = () => {
 		if (dest === true) {
-			keepPlace.forEach((element) => {
+			keepPlace.map((element) => {
 				const { lat, lng } = element.coords;
 				const mark_ = new kakao.maps.LatLng(lat, lng);
 				const newMarker = new kakao.maps.Marker({
@@ -87,6 +212,7 @@ export default function Mapwindow(params) {
 					position: mark_,
 				});
 				newMarker.setPosition(mark_);
+
 				setKeeplist((keeplist) => [...keeplist, element.name]);
 			});
 
@@ -96,8 +222,8 @@ export default function Mapwindow(params) {
 
 	//TODO: Need to revise
 	const onLoadSharePicture = () => {
-		if (keep === false) {
-			keepPlace.forEach((element) => {
+		if (share === false) {
+			sharePlace.forEach((element) => {
 				const { lat, lng } = element.coords;
 				console.log(element);
 				const mark_ = new kakao.maps.LatLng(lat, lng);
@@ -106,78 +232,69 @@ export default function Mapwindow(params) {
 					position: mark_,
 				});
 				newMarker.setPosition(mark_);
-				setKeeplist((keeplist) => [...keeplist, element.name]);
+				setSharePlace((sharelist) => [...sharelist, element.name]);
 			});
 
-			setKeep(!keep);
+			setShare(!share);
 		}
 	};
 
-	//loadkeep
-	const onLoadKeep = () => {
-		if (keep === false) {
-			keepPlace.forEach((element) => {
-				const { lat, lng } = element.coords;
-				console.log(element);
-				const mark_ = new kakao.maps.LatLng(lat, lng);
-				const newMarker = new kakao.maps.Marker({
-					map: map,
-					position: mark_,
-				});
-				newMarker.setPosition(mark_);
-				setKeeplist((keeplist) => [...keeplist, element.name]);
-			});
-
-			setKeep(!keep);
-		}
+	const onLoadCurrent = () => {
+		map.setCenter(locPosition);
 	};
 
 	useEffect(() => {
-		if (firstUpdate.current) {
-			firstUpdate.current = false;
-			return;
-		}
-		getMap();
-	}, [getMap, mapPlace]);
-
-	//load location
-	const getLocation = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
 			setLat(position.coords.latitude);
 			setLog(position.coords.longitude);
 		});
-	};
+		setMap();
+		getMarker();
+	}, [setMap]);
 
-	//load map
-	const onClickEvent = (e) => {
-		//confirm location
-		if ("geolocation" in navigator) {
-			console.log("Available");
-		} else {
-			console.log("Not Available");
+	//이동시
+	UseInterval(() => {
+		if (mapPlace !== null) {
+			navigator.geolocation.getCurrentPosition(function (position) {
+				currentLoc.current.setPosition(
+					new kakao.maps.LatLng(
+						position.coords.latitude,
+						position.coords.longitude,
+					),
+				);
+				customLoc.current.setPosition(
+					new kakao.maps.LatLng(
+						position.coords.latitude,
+						position.coords.longitude,
+					),
+				);
+			});
 		}
-		getLocation();
-		e.preventDefault();
-	};
+	}, 5000);
 
 	return (
-		<div>
-			<div>
-				<Wrapper className="map" ref={mapPlace}></Wrapper>
-
+		<>
+			<Wrapper>
 				<MenuWrapper>
-					<button onClick={onClickEvent}>Load Map</button>
-					<button onClick={onLoadKeep}>Keep</button>
+					<button onClick={onClickGeocoder}>주변과 관련된 영상 찾아보기</button>
+					<button onClick={onLoadKeep}>Keep {keepPlace.length} 개</button>
+					<button onClick={onLoadSharePicture}>
+						공유 풍경 {keepPlace.length}
+					</button>
 					<button onClick={onLoadDestination}>목적지</button>
-					<button onClick={onLoadSharePicture}>공유 풍경</button>
-
 					<div ref={infoPlace}>
-						{keeplist.map((list, index) => (
-							<div key={index}>{list}</div>
-						))}
+						{keep
+							? keepPlace.map((list, index) => (
+									<button onClick={() => onClickKeep(list.name)} key={index}>
+										{list.name}
+									</button>
+							  ))
+							: null}
 					</div>
+					<button onClick={onLoadCurrent}>현재 위치</button>
 				</MenuWrapper>
-			</div>
-		</div>
+				<MapWrapper className="map" ref={mapPlace}></MapWrapper>
+			</Wrapper>
+		</>
 	);
 }

@@ -15,7 +15,6 @@ const GlobalStyles = createGlobalStyle`
         }
     }
     body{
-        background-color: ${(props) => props.theme.bgColor};
         width: 100%;
     }
     a{
@@ -24,6 +23,7 @@ const GlobalStyles = createGlobalStyle`
     input:focus{
         outline: none;
     }
+
 `;
 
 export default GlobalStyles;
