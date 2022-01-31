@@ -12,8 +12,7 @@ const MenuWrapper = styled.div`
 `;
 
 const MapWrapper = styled.div`
-	width: 100%;
-	height: 500px;
+	height: 1000px;
 `;
 
 //이동시마다 받아옴

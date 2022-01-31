@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import "./Main.css";
+// import "./Main.css";
 import useChat from "../useChat";
 import io from "socket.io-client";
 import Peer from "simple-peer";
-import {
-	StyledVideo,
-	Video,
-	Container,
-	videoConstraints,
-} from "../VideoCall/video";
+import { StyledVideo, Video, videoConstraints } from "../VideoCall/video";
+import Grid from "@mui/material/Grid";
+import Avatar from "@mui/material/Avatar";
+import Stack from "@mui/material/Stack";
+// import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 // Main handles connection between users and sends those to other pages
 const SOCKET_SERVER_URL = "http://localhost:4000";
@@ -147,16 +146,24 @@ function Main() {
 	}
 	return (
 		<div>
-			Room name: {groupID}
-			User name: {userName}
-			<div>
-				<Container>
+			{groupID}
+			<Grid container>
+				<Grid item style={{ padding: "1.5rem" }}>
 					<StyledVideo muted ref={userVideo} autoPlay playsInline />
-					{peers.map((peer, index) => {
-						return <Video key={index} peer={peer} />;
-					})}
-				</Container>
-			</div>
+					<Stack direction="row" spacing={2}>
+						<Avatar>{userName.slice(0, 1).toUpperCase()}</Avatar>
+						{userName}
+						{/* <MoreVertIcon></MoreVertIcon> */}
+					</Stack>
+				</Grid>
+				{peers.map((peer, index) => {
+					return (
+						<Grid item key={index}>
+							<Video peer={peer} />
+						</Grid>
+					);
+				})}
+			</Grid>
 		</div>
 	);
 }
