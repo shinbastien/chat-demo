@@ -28,6 +28,7 @@ function Home() {
 	});
 
 	const { roomname, username } = inputs;
+
 	const onChange = (e) => {
 		const { value, name } = e.target;
 		setInputs({

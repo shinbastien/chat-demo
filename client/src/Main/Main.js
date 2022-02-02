@@ -8,7 +8,6 @@ import { StyledVideo, Video, videoConstraints } from "../VideoCall/video";
 import Grid from "@mui/material/Grid";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
-// import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 // Main handles connection between users and sends those to other pages
 const SOCKET_SERVER_URL = "http://localhost:4000";
@@ -153,7 +152,6 @@ function Main() {
 					<Stack direction="row" spacing={2}>
 						<Avatar>{userName.slice(0, 1).toUpperCase()}</Avatar>
 						{userName}
-						{/* <MoreVertIcon></MoreVertIcon> */}
 					</Stack>
 				</Grid>
 				{peers.map((peer, index) => {
