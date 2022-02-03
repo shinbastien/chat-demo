@@ -1,8 +1,6 @@
 import { createGlobalStyle } from "styled-components";
-import reset from "styled-reset";
 
-export default createGlobalStyle`
-    ${reset};
+const GlobalStyles = createGlobalStyle`
     *{
         box-sizing: border-box;
     }
@@ -17,7 +15,6 @@ export default createGlobalStyle`
         }
     }
     body{
-        background-color: ${(props) => props.theme.bgColor};
         width: 100%;
     }
     a{
@@ -26,4 +23,7 @@ export default createGlobalStyle`
     input:focus{
         outline: none;
     }
+
 `;
+
+export default GlobalStyles;
