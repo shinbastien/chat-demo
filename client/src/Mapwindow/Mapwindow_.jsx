@@ -44,7 +44,7 @@ function UseInterval(callback, delay) {
 	}, [delay]);
 }
 
-export default function Mapwindow(params) {
+export default function Mapwindow_(params) {
 	const [lat_, setLat] = useState(0);
 	const [lng_, setLog] = useState(0);
 	const [dest, setDest] = useState(true);
@@ -56,68 +56,10 @@ export default function Mapwindow(params) {
 
 	const [keep, setKeep] = useState(false);
 	const [keeplist, setKeeplist] = useState([]);
-	const [keepPlace, setKeepPlace] = useState([
-		{
-			id: 1,
-			name: "place 1",
-			coords: {
-				lat: 36.368258636020634,
-				lng: 127.36385086076758,
-			},
-		},
-		{
-			id: 2,
-			name: "place 2",
-			coords: {
-				lat: 36.3737905724698,
-				lng: 127.36720858751144,
-			},
-		},
+	const [keepPlace, setKeepPlace] = useState([]);
 
-		{
-			id: 3,
-			name: "place 3",
-			coords: {
-				lat: 37.52852967338524,
-				lng: 126.96922791179354,
-			},
-		},
-		{
-			id: 4,
-			name: "place 4",
-			coords: {
-				lat: 37.42812509478836,
-				lng: 126.99524348235616,
-			},
-		},
-		{
-			id: 5,
-			name: "place 5",
-			coords: {
-				lat: 37.42887299230859,
-				lng: 126.99683648886092,
-			},
-		},
-	]);
 	const [share, setShare] = useState(false);
-	const [sharePlace, setSharePlace] = useState([
-		{
-			id: 1,
-			name: "place 1",
-			coords: {
-				lat: 36.368258636020634,
-				lng: 127.36385086076758,
-			},
-		},
-		{
-			id: 2,
-			name: "place 2",
-			coords: {
-				lat: 36.3737905724698,
-				lng: 127.36720858751144,
-			},
-		},
-	]);
+	const [sharePlace, setSharePlace] = useState([]);
 
 	const mapPlace = useRef();
 	const infoPlace = useRef();
@@ -151,6 +93,20 @@ export default function Mapwindow(params) {
 		});
 		setMap();
 	}, [lat_, lng_]);
+
+	useEffect(async () => {
+		const photos = await readFromFirebase("photos");
+		await photos.forEach((photo) => {
+			setKeepPlace([...keepPlace, photo.data()]);
+		});
+	}, []);
+
+	// useEffect(async () => {
+	// 	const shares = await readFromFirebase("shares");
+	// 	await shares.forEach((share) => {
+	// 		setSharePlace([...sharePlace, share.data()]);
+	// 	});
+	// }, []);
 
 	//loadkeep
 	const onLoadKeep = (e) => {
@@ -214,6 +170,48 @@ export default function Mapwindow(params) {
 		geocoder.coord2Address(coords.getLng(), coords.getLat(), callback);
 	}
 
+	const onLoadCurrent = () => {
+		const result = locPosition(lat_, lng_);
+		const currentMarker = new kakao.maps.Marker({
+			position: result,
+		});
+		currentMarker.setMap(map);
+
+		const customOverlay = new kakao.maps.CustomOverlay({
+			position: result,
+			content: `<div className ="label" style='${css}'><span class="left"></span><span class="center">${"현재 위치"}</span><span class="right"></span></div>`,
+		});
+		customOverlay.setMap(map);
+		currentLoc.current = currentMarker;
+		customLoc.current = customOverlay;
+		map.setCenter(result);
+	};
+
+	//이동시
+	UseInterval(() => {
+		if (mapPlace !== null) {
+			navigator.geolocation.getCurrentPosition(function (position) {
+				currentLoc.current.setPosition(
+					new kakao.maps.LatLng(
+						position.coords.latitude,
+						position.coords.longitude,
+					),
+				);
+				customLoc.current.setPosition(
+					new kakao.maps.LatLng(
+						position.coords.latitude,
+						position.coords.longitude,
+					),
+				);
+			});
+			console.log("loadding...");
+		}
+	}, 5000);
+
+	const handleClose = () => {
+		setAnchorEl(null);
+	};
+
 	//load destination
 	//TODO: Need to revise
 	const onLoadDestination = () => {
@@ -251,49 +249,6 @@ export default function Mapwindow(params) {
 
 			setShare(!share);
 		}
-	};
-
-	const onLoadCurrent = () => {
-		const result = locPosition(lat_, lng_);
-		const currentMarker = new kakao.maps.Marker({
-			position: result,
-		});
-		currentMarker.setMap(map);
-		// console.log("loadding...");
-
-		const customOverlay = new kakao.maps.CustomOverlay({
-			position: result,
-			content: `<div className ="label" style='${css}'><span class="left"></span><span class="center">${"현재 위치"}</span><span class="right"></span></div>`,
-		});
-		customOverlay.setMap(map);
-		currentLoc.current = currentMarker;
-		customLoc.current = customOverlay;
-		map.setCenter(result);
-	};
-
-	//이동시
-	UseInterval(() => {
-		if (mapPlace !== null) {
-			navigator.geolocation.getCurrentPosition(function (position) {
-				currentLoc.current.setPosition(
-					new kakao.maps.LatLng(
-						position.coords.latitude,
-						position.coords.longitude,
-					),
-				);
-				customLoc.current.setPosition(
-					new kakao.maps.LatLng(
-						position.coords.latitude,
-						position.coords.longitude,
-					),
-				);
-			});
-			console.log("loadding...");
-		}
-	}, 5000);
-
-	const handleClose = () => {
-		setAnchorEl(null);
 	};
 
 	return (

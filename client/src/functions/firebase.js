@@ -30,9 +30,7 @@ async function readFromFirebase(element) {
 	const db = getFirestore();
 	try {
 		const docRef = await getDocs(collection(db, element));
-		docRef.forEach((element) => {
-			console.log(element);
-		});
+		return docRef;
 	} catch (error) {
 		console.log(error);
 	}
@@ -69,3 +67,45 @@ export { readFromFirebase };
 //  ]
 
 // }
+
+// {
+// 		id: 1,
+// 		name: "place 1",
+// 		coords: {
+// 			lat: 36.368258636020634,
+// 			lng: 127.36385086076758,
+// 		},
+// 	},
+// 	{
+// 		id: 2,
+// 		name: "place 2",
+// 		coords: {
+// 			lat: 36.3737905724698,
+// 			lng: 127.36720858751144,
+// 		},
+// 	},
+
+// 	{
+// 		id: 3,
+// 		name: "place 3",
+// 		coords: {
+// 			lat: 37.52852967338524,
+// 			lng: 126.96922791179354,
+// 		},
+// 	},
+// 	{
+// 		id: 4,
+// 		name: "place 4",
+// 		coords: {
+// 			lat: 37.42812509478836,
+// 			lng: 126.99524348235616,
+// 		},
+// 	},
+// 	{
+// 		id: 5,
+// 		name: "place 5",
+// 		coords: {
+// 			lat: 37.42887299230859,
+// 			lng: 126.99683648886092,
+// 		},
+// 	},

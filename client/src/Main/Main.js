@@ -8,6 +8,8 @@ import { StyledVideo, Video, videoConstraints } from "../VideoCall/video";
 import Grid from "@mui/material/Grid";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
+import MoreVertIcon from "@material-ui/icons/MoreVert";
+import IconButton from "@mui/material/IconButton";
 
 // Main handles connection between users and sends those to other pages
 const SOCKET_SERVER_URL = "http://localhost:4000";
@@ -149,10 +151,19 @@ function Main() {
 			<Grid container>
 				<Grid item style={{ padding: "1.5rem" }}>
 					<StyledVideo muted ref={userVideo} autoPlay playsInline />
-					<Stack direction="row" spacing={2}>
-						<Avatar>{userName.slice(0, 1).toUpperCase()}</Avatar>
-						{userName}
-					</Stack>
+					<Grid container direction="row" justifyContent="space-between">
+						<Grid item>
+							<Stack direction="row" spacing={2}>
+								<Avatar>{userName.slice(0, 1).toUpperCase()}</Avatar>
+								{userName}
+							</Stack>
+						</Grid>
+						<Grid item>
+							<IconButton onClick={() => console.log("test")}>
+								<MoreVertIcon></MoreVertIcon>
+							</IconButton>
+						</Grid>
+					</Grid>
 				</Grid>
 				{peers.map((peer, index) => {
 					return (

@@ -2,19 +2,10 @@ import * as React from "react";
 import { styled, createTheme } from "@mui/material/styles";
 import Input from "@mui/material/Input";
 
-// export const customTheme = createTheme({
-// 	palette: {
-// 		primary: {
-// 			main: "#151CA2",
-// 			contrastText: "white",
-// 		},
-// 	},
-// });
-
 export const customTheme = createTheme({
 	palette: {
 		primary: {
-			main: "#1976d2",
+			main: "#151ca2",
 			contrastText: "white",
 			input: "white",
 		},
@@ -33,7 +24,8 @@ export const customTheme = createTheme({
 });
 
 export const Item = styled(Input)(({ theme }) => ({
-	backgroundColor: theme.palette.primary.input,
+	//responsive
+	backgroundColor: theme.palette.input,
 	textAlign: "center",
 	padding: theme.spacing(3),
 	display: "block",

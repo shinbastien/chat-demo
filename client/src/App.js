@@ -22,16 +22,14 @@ function App() {
 		<>
 			<CssBaseline />
 			<ThemeProvider theme={customTheme}>
-				<userContext.Provider value={value}>
-					<Router>
-						<Routes>
-							<Route path="/" component={Home} />
-							<Route path="/:roomname" component={ChatRoom} />
-							<Route path="/:roomname/map" component={Map} />
-							{/* <Route path="/:roomname/search" component={Search} /> */}
-						</Routes>
-					</Router>
-				</userContext.Provider>
+				<Router>
+					<Routes>
+						<Route path="/" component={Home} />
+						<Route path="/:roomname" component={ChatRoom} />
+						<Route path="/:roomname/map" component={Map} />
+						{/* <Route path="/:roomname/search" component={Search} /> */}
+					</Routes>
+				</Router>
 			</ThemeProvider>
 		</>
 	);
