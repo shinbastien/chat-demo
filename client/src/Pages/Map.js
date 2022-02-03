@@ -15,6 +15,9 @@ const ImgWrapper = styled.img`
 `;
 
 function Map() {
+
+	const location = useLocation();
+	const {groupID, userName}= location.state;
 	return (
 		<>
 			<AppBar postiion="static" style={{ backgroundColor: "#151ca2" }}>
@@ -32,7 +35,7 @@ function Map() {
 					<NewMapwindow></NewMapwindow>
 				</Grid>
 				<Grid item xs={6} md={4}>
-					<Main></Main>
+					<Main groupID = {groupID} userName={userName} userLocation={""}></Main>
 				</Grid>
 			</Grid>
 		</>
