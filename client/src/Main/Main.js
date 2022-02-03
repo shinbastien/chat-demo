@@ -16,10 +16,10 @@ const SOCKET_SERVER_URL = "http://localhost:4000";
 
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 
-function Main() {
-	// let is_new = true;
-	const location = useLocation();
-	const { groupID, userName } = location.state;
+function Main(props) {
+	// let is_ncons location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();ew = true;
+	// const location = useLocation();
+	// const {groupID, userName}= location.state;
 	// const [users, setUsers] = useState([]);
 	const [stream, setStream] = useState();
 	const [peers, setPeers] = useState([]);
@@ -36,8 +36,9 @@ function Main() {
 	useEffect(() => {
 		socket.current = io(SOCKET_SERVER_URL, {
 			query: {
-				GroupID: groupID,
-				userName: userName,
+				GroupID: props.groupID,
+				userName: props.userName,
+				userLocation: props.userLocation,
 			},
 		});
 
@@ -45,31 +46,35 @@ function Main() {
 			.getUserMedia({ video: videoConstraints, audio: true })
 			.then((stream) => {
 				userVideo.current.srcObject = stream;
-				socket.current.emit("join group", groupID);
+				socket.current.emit("join group", props.groupID);
 				socket.current.on("all users in group", (users) => {
 					const peers = [];
 					console.log("get users from server", users);
 
-					users
-						.filter((user) => user.userName != userName)
+					Object.keys(users)
+						.filter((user) => users[user].userName !== props.userName)
 						.forEach((user) => {
-							// create Peers of the existing members for the newbie
-							console.log("gained user name: ", user.userName);
+							console.log("gained user name: ", users[user].userName);
 							const peer = createPeer(
-								user.userID,
-								user.userName,
+								users[user].userID,
+								users[user].userName,
 								socket.current.id,
-								userName,
+								props.userName,
 								stream,
 							);
 							peersRef.current.push({
-								peerID: user.userID,
-								peerName: user.userName,
+								peerID: users[user].userID,
+								peerName: users[user].userName,
+								peer: peer,
+							});
+							peers.push({
+								peerID: users[user].userID,
+								peerName: users[user].userName,
 								peer,
 							});
-							peers.push(peer);
 						});
 					setPeers(peers);
+					// console.log("current PeersRef is: " ,peersRef.current);
 				});
 
 				// When a new member joined, and I'm an existing member
@@ -83,10 +88,12 @@ function Main() {
 					peersRef.current.push({
 						peerID: payload.callerID,
 						peerName: payload.callerName,
-						peer,
+						peer: peer,
 					});
+
 					console.log("received socket message from new member");
-					setPeers((users) => [...users, peer]);
+					console.log("current PeersRef is: ", peersRef.current);
+					setPeers([...peersRef.current]);
 				});
 
 				// receive the returned signal the newbie gets from the existing peers
@@ -99,6 +106,19 @@ function Main() {
 						payload.callerName,
 					);
 					item.peer.signal(payload.signal);
+				});
+
+				socket.current.on("user left", (id) => {
+					const peerObj = peersRef.current.find((p) => p.peerID === id);
+					console.log("The user left is: ", peerObj.peerName);
+					if (peerObj) {
+						peerObj.peer.destroy();
+					}
+
+					const peers = peersRef.current.filter((p) => p.peerID !== id);
+					peersRef.current = peers;
+					console.log("current peersRef after user leaving is: ", peers);
+					setPeers(peers);
 				});
 			});
 	}, []);
@@ -147,15 +167,23 @@ function Main() {
 	}
 	return (
 		<div>
-			{groupID}
+			Room name: {props.groupID}
+			User name: {props.userName}
 			<Grid container>
 				<Grid item style={{ padding: "1.5rem" }}>
-					<StyledVideo muted ref={userVideo} autoPlay playsInline />
+					<StyledVideo
+						muted
+						ref={userVideo}
+						autoPlay
+						playsInline
+						id={props.userName}
+					/>
+					{console.log("1", peers)}
 					<Grid container direction="row" justifyContent="space-between">
 						<Grid item>
 							<Stack direction="row" spacing={2}>
-								<Avatar>{userName.slice(0, 1).toUpperCase()}</Avatar>
-								{userName}
+								{/* <Avatar>{props.userName.slice(0, 1).toUpperCase()}</Avatar> */}
+								{props.userName}
 							</Stack>
 						</Grid>
 						<Grid item>
@@ -165,10 +193,14 @@ function Main() {
 						</Grid>
 					</Grid>
 				</Grid>
-				{peers.map((peer, index) => {
+				{peers.map((peerObj, idx) => {
 					return (
-						<Grid item key={index}>
-							<Video peer={peer} />
+						<Grid item key={idx}>
+							<Video
+								key={peerObj.peerID}
+								peer={peerObj.peer}
+								userName={peerObj.peerName}
+							/>
 						</Grid>
 					);
 				})}

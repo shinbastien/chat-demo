@@ -27,7 +27,7 @@ const Video = (props) => {
 		});
 	}, []);
 
-	return <StyledVideo playsInline autoPlay ref={ref} />;
+	return <StyledVideo playsInline autoPlay ref={ref} id={props.userName} />;
 };
 
 const videoConstraints = {
