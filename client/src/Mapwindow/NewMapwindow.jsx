@@ -4,6 +4,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import styled from "styled-components";
 import axios from "axios";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import SearchIcon from "@material-ui/icons/Search";
+import IconButton from "@mui/material/IconButton";
 
 const Navigation = styled.div`
 	display: flex;
@@ -16,6 +20,17 @@ const SearchBox = styled.div`
 const ResultList = styled.div`
 	flex: 1;
 `;
+
+const Wrapper = styled.div`
+	position: relative;
+	width: 100%;
+`;
+
+const MenuWrapper = styled.div`
+	position: absolute;
+	z-index: 10;
+`;
+
 ResultList.Item = styled.div`
 	display: flex;
 	align-items: center;
@@ -24,17 +39,36 @@ ResultList.Item = styled.div`
 	}
 `;
 
+//이동시마다 받아옴
+function UseInterval(callback, delay) {
+	const savedCallback = useRef();
+
+	useEffect(() => {
+		savedCallback.current = callback;
+	});
+
+	useEffect(() => {
+		function tick() {
+			savedCallback.current();
+		}
+
+		let id = setInterval(tick, delay);
+		return () => clearInterval(id);
+	}, [delay]);
+}
+
 export default function NewMapwindow() {
 	const [map, setMap] = useState(null);
 	const [start, setStart] = useState(null);
 	const [end, setEnd] = useState(null);
-	const [searchKey, setSearchKey] = useState("상봉 듀오트리스");
+	const [searchKey, setSearchKey] = useState("신사역");
 	const [searchResult, setSearchResult] = useState([]);
 	const [resultDrawArr, setResultDrawArr] = useState([]);
 	const [chktraffic, setChktraffic] = useState([]);
 	const [resultMarkerArr, setResultMarkerArr] = useState([]);
 	const [markerS, setMarkerS] = useState(null);
 	const [markerE, setMarkerE] = useState(null);
+	const [markerC, setMarkerC] = useState(null);
 	const [searchMarkers, setSearchMarkers] = useState([]);
 
 	const initMap = () => {
@@ -43,13 +77,6 @@ export default function NewMapwindow() {
 			const lng = position.coords.longitude;
 
 			var center = new Tmapv2.LatLng(lat, lng);
-
-			const current = {
-				pointType: "P",
-				lat: lat,
-				lng: lng,
-				markerImage: "http://topopen.tmap.co.kr/imgs/point.png",
-			};
 
 			setMap(
 				new Tmapv2.Map("map_div", {
@@ -61,7 +88,6 @@ export default function NewMapwindow() {
 					scrollwheel: true,
 				}),
 			);
-			getMarkers(current);
 		});
 
 		// const noorLat = 4522710.51119176;
@@ -74,6 +100,57 @@ export default function NewMapwindow() {
 
 	useEffect(() => {
 		initMap();
+	}, []);
+
+	//current point
+	useEffect(() => {
+		if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(function (position) {
+				const lat = position.coords.latitude;
+				const lng = position.coords.longitude;
+
+				setMarkerC(
+					new Tmapv2.Marker({
+						position: new Tmapv2.LatLng(lat, lng),
+						icon: "http://topopen.tmap.co.kr/imgs/point.png",
+						iconSize: new Tmapv2.Size(24, 38),
+						title: "현재위치",
+						map: map,
+						label:
+							"<span style='background-color: #46414E;color:white'>" +
+							"이동중" +
+							"</span>",
+					}),
+				);
+			});
+		}
+	}, [map]);
+
+	//이동시
+	useEffect(() => {
+		const interval = setInterval(() => {
+			navigator.geolocation.getCurrentPosition(function (position) {
+				const lat = position.coords.latitude;
+				const lng = position.coords.longitude;
+
+				if (markerC !== null) {
+					markerC.setMap(null);
+				}
+				setMarkerC(
+					new Tmapv2.Marker({
+						position: new Tmapv2.LatLng(lat, lng),
+						icon: "http://topopen.tmap.co.kr/imgs/point.png",
+						iconSize: new Tmapv2.Size(24, 38),
+						title: "현재위치",
+						map: map,
+					}),
+				);
+			});
+		}, 5000);
+
+		return () => {
+			clearInterval(interval);
+		};
 	}, []);
 
 	useEffect(async () => {
@@ -198,15 +275,23 @@ export default function NewMapwindow() {
 	};
 
 	const getMarkers = (infoObj) => {
-		const { pointType, lat, lng, markerImage } = infoObj;
+		const { pointType, lat, lng, markerImage, title } = infoObj;
 		const size =
 			pointType === "P" ? new Tmapv2.Size(8, 8) : new Tmapv2.Size(24, 38); //아이콘 크기 설정합니다.
 
+		if (title) {
+			var label =
+				"<span style='background-color: #46414E;color:white'>" +
+				title +
+				"</span>";
+		}
 		return new Tmapv2.Marker({
 			position: new Tmapv2.LatLng(lat, lng),
 			icon: markerImage,
 			iconSize: size,
 			map: map,
+			title: title,
+			label: label,
 		});
 	};
 
@@ -454,8 +539,10 @@ export default function NewMapwindow() {
 						<div>도착: {end && end.name}</div>
 					</div>
 					<form onSubmit={handleSubmit}>
-						<input type="text" value={searchKey} onChange={handleChange} />
-						<button type="submit">검색하기</button>
+						<TextField type="text" value={searchKey} onChange={handleChange} />
+						<IconButton variant="contained" type="submit">
+							<SearchIcon></SearchIcon>
+						</IconButton>
 					</form>
 					<ResultList>
 						{searchResult
@@ -465,18 +552,23 @@ export default function NewMapwindow() {
 											src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
 										/>
 										{result.name}
-										<button onClick={() => handleStartSetting(result)}>
+										<Button onClick={() => handleStartSetting(result)}>
 											출발
-										</button>
-										<button onClick={() => handleEndSetting(result)}>
+										</Button>
+										<Button onClick={() => handleEndSetting(result)}>
 											도착
-										</button>
+										</Button>
 									</ResultList.Item>
 							  ))
 							: "검색 결과"}
 					</ResultList>
 				</SearchBox>
-				<div id="map_div"></div>
+				<Wrapper>
+					<MenuWrapper>
+						<Button>공유 풍경</Button>
+					</MenuWrapper>
+					<div id="map_div"></div>
+				</Wrapper>
 			</Navigation>
 		</React.Fragment>
 	);

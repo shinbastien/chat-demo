@@ -10,11 +10,18 @@ import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import IconButton from "@mui/material/IconButton";
+import styled from "styled-components";
 
 // Main handles connection between users and sends those to other pages
 const SOCKET_SERVER_URL = "http://localhost:4000";
 
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
+
+const TextWrapper = styled.span`
+	display: flex;
+	justify-content: center; /* align horizontal */
+	align-items: center; /* align vertical */
+`;
 
 function Main(props) {
 	// let is_ncons location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();ew = true;
@@ -167,8 +174,7 @@ function Main(props) {
 	}
 	return (
 		<div>
-			Room name: {props.groupID}
-			User name: {props.userName}
+			현재 접속자 수: {peers.length} 명
 			<Grid container>
 				<Grid item style={{ padding: "1.5rem" }}>
 					<StyledVideo
@@ -182,8 +188,11 @@ function Main(props) {
 					<Grid container direction="row" justifyContent="space-between">
 						<Grid item>
 							<Stack direction="row" spacing={2}>
-								{/* <Avatar>{props.userName.slice(0, 1).toUpperCase()}</Avatar> */}
-								{props.userName}
+								<Avatar>{props.userName.slice(0, 1).toUpperCase()}</Avatar>
+								<TextWrapper>
+									{props.userName} &nbsp; &nbsp;
+									<span style={{ color: "red" }}>나</span>
+								</TextWrapper>
 							</Stack>
 						</Grid>
 						<Grid item>
