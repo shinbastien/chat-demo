@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import {useLocation } from "react-router-dom";
 import styled from "styled-components";
 import Peer from "simple-peer";
+import Main from "../Main/Main";
 
 const Wrapper = styled.div`
 	width: 1000px;
@@ -14,8 +16,14 @@ const videoImg = () => {};
 export default function Mapwindow(params) {
 	const [lat, setLat] = useState(0);
 	const [log, setLog] = useState(0);
+	const [loc, setLoc] = useState([]);
 	const [keep, setKeep] = useState(false);
 	const [dest, setDest] = useState("");
+	const location = useLocation();
+	const {groupID, userName}= location.state;
+	console.log(groupID);
+	console.log(userName);
+    const [users, setUsers] = useState([]);
 
 	const [keepPlace, setKeepPlace] = useState([
 		{
@@ -106,6 +114,7 @@ export default function Mapwindow(params) {
 		navigator.geolocation.getCurrentPosition(function (position) {
 			setLat(position.coords.latitude);
 			setLog(position.coords.longitude);
+			setLoc([position.coords.latitude, position.coords.longitude])
 		});
 	};
 
@@ -122,7 +131,7 @@ export default function Mapwindow(params) {
 	};
 
 	return (
-		<div>
+		<div style={{display: "flex"}}>
 			<div>
 				<Wrapper className="map" ref={mapPlace}></Wrapper>
 				<MenuWrapper>
@@ -130,6 +139,9 @@ export default function Mapwindow(params) {
 					<button onClick={onLoadKeep}>Load Keep</button>
 					<button onClick={onLoadDestination}>목적지 지정</button>
 				</MenuWrapper>
+			</div>
+			<div>
+				<Main groupID={groupID} userName={userName} userLocation={loc}></Main>
 			</div>
 		</div>
 	);

@@ -20,19 +20,18 @@ const users = {};
 io.on("connection", (socket) => {
 
   // Join a conversation
-  const {GroupID, userName} = socket.handshake.query;
+  const {GroupID, userName, userLocation} = socket.handshake.query;
   console.log("1", GroupID);
   console.log("2", userName);
+  console.log("3", userLocation);
+  socket.join(GroupID);
 
+  if (!users[GroupID]) {
+    users[GroupID] = {};
+  }
   socket.on("join group", GroupID => {
-    if (users[GroupID] && !users[GroupID].includes(userName)) {
-      users[GroupID].push({userName: userName, userID: socket.id})
-      console.log("user pushed in users in server")
-    }
-
-    else {
-      users[GroupID] = [{userName: userName, userID: socket.id}];
-    }
+    users[GroupID][socket.id]={userName: userName, userID: socket.id, userLocation: userLocation}
+    console.log("user pushed in users in server")
 
     console.log("users in room", users[GroupID]);
   
@@ -69,8 +68,10 @@ io.on("connection", (socket) => {
 
   // Leave the room if the user closes the socket
   socket.on("disconnect", () => {
-    delete users[userName];
+    delete users[GroupID][socket.id];
+    socket.broadcast.emit("user left", socket.id)
     socket.leave(GroupID);
+    console.log("current users: ", users[GroupID]);
   });
 });
 

@@ -16,10 +16,10 @@ const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 
 
 
-function Main() {
-    // let is_new = true;
-    const location = useLocation();
-    const {groupID, userName}= location.state;
+function Main(props){
+     // let is_ncons location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();ew = true;
+    // const location = useLocation();
+    // const {groupID, userName}= location.state;
     // const [users, setUsers] = useState([]);
     const [stream, setStream] = useState();
     const [peers, setPeers] = useState([]);
@@ -39,30 +39,35 @@ function Main() {
     useEffect(() => {
       socket.current = io(SOCKET_SERVER_URL, {
         query: { 
-          GroupID: groupID,
-          userName: userName,
+          GroupID: props.groupID,
+          userName: props.userName,
+          userLocation: props.userLocation,
         },
       });
 
       navigator.mediaDevices.getUserMedia({video:videoConstraints, audio: true}).then(stream => {
         userVideo.current.srcObject = stream;
-        socket.current.emit("join group", groupID);
+        socket.current.emit("join group", props.groupID);
         socket.current.on("all users in group", users => {
           const peers = [];
           console.log("get users from server", users);          
 
-          users.filter(user => user.userName != userName).forEach(user => {
-            // create Peers of the existing members for the newbie
-            console.log("gained user name: ", user.userName);
-            const peer = createPeer(user.userID, user.userName, socket.current.id, userName, stream);
+          Object.keys(users).filter(user => users[user].userName !== props.userName).forEach(user => {
+            console.log("gained user name: ", users[user].userName);
+            const peer = createPeer(users[user].userID, users[user].userName, socket.current.id, props.userName, stream);
             peersRef.current.push({
-              peerID: user.userID,
-              peerName: user.userName,
-              peer,
+              peerID: users[user].userID,
+              peerName: users[user].userName,
+              peer: peer,
             })
-            peers.push(peer);
-          })
+            peers.push({
+              peerID: users[user].userID,
+              peerName: users[user].userName,
+              peer,
+            });
+          });
           setPeers(peers);
+          // console.log("current PeersRef is: " ,peersRef.current);
         });
 
         // When a new member joined, and I'm an existing member
@@ -71,17 +76,33 @@ function Main() {
           peersRef.current.push({
             peerID: payload.callerID,
             peerName: payload.callerName,
-            peer,
+            peer: peer,
           })
-          console.log("received socket message from new member");
-          setPeers(users => [...users, peer]);
-        });
 
+          console.log("received socket message from new member");
+          console.log("current PeersRef is: " ,peersRef.current);
+          setPeers([...peersRef.current]);
+        });
+ 
         // receive the returned signal the newbie gets from the existing peers
         socket.current.on("receiving returned signal", payload => {
           const item = peersRef.current.find(p => p.peerID === payload.callerID);
           console.log("receive returning signal from the peer: " , payload.callerName);
           item.peer.signal(payload.signal);
+        })
+
+        socket.current.on("user left", id => {
+          const peerObj = peersRef.current.find(p => p.peerID === id);
+          console.log("The user left is: ", peerObj.peerName)
+          if (peerObj) {
+            peerObj.peer.destroy();
+          }
+
+          const peers = peersRef.current.filter(p=> p.peerID !== id);
+          peersRef.current = peers;
+          console.log("current peersRef after user leaving is: ", peers);
+          setPeers(peers);
+
         })
         
       });
@@ -120,13 +141,15 @@ function Main() {
   } 
 	return (
 		<div>
-			Room name: {groupID}
-      User name: {userName}
+			Room name: {props.groupID}
+      User name: {props.userName}
 			<div>
 				<Container>
-					<StyledVideo muted ref={userVideo} autoPlay playsInline />
-					{peers.map((peer, index) => {
-						return <Video key={index} peer={peer} />;
+					<StyledVideo muted ref={userVideo} autoPlay playsInline id={props.userName} />
+          {console.log("1",peers)}
+					{peers.map((peerObj) => {
+						return <Video key={peerObj.peerID} peer={peerObj.peer} userName={peerObj.peerName}/>;
+            // console.log("2", peerRef.peerName);
 					})}
 				</Container>
 			</div>

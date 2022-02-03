@@ -42,7 +42,7 @@ function Home() {
 				className="text-input-field"
 			/>
 			<Link
-				to={`/${roomname}`}
+				to={`/${roomname}/map`}
 				state={{
 					groupID: roomname,
 					userName: username,

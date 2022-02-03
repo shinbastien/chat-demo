@@ -5,15 +5,14 @@ import styled from "styled-components";
 const Container = styled.div`
     padding: 20px;
     display: flex;
-    height: 100vh;
-    width: 90%;
+    flex-direction: column;
+    width: 30%;
     margin: auto;
-    flex-wrap: wrap;
 `;
 
 const StyledVideo = styled.video`
-    height: 40%;
-    width: 50%;
+    width: 100%;
+    margin: 15px;
 `;
 
 const Video = (props) => {
@@ -26,7 +25,7 @@ const Video = (props) => {
     }, []);
 
     return (
-        <StyledVideo playsInline autoPlay ref={ref} />
+        <StyledVideo playsInline autoPlay ref={ref} id={props.userName} />
     )
 }
 
