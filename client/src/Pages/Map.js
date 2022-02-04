@@ -40,7 +40,7 @@ function Map() {
 						<ShareIcon></ShareIcon>
 					</IconButton>
 					<Box sx={{ flexGrow: 1 }}></Box>
-					<TextWrapper>{groupID}</TextWrapper>
+					<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
 				</Typography>
 			</AppBar>
 			<Grid container spacing={2} style={{ marginTop: 60 }}>

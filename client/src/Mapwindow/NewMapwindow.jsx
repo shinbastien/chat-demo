@@ -8,6 +8,8 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import SearchIcon from "@material-ui/icons/Search";
 import IconButton from "@mui/material/IconButton";
+import point1 from "../Styles/source/point1.png";
+import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
 
 const Navigation = styled.div`
 	display: flex;
@@ -39,24 +41,6 @@ ResultList.Item = styled.div`
 	}
 `;
 
-//이동시마다 받아옴
-function UseInterval(callback, delay) {
-	const savedCallback = useRef();
-
-	useEffect(() => {
-		savedCallback.current = callback;
-	});
-
-	useEffect(() => {
-		function tick() {
-			savedCallback.current();
-		}
-
-		let id = setInterval(tick, delay);
-		return () => clearInterval(id);
-	}, [delay]);
-}
-
 export default function NewMapwindow() {
 	const [map, setMap] = useState(null);
 	const [start, setStart] = useState(null);
@@ -70,6 +54,8 @@ export default function NewMapwindow() {
 	const [markerE, setMarkerE] = useState(null);
 	const [markerC, setMarkerC] = useState(null);
 	const [searchMarkers, setSearchMarkers] = useState([]);
+	const [recvideo, setrecvideo] = useState([]);
+	const [keepPlace, setKeepPlace] = useState([]);
 
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
@@ -112,12 +98,12 @@ export default function NewMapwindow() {
 				setMarkerC(
 					new Tmapv2.Marker({
 						position: new Tmapv2.LatLng(lat, lng),
-						icon: "http://topopen.tmap.co.kr/imgs/point.png",
-						iconSize: new Tmapv2.Size(24, 38),
+						icon: point1,
+						iconSize: new Tmapv2.Size(24, 24),
 						title: "현재위치",
 						map: map,
 						label:
-							"<span style='background-color: #46414E;color:white'>" +
+							"<span style='background-color: #46414E; color:white'>" +
 							"이동중" +
 							"</span>",
 					}),
@@ -139,7 +125,7 @@ export default function NewMapwindow() {
 				setMarkerC(
 					new Tmapv2.Marker({
 						position: new Tmapv2.LatLng(lat, lng),
-						icon: "http://topopen.tmap.co.kr/imgs/point.png",
+						icon: point1,
 						iconSize: new Tmapv2.Size(24, 38),
 						title: "현재위치",
 						map: map,
@@ -151,6 +137,16 @@ export default function NewMapwindow() {
 		return () => {
 			clearInterval(interval);
 		};
+	}, []);
+
+	useEffect(async () => {
+		// const videoList = await searchOnYoutube('d');
+		// setrecvideo(videoList);
+	}, [markerC]);
+
+	useEffect(async () => {
+		const keeplist = await readFromFirebase("photos");
+		setKeepPlace(keeplist);
 	}, []);
 
 	useEffect(async () => {
@@ -516,6 +512,11 @@ export default function NewMapwindow() {
 		);
 	};
 
+	const onLoadCurrent = (e) => {
+		const currentPosition = markerE.getPosition();
+		map.setCenter(currentPosition);
+	};
+
 	const getPositionFromData = (data) => {
 		const noorLat = Number(data.noorLat);
 		const noorLon = Number(data.noorLon);
@@ -534,16 +535,16 @@ export default function NewMapwindow() {
 		<React.Fragment>
 			<Navigation>
 				<SearchBox id="searchResult">
-					<div>
-						<div>출발: {start && start.name}</div>
-						<div>도착: {end && end.name}</div>
-					</div>
 					<form onSubmit={handleSubmit}>
 						<TextField type="text" value={searchKey} onChange={handleChange} />
 						<IconButton variant="contained" type="submit">
 							<SearchIcon></SearchIcon>
 						</IconButton>
 					</form>
+					<div>
+						<div>출발: {start && start.name}</div>
+						<div>도착: {end && end.name}</div>
+					</div>
 					<ResultList>
 						{searchResult
 							? searchResult.map((result, idx) => (
@@ -566,6 +567,8 @@ export default function NewMapwindow() {
 				<Wrapper>
 					<MenuWrapper>
 						<Button>공유 풍경</Button>
+						<Button onClick={onLoadCurrent}>현재 위치</Button>
+						{keepPlace.map((list, idx) => list.title)}
 					</MenuWrapper>
 					<div id="map_div"></div>
 				</Wrapper>

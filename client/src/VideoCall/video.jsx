@@ -14,7 +14,7 @@ const Container = styled.div`
 const StyledVideo = styled.video`
 	// height: 40%;
 	width: 100%;
-	border-radius: 25px;
+	border-radius: 15px;
 	overflow: hidden;
 `;
 

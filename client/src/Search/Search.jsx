@@ -8,11 +8,12 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Grid";
 
-const Search = () => {
+const Search = (props) => {
 	const termInput = useInput("");
 	const [submit, setSubmit] = useState(false);
 	const [videos, setVideos] = useState([]);
 	const [share, setShare] = useState(false);
+	
 	async function searchOnYoutube() {
 		const API_URL = "https://www.googleapis.com/youtube/v3/search";
 		try {

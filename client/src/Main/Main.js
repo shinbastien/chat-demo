@@ -188,7 +188,9 @@ function Main(props) {
 					<Grid container direction="row" justifyContent="space-between">
 						<Grid item>
 							<Stack direction="row" spacing={2}>
-								<Avatar>{props.userName.slice(0, 1).toUpperCase()}</Avatar>
+								<Avatar sx={{ bgcolor: "#ff4e6c" }}>
+									{props.userName.slice(0, 1).toUpperCase()}
+								</Avatar>
 								<TextWrapper>
 									{props.userName} &nbsp; &nbsp;
 									<span style={{ color: "red" }}>나</span>
