@@ -13,7 +13,7 @@ import { userContext } from "./contexts/UserContext";
 function App() {
 	const [inputs, setInputs] = useState({
 		roomname: "참여자",
-		username: "aㄴㅇㄹ",
+		username: "dd",
 	});
 	const value = useMemo(() => ({ inputs, setInputs }), [inputs]);
 

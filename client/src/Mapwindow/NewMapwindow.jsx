@@ -1,7 +1,7 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
@@ -9,6 +9,10 @@ import TextField from "@mui/material/TextField";
 import SearchIcon from "@material-ui/icons/Search";
 import IconButton from "@mui/material/IconButton";
 import point1 from "../Styles/source/point1.png";
+import point2 from "../Styles/source/point2.png";
+import Grid from "@mui/material/Grid";
+import Stack from "@mui/material/Stack";
+
 import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
 import MyLocationIcon from "@material-ui/icons/MyLocation";
 
@@ -30,13 +34,13 @@ const Wrapper = styled.div`
 `;
 
 const MenuWrapper = styled.div`
-	position: absolute;
-	z-index: 10;
+	// position: absolute;
+	// z-index: 10;
 
 	> button {
-		// width: 50px;
-		// height: 30px;
-		// background-color: white;
+		width: 70px;
+		height: 70px;
+		background-color: white;
 	}
 `;
 
@@ -64,6 +68,8 @@ export default function NewMapwindow() {
 	const [recvideo, setrecvideo] = useState([]);
 	const [keepPlace, setKeepPlace] = useState([]);
 	const [recvideoLoc, setrecvideoLoc] = useState([]);
+	const types = ["경로 설정", "정보 보기"];
+	const [active, setActive] = useState(types[0]);
 
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
@@ -83,13 +89,6 @@ export default function NewMapwindow() {
 				}),
 			);
 		});
-
-		// const noorLat = 4522710.51119176;
-		// const noorLon = 14147851.82614338;
-		// const pointCng = new Tmapv2.Point(noorLon, noorLat);
-		// const projectionCng = new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(
-		// 	pointCng,
-		// );
 	};
 
 	useEffect(() => {
@@ -149,7 +148,7 @@ export default function NewMapwindow() {
 		};
 	}, []);
 
-	useEffect(() => {
+	useMemo(() => {
 		if (markerC) {
 			markerC.addListener("click", (e) => {
 				const { _lat, _lng } = markerC.getPosition();
@@ -159,7 +158,7 @@ export default function NewMapwindow() {
 		}
 	}, [markerC]);
 
-	useEffect(async () => {
+	useMemo(async () => {
 		if (recvideo.length > 0) {
 			for (let i = 0; i < recvideo.length; i++) {
 				const video = await searchOnYoutube(recvideo[i].name);
@@ -167,7 +166,6 @@ export default function NewMapwindow() {
 			}
 		}
 	}, [recvideo]);
-	console.log(recvideoLoc);
 
 	const loadKeepList = async () => {
 		const keeplist = await readFromFirebase("photos");
@@ -597,7 +595,24 @@ export default function NewMapwindow() {
 
 	const onLoadCurrent = (e) => {
 		const currentPosition = markerC.getPosition();
+		if (!markerC.isLoaded()) {
+			markerC.setMap(map);
+		}
 		map.setCenter(currentPosition);
+	};
+
+	const onClickKeep = (list) => {
+		const { _lat, _long } = list.coords;
+		const keepLocation = new Tmapv2.LatLng(_lat, _long);
+		const newMarker = new Tmapv2.Marker({
+			position: keepLocation,
+			icon: point2,
+			iconSize: new Tmapv2.Size(24, 24),
+			map: map,
+			title: list.title,
+		});
+		newMarker.setMap(map);
+		map.setCenter(keepLocation);
 	};
 
 	const getPositionFromData = (data) => {
@@ -614,39 +629,43 @@ export default function NewMapwindow() {
 		return new Tmapv2.LatLng(lat, lon);
 	};
 
-	return (
-		<React.Fragment>
-			<Navigation>
-				<SearchBox id="searchResult">
-					<form onSubmit={handleSubmit}>
-						<TextField type="text" value={searchKey} onChange={handleChange} />
-						<IconButton variant="contained" type="submit">
-							<SearchIcon></SearchIcon>
-						</IconButton>
-					</form>
-					<div>
-						<div>출발: {start && start.name}</div>
-						<div>도착: {end && end.name}</div>
-					</div>
-					<ResultList>
-						{searchResult
-							? searchResult.map((result, idx) => (
-									<ResultList.Item>
-										<img
-											src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
-										/>
-										{result.name}
-										<Button onClick={() => handleStartSetting(result)}>
-											출발
-										</Button>
-										<Button onClick={() => handleEndSetting(result)}>
-											도착
-										</Button>
-									</ResultList.Item>
-							  ))
-							: "검색 결과"}
-					</ResultList>
+	const trackMenu = () => {
+		return (
+			<SearchBox id="searchResult">
+				<form onSubmit={handleSubmit}>
+					<TextField type="text" value={searchKey} onChange={handleChange} />
+					<IconButton variant="contained" type="submit">
+						<SearchIcon></SearchIcon>
+					</IconButton>
+				</form>
+				<div>
+					<div>출발: {start && start.name}</div>
+					<div>도착: {end && end.name}</div>
+				</div>
+				<ResultList>
+					{searchResult
+						? searchResult.map((result, idx) => (
+								<ResultList.Item>
+									<img
+										src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
+									/>
+									{result.name}
+									<Button onClick={() => handleStartSetting(result)}>
+										출발
+									</Button>
+									<Button onClick={() => handleEndSetting(result)}>도착</Button>
+								</ResultList.Item>
+						  ))
+						: "검색 결과"}
+				</ResultList>
+			</SearchBox>
+		);
+	};
 
+	const infoMenu = () => {
+		return (
+			<MenuWrapper>
+				<Grid>
 					<span>관련 주변 영상</span>
 					{recvideoLoc.length > 0
 						? recvideoLoc.map((list, idx) => (
@@ -658,18 +677,33 @@ export default function NewMapwindow() {
 								></img>
 						  ))
 						: null}
-				</SearchBox>
-				<Wrapper>
-					<MenuWrapper>
-						<Button>공유 풍경</Button>
+				</Grid>
+				<Button>공유 풍경</Button>
 
-						<IconButton onClick={onLoadCurrent}>
-							<MyLocationIcon></MyLocationIcon>
-						</IconButton>
-						{keepPlace.map((list, idx) => list.title)}
-					</MenuWrapper>
-					<div id="map_div"></div>
-				</Wrapper>
+				<IconButton onClick={onLoadCurrent}>
+					<MyLocationIcon></MyLocationIcon>
+				</IconButton>
+				{keepPlace.map((list, idx) => (
+					<Button key={idx} onClick={() => onClickKeep(list)}>
+						{list.title}
+					</Button>
+				))}
+			</MenuWrapper>
+		);
+	};
+
+	return (
+		<React.Fragment>
+			<Stack>
+				{types.map((type, i) => (
+					<Button key={i} onClick={() => setActive(type)}>
+						{type}
+					</Button>
+				))}
+			</Stack>
+			<Navigation>
+				{active === types[0] ? trackMenu() : infoMenu()}
+				<div id="map_div"></div>
 			</Navigation>
 		</React.Fragment>
 	);

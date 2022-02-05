@@ -8,7 +8,6 @@ import Typography from "@mui/material/Typography";
 import logoWhite from "../Styles/source/logo_w.png";
 import ShareIcon from "@material-ui/icons/Share";
 import IconButton from "@mui/material/IconButton";
-import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 
 import styled from "styled-components";
@@ -28,6 +27,7 @@ export default function Individual() {
 	const types = ["Search", "Keep"];
 	const [active, setActive] = useState(types[0]);
 
+
 	return (
 		<>
 			<AppBar postiion="static" style={{ backgroundColor: "#151ca2" }}>
@@ -45,15 +45,16 @@ export default function Individual() {
 					<TextWrapper>개인 화면</TextWrapper>
 				</Typography>
 			</AppBar>
-			<Stack container spacing={2} style={{ marginTop: 60 }}>
-				{types.map((type, i) => (
-					<Button key={i} onClick={() => setActive(type)}>
-						{type}
-					</Button>
-				))}
-
+			<Box sx={{ padding: "2%" }}>
+				<Stack direction="row" spacing={2} style={{ marginTop: 60 }}>
+					{types.map((type, i) => (
+						<Button key={i} onClick={() => setActive(type)}>
+							{type}
+						</Button>
+					))}
+				</Stack>
 				{active === types[0] ? <Search></Search> : <Keep></Keep>}
-			</Stack>
+			</Box>
 		</>
 	);
 }

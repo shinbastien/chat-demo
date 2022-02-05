@@ -9,13 +9,17 @@ import Grid from "@mui/material/Grid";
 
 const Keep = () => {
 	const [keep, setKeep] = useState(false);
-	const [keeplist, setKeeplist] = useState([]);
-	const [keepPlace, setKeepPlace] = useState([]);
+	const [keepPlace, setKeepPlace] = useState({ visited: "", notVisited: "" });
 
 	useEffect(async () => {
 		const photos = await readFromFirebase("photos");
-		setKeepPlace(photos);
+		const visited = photos.filter((photo) => photo.visited === true);
+		const notVisited = photos.filter((photo) => photo.visited === false);
+		setKeepPlace((keepPlace) => ({ ...keepPlace, visited: visited }));
+		setKeepPlace((keepPlace) => ({ ...keepPlace, notVisited: notVisited }));
 	}, []);
+
+	console.log(keepPlace);
 
 	return (
 		<div>
@@ -23,17 +27,26 @@ const Keep = () => {
 				Keep
 			</Typography>
 			<Grid item container>
-				<Typography variant="h5" component="span">
-					오늘 방문한 장소
-				</Typography>
-				<Typography variant="h5" component="span">
-					과거 방문할 장소
-				</Typography>
-				{keepPlace.length > 0
-					? keepPlace.map((list, index) => (
-							<KeepCard key={index} place={list.title}></KeepCard>
-					  ))
-					: null}
+				<Grid item>
+					<Typography variant="h5" component="span">
+						오늘 방문한 장소
+					</Typography>
+					{keepPlace.notVisited.length > 0
+						? keepPlace.notVisited.map((list, index) => (
+								<KeepCard key={index} place={list.title}></KeepCard>
+						  ))
+						: null}
+				</Grid>
+				<Grid item>
+					<Typography variant="h5" component="span">
+						과거 방문한 장소
+					</Typography>
+					{keepPlace.visited.length > 0
+						? keepPlace.visited.map((list, index) => (
+								<KeepCard key={index} place={list.title}></KeepCard>
+						  ))
+						: null}
+				</Grid>
 			</Grid>
 		</div>
 	);

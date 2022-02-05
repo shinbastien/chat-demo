@@ -5,7 +5,7 @@ const GlobalStyles = createGlobalStyle`
         box-sizing: border-box;
     }
     html{
-        font-size: 16px;
+        font-size: 20px;
         width: 100%;
         &:lang(ko) {
             font-family: 'Do Hyeon', sans-serif;
