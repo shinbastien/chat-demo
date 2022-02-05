@@ -13,15 +13,7 @@ const KeepCard = (props) => {
 				<Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
 					{props.place}
 				</Typography>
-				{/* <Typography variant="h5" component="div"></Typography>
-				<Typography sx={{ mb: 1.5 }} color="text.secondary">
-					adjective
-				</Typography>
-				<Typography variant="body2">
-					well meaning and kindly.
-					<br />
-					{'"a benevolent smile"'}
-				</Typography> */}
+				
 			</CardContent>
 			<CardActions>
 				<Button size="small">Learn More</Button>
@@ -36,3 +28,16 @@ const KeepCard = (props) => {
 };
 
 export default KeepCard;
+
+
+{
+	/* <Typography variant="h5" component="div"></Typography>
+				<Typography sx={{ mb: 1.5 }} color="text.secondary">
+					adjective
+				</Typography>
+				<Typography variant="body2">
+					well meaning and kindly.
+					<br />
+					{'"a benevolent smile"'}
+				</Typography> */
+}

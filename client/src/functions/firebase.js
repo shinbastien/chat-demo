@@ -43,6 +43,7 @@ async function readFromFirebase(element) {
 
 async function searchOnYoutube(props) {
 	const API_URL = "https://www.googleapis.com/youtube/v3/search";
+
 	try {
 		const {
 			data: { items },
@@ -51,9 +52,11 @@ async function searchOnYoutube(props) {
 			params: {
 				key: process.env.REACT_APP_YOUTUBE_API_KEY,
 				part: "snippet",
-				q: props.value,
+				q: `대전 유성구` + props,
+				maxResults: 1,
 			},
 		});
+		return items;
 	} catch (err) {
 		console.log(err);
 	}

@@ -10,6 +10,7 @@ import SearchIcon from "@material-ui/icons/Search";
 import IconButton from "@mui/material/IconButton";
 import point1 from "../Styles/source/point1.png";
 import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
+import MyLocationIcon from "@material-ui/icons/MyLocation";
 
 const Navigation = styled.div`
 	display: flex;
@@ -31,6 +32,12 @@ const Wrapper = styled.div`
 const MenuWrapper = styled.div`
 	position: absolute;
 	z-index: 10;
+
+	> button {
+		// width: 50px;
+		// height: 30px;
+		// background-color: white;
+	}
 `;
 
 ResultList.Item = styled.div`
@@ -56,6 +63,7 @@ export default function NewMapwindow() {
 	const [searchMarkers, setSearchMarkers] = useState([]);
 	const [recvideo, setrecvideo] = useState([]);
 	const [keepPlace, setKeepPlace] = useState([]);
+	const [recvideoLoc, setrecvideoLoc] = useState([]);
 
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
@@ -126,28 +134,103 @@ export default function NewMapwindow() {
 					new Tmapv2.Marker({
 						position: new Tmapv2.LatLng(lat, lng),
 						icon: point1,
-						iconSize: new Tmapv2.Size(24, 38),
+						iconSize: new Tmapv2.Size(24, 24),
 						title: "현재위치",
 						map: map,
 					}),
 				);
 			});
-		}, 5000);
+		}, 10000000);
+
+		loadKeepList();
 
 		return () => {
 			clearInterval(interval);
 		};
 	}, []);
 
-	useEffect(async () => {
-		// const videoList = await searchOnYoutube('d');
-		// setrecvideo(videoList);
+	useEffect(() => {
+		if (markerC) {
+			markerC.addListener("click", (e) => {
+				const { _lat, _lng } = markerC.getPosition();
+				// reverseGeoCoding(_lat, _lng);
+				loadpointInfo(_lat, _lng);
+			});
+		}
 	}, [markerC]);
 
 	useEffect(async () => {
+		if (recvideo.length > 0) {
+			for (let i = 0; i < recvideo.length; i++) {
+				const video = await searchOnYoutube(recvideo[i].name);
+				setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
+			}
+		}
+	}, [recvideo]);
+	console.log(recvideoLoc);
+
+	const loadKeepList = async () => {
 		const keeplist = await readFromFirebase("photos");
 		setKeepPlace(keeplist);
-	}, []);
+	};
+
+	const loadpointInfo = async (lat, lng) => {
+		try {
+			const { data: items } = await axios({
+				method: "get",
+				url: "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&format=json&callback=result",
+				params: {
+					categories: "카페;음식점;",
+					appKey: process.env.REACT_APP_TMAP_API_KEY,
+					reqLevel: 15,
+					radius: 1,
+					centerLon: lng,
+					centerLat: lat,
+					reqCoordType: "WGS84GEO",
+					resCoordType: "WGS84GEO",
+					count: 5,
+				},
+			});
+			setrecvideo(items.searchPoiInfo.pois.poi);
+		} catch (err) {
+			console.log(err);
+		}
+	};
+
+	// const reverseGeoCoding = (lat, lng) => {
+	// 	var tData = new Tmapv2.extension.TData();
+	// 	const params = {
+	// 		onComplete: onComplete, //데이터 로드가 성공적으로 완료 되었을때 실행하는 함수 입니다.
+	// 		onProgress: onProgress, //데이터 로드 중에 실행하는 함수 입니다.
+	// 		onError: onError, //데이터 로드가 실패했을때 실행하는 함수 입니다.
+	// 	};
+
+	// 	const optionObj = {
+	// 		coordType: "WGS84GEO",
+	// 		addressType: "A04",
+	// 	};
+
+	// 	tData.getAddressFromGeoJson(lat, lng, optionObj, params);
+
+	// 	function onComplete() {
+	// 		console.log("Complete");
+	// 		console.log(this._responseData);
+
+	// 		const loadVideoList = async (loc) => {
+	// 			const videoList = await searchOnYoutube(loc);
+	// 			setrecvideo(videoList);
+	// 		};
+	// 	}
+	// 	//데이터 로드중 실행하는 함수입니다.
+	// 	function onProgress() {
+	// 		console.log("onprogress");
+	// 	}
+
+	// 	//데이터 로드 중 에러가 발생시 실행하는 함수입니다.
+	// 	function onError() {
+	// 		console.log("error");
+	// 	}
+	// };
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -513,7 +596,7 @@ export default function NewMapwindow() {
 	};
 
 	const onLoadCurrent = (e) => {
-		const currentPosition = markerE.getPosition();
+		const currentPosition = markerC.getPosition();
 		map.setCenter(currentPosition);
 	};
 
@@ -563,11 +646,26 @@ export default function NewMapwindow() {
 							  ))
 							: "검색 결과"}
 					</ResultList>
+
+					<span>관련 주변 영상</span>
+					{recvideoLoc.length > 0
+						? recvideoLoc.map((list, idx) => (
+								<img
+									key={idx}
+									src={list.snippet.thumbnails.medium.url}
+									width={list.snippet.thumbnails.medium.width}
+									height={list.snippet.thumbnails.medium.height}
+								></img>
+						  ))
+						: null}
 				</SearchBox>
 				<Wrapper>
 					<MenuWrapper>
 						<Button>공유 풍경</Button>
-						<Button onClick={onLoadCurrent}>현재 위치</Button>
+
+						<IconButton onClick={onLoadCurrent}>
+							<MyLocationIcon></MyLocationIcon>
+						</IconButton>
 						{keepPlace.map((list, idx) => list.title)}
 					</MenuWrapper>
 					<div id="map_div"></div>
