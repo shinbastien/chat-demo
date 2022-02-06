@@ -12,6 +12,8 @@ import point1 from "../Styles/source/point1.png";
 import point2 from "../Styles/source/point2.png";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
 
 import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
 import MyLocationIcon from "@material-ui/icons/MyLocation";
@@ -34,14 +36,16 @@ const Wrapper = styled.div`
 `;
 
 const MenuWrapper = styled.div`
-	// position: absolute;
-	// z-index: 10;
-
 	> button {
 		width: 70px;
 		height: 70px;
 		background-color: white;
 	}
+`;
+
+const MapButtonWrapper = styled.div`
+	position: absolute;
+	z-index: 10;
 `;
 
 ResultList.Item = styled.div`
@@ -631,7 +635,7 @@ export default function NewMapwindow() {
 
 	const trackMenu = () => {
 		return (
-			<SearchBox id="searchResult">
+			<div id="searchResult">
 				<form onSubmit={handleSubmit}>
 					<TextField type="text" value={searchKey} onChange={handleChange} />
 					<IconButton variant="contained" type="submit">
@@ -658,52 +662,61 @@ export default function NewMapwindow() {
 						  ))
 						: "검색 결과"}
 				</ResultList>
-			</SearchBox>
+			</div>
 		);
 	};
 
 	const infoMenu = () => {
 		return (
 			<MenuWrapper>
-				<Grid>
-					<span>관련 주변 영상</span>
-					{recvideoLoc.length > 0
-						? recvideoLoc.map((list, idx) => (
-								<img
-									key={idx}
-									src={list.snippet.thumbnails.medium.url}
-									width={list.snippet.thumbnails.medium.width}
-									height={list.snippet.thumbnails.medium.height}
-								></img>
-						  ))
-						: null}
-				</Grid>
-				<Button>공유 풍경</Button>
-
-				<IconButton onClick={onLoadCurrent}>
-					<MyLocationIcon></MyLocationIcon>
-				</IconButton>
+				<Box>Keep Place</Box>
 				{keepPlace.map((list, idx) => (
 					<Button key={idx} onClick={() => onClickKeep(list)}>
 						{list.title}
 					</Button>
 				))}
+
+				<Grid item>
+					<Box component="span">주변 영상</Box>
+					<Divider>CENTER</Divider>
+					<Box>
+						{recvideoLoc.length > 0
+							? recvideoLoc.map((list, idx) => (
+									<img
+										key={idx}
+										src={list.snippet.thumbnails.medium.url}
+										width={list.snippet.thumbnails.medium.width}
+										height={list.snippet.thumbnails.medium.height}
+									></img>
+							  ))
+							: "아직 관련된 영상이 없습니다"}
+					</Box>
+				</Grid>
 			</MenuWrapper>
 		);
 	};
 
 	return (
 		<React.Fragment>
-			<Stack>
-				{types.map((type, i) => (
-					<Button key={i} onClick={() => setActive(type)}>
-						{type}
-					</Button>
-				))}
-			</Stack>
 			<Navigation>
-				{active === types[0] ? trackMenu() : infoMenu()}
-				<div id="map_div"></div>
+				<SearchBox>
+					<Stack direction="row" alignItems="center" justifyContent="center">
+						{types.map((type, i) => (
+							<Button key={i} onClick={() => setActive(type)}>
+								{type}
+							</Button>
+						))}
+					</Stack>
+					{active === types[0] ? trackMenu() : infoMenu()}
+				</SearchBox>
+				<Wrapper>
+					<MapButtonWrapper>
+						<IconButton onClick={onLoadCurrent}>
+							<MyLocationIcon></MyLocationIcon>
+						</IconButton>
+					</MapButtonWrapper>
+					<div id="map_div"></div>
+				</Wrapper>
 			</Navigation>
 		</React.Fragment>
 	);

@@ -16,6 +16,7 @@ const GlobalStyles = createGlobalStyle`
     }
     body{
         width: 100%;
+		overflow: scroll; /* Show scrollbars */
     }
     a{
         text-decoration: none;

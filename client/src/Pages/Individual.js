@@ -9,6 +9,10 @@ import logoWhite from "../Styles/source/logo_w.png";
 import ShareIcon from "@material-ui/icons/Share";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
+import Menu from "@mui/material/Menu";
+import { useParams, useLocation, Link } from "react-router-dom";
+
+import { MenuItem } from "@mui/material";
 
 import styled from "styled-components";
 
@@ -24,9 +28,21 @@ const TextWrapper = styled.span`
 `;
 
 export default function Individual() {
+	const location = useLocation();
 	const types = ["Search", "Keep"];
 	const [active, setActive] = useState(types[0]);
+	const [anchorEl, setAnchorEl] = useState(null);
+	const open = Boolean(anchorEl);
 
+	const { groupID, userName } = location.state;
+
+	const handleClose = () => {
+		setAnchorEl(null);
+	};
+
+	const handleClick = (event) => {
+		setAnchorEl(event.currentTarget);
+	};
 
 	return (
 		<>
@@ -42,7 +58,49 @@ export default function Individual() {
 						<ShareIcon></ShareIcon>
 					</IconButton>
 					<Box sx={{ flexGrow: 1 }}></Box>
-					<TextWrapper>개인 화면</TextWrapper>
+
+					<Button
+						id="basic-button"
+						aria-controls={open ? "basic-menu" : undefined}
+						aria-haspopup="true"
+						aria-expanded={open ? "true" : undefined}
+						onClick={handleClick}
+						style={{ color: "white" }}
+					>
+						<TextWrapper>{groupID}&nbsp; 개인 화면</TextWrapper>
+					</Button>
+					<Menu
+						anchorEl={anchorEl}
+						open={open}
+						MenuListProps={{
+							"aria-labelledby": "basic-button",
+						}}
+						onClose={handleClose}
+					>
+						<MenuItem>
+							<Link
+								to={`/${groupID}`}
+								state={{
+									groupID: groupID,
+									userName: userName,
+								}}
+							>
+								<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
+							</Link>
+						</MenuItem>
+
+						<MenuItem>
+							<Link
+								to={`/${groupID}/share`}
+								state={{
+									groupID: groupID,
+									userName: userName,
+								}}
+							>
+								<TextWrapper>{groupID}&nbsp; 공유 화면</TextWrapper>
+							</Link>
+						</MenuItem>
+					</Menu>
 				</Typography>
 			</AppBar>
 			<Box sx={{ padding: "2%" }}>
