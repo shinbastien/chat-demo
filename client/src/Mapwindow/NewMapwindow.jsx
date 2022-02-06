@@ -17,6 +17,7 @@ import Divider from "@mui/material/Divider";
 
 import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
 import MyLocationIcon from "@material-ui/icons/MyLocation";
+import { useThemeProps } from "@mui/system";
 
 const Navigation = styled.div`
 	display: flex;
@@ -48,6 +49,8 @@ const MapButtonWrapper = styled.div`
 	z-index: 10;
 `;
 
+const CardWrapper = styled.div``;
+
 ResultList.Item = styled.div`
 	display: flex;
 	align-items: center;
@@ -74,6 +77,10 @@ export default function NewMapwindow() {
 	const [recvideoLoc, setrecvideoLoc] = useState([]);
 	const types = ["경로 설정", "정보 보기"];
 	const [active, setActive] = useState(types[0]);
+	const [totalDaytime, setTotalDaytime] = useState({
+		totalD: "",
+		totalTime: "",
+	});
 
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
@@ -121,6 +128,10 @@ export default function NewMapwindow() {
 				);
 			});
 		}
+
+		// new Tmapv2.extension.MeasureDistance({
+		// 	map: map,
+		// });
 	}, [map]);
 
 	//이동시
@@ -260,9 +271,14 @@ export default function NewMapwindow() {
 		const {
 			data: { features: resultData },
 		} = res;
+
 		const totalDistance = (
 			resultData[0].properties.totalDistance / 1000
 		).toFixed(1);
+
+		const totalTime = (resultData[0].properties.totalTime / 60).toFixed(0);
+		console.log(totalTime);
+		setTotalDaytime({ totalD: totalDistance, totalTime: totalTime });
 
 		setChktraffic(
 			resultData
@@ -615,6 +631,15 @@ export default function NewMapwindow() {
 			map: map,
 			title: list.title,
 		});
+		newMarker.addListener("mouseenter", function (evt) {
+			new Tmapv2.InfoWindow({
+				position: keepLocation,
+				content: `<img src=${list.url} width="300px" height="auto"></img>`,
+				type: 2,
+				map: map,
+			});
+		});
+
 		newMarker.setMap(map);
 		map.setCenter(keepLocation);
 	};
@@ -633,6 +658,19 @@ export default function NewMapwindow() {
 		return new Tmapv2.LatLng(lat, lon);
 	};
 
+	const KeepPlaceCard = (props) => {
+		const { coords, date, id, title, url, visited } = props.info;
+		return (
+			<Box componenet={"div"}>
+				{title}
+				<img src={url} width="100%" height="auto"></img>
+				<Button variant="outlined" onClick={() => onClickKeep(props.info)}>
+					link
+				</Button>
+			</Box>
+		);
+	};
+
 	const trackMenu = () => {
 		return (
 			<div id="searchResult">
@@ -643,6 +681,13 @@ export default function NewMapwindow() {
 					</IconButton>
 				</form>
 				<div>
+					<div>
+						총 거리:{" "}
+						{totalDaytime.totalD < 1
+							? totalDaytime.totalD * 1000 + "m"
+							: totalDaytime.totalD + "km"}
+					</div>
+					<div>총 시간: {totalDaytime.totalTime} 분</div>
 					<div>출발: {start && start.name}</div>
 					<div>도착: {end && end.name}</div>
 				</div>
@@ -671,14 +716,12 @@ export default function NewMapwindow() {
 			<MenuWrapper>
 				<Box>Keep Place</Box>
 				{keepPlace.map((list, idx) => (
-					<Button key={idx} onClick={() => onClickKeep(list)}>
-						{list.title}
-					</Button>
+					<KeepPlaceCard key={idx} info={list}></KeepPlaceCard>
 				))}
 
 				<Grid item>
+					<Divider></Divider>
 					<Box component="span">주변 영상</Box>
-					<Divider>CENTER</Divider>
 					<Box>
 						{recvideoLoc.length > 0
 							? recvideoLoc.map((list, idx) => (
