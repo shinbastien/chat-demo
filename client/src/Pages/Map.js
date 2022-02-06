@@ -1,23 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import NewMapwindow from "../Mapwindow/NewMapwindow";
-import Main from "../Main/Main";
+import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
 import AppBar from "@mui/material/AppBar";
 import Typography from "@mui/material/Typography";
 import logoWhite from "../Styles/source/logo_w.png";
 
+import { useSocket } from "../lib/socket";
 import styled from "styled-components";
 
 const ImgWrapper = styled.img`
 	display: block;
 	width: 10%;
 `;
+const SOCKET_SERVER_URL = "http://localhost:4000";
 
 function Map() {
 
 	const location = useLocation();
 	const {groupID, userName}= location.state;
+	console.log("groupID obtained from Home is: ", groupID);
+	console.log("userName obtained from Home is: ", userName);
+
+	const {socket, connected} = useSocket();
+	
+	useEffect(() => {
+		if (connected) {
+			socket.emit("join group", [groupID, userName]);
+			console.log("joining group");
+		}
+	}, [socket])
+	
+
+
 	return (
 		<>
 			<AppBar postiion="static" style={{ backgroundColor: "#151ca2" }}>
@@ -35,7 +51,7 @@ function Map() {
 					<NewMapwindow></NewMapwindow>
 				</Grid>
 				<Grid item xs={6} md={4}>
-					<Main groupID = {groupID} userName={userName} userLocation={""}></Main>
+					<VideoCall groupID = {groupID} userName={userName}></VideoCall>
 				</Grid>
 			</Grid>
 		</>

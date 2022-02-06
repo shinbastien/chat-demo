@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { SocketProvider } from "./lib/socket";
 import "./index.css";
-import App from "./App";
 import Home from "./Home/Home";
-import ChatRoom from "./ChatRoom/ChatRoom";
 // import Main from "./Main/Main";
 import Map from "./Pages/Map";
+import ShareVideo from "./Pages/ShareVideo";
 import reportWebVitals from "./reportWebVitals";
 import Individual from "./Pages/Individual";
 import GlobalStyles from "./Styles/globalStyles";
@@ -14,12 +14,15 @@ import GlobalStyles from "./Styles/globalStyles";
 ReactDOM.render(
 	<BrowserRouter>
 		<GlobalStyles />
-		<Routes>
-			<Route exact path="/" element={<Home />} />
-			<Route exact path=":roomID" element={<Map />} />
-			{/* <Route path=":roomId/map" element={<Map />} /> */}
-			<Route path=":roomId/search" element={<Individual />} />
-		</Routes>
+		<SocketProvider url = "http://localhost:4000">
+			<Routes>
+				<Route exact path="/" element={<Home />} />
+				<Route exact path=":roomID" element={<Map />} />
+				{/* <Route path=":roomId/map" element={<Map />} /> */}
+				<Route path=":roomId/search" element={<Individual />} />
+				<Route path=":roomID/share" element={<ShareVideo/>} />
+			</Routes>
+		</SocketProvider>
 	</BrowserRouter>,
 	document.getElementById("root"),
 );

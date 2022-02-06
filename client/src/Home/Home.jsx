@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import logo from "../Styles/source/logo.png";
 
@@ -8,6 +8,7 @@ import Button from "@mui/material/Button";
 import { Item } from "../Styles/themeSytles";
 
 import styled from "styled-components";
+import { useSocket } from "../lib/socket";
 
 const ImgWrapper = styled.img`
 	display: block;
@@ -21,7 +22,9 @@ const Wrapper = styled.div`
 	padding-top: 50px;
 `;
 
+
 function Home() {
+	// const socket = useSocket();
 	const [inputs, setInputs] = useState({
 		roomname: "",
 		username: "",
@@ -36,6 +39,7 @@ function Home() {
 			[name]: value,
 		});
 	};
+	
 
 	return (
 		<Grid
@@ -77,10 +81,25 @@ function Home() {
 						userName: username,
 					}}
 				>
-					<Button variant="contained" style={{ fontSize: "1.5rem" }}>
+					<Button variant="contained"style={{ fontSize: "1.5rem" }}>
+					{/* onClick = {() => socket.emit("entering room", [roomname, username])} */}
 						입장하기
 					</Button>
 				</Link>
+			
+				<Link
+					to={`/${roomname}/share`}
+					state={{
+						GroupID: roomname,
+						userName: username,
+					}}
+				>
+					<Button variant="contained"style={{ fontSize: "1.5rem" }}>
+					{/* onClick = {() => socket.emit("entering room", [roomname, username])} */}
+						Share Video 입장하기
+					</Button>
+				</Link>
+
 			</Wrapper>
 		</Grid>
 	);
