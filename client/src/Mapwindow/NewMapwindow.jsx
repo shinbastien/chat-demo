@@ -160,7 +160,7 @@ export default function NewMapwindow() {
 					}),
 				);
 			});
-		}, 10000000);
+		}, 5000);
 
 		loadKeepList();
 

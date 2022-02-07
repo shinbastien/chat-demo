@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation, Link } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import NewMapwindow from "../Mapwindow/NewMapwindow";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
@@ -103,7 +103,7 @@ function Map() {
 							<Link
 								to={`/${groupID}/share`}
 								state={{
-									groupID: groupID,
+									GroupID: groupID,
 									userName: userName,
 								}}
 							>

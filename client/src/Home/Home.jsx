@@ -85,18 +85,18 @@ function Home() {
 					</Button>
 				</Link>
 
-				<Link
+				{/* <Link
 					to={`/${roomname}/share`}
 					state={{
 						GroupID: roomname,
 						userName: username,
 					}}
 				>
-					<Button variant="contained" style={{ fontSize: "1.5rem" }}>
-						{/* onClick = {() => socket.emit("entering room", [roomname, username])} */}
-						Share Video 입장하기
+					<Button variant="contained" style={{ fontSize: "1.5rem" }}> */}
+				{/* onClick = {() => socket.emit("entering room", [roomname, username])} */}
+				{/* Share Video 입장하기
 					</Button>
-				</Link>
+				</Link> */}
 			</Wrapper>
 		</Grid>
 	);

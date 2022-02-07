@@ -8,16 +8,8 @@ import Map from "./Pages/Map";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/system";
 import { customTheme } from "./Styles/themeSytles";
-import { userContext } from "./contexts/UserContext";
 
 function App() {
-	const [inputs, setInputs] = useState({
-		roomname: "참여자",
-		username: "dd",
-	});
-	const value = useMemo(() => ({ inputs, setInputs }), [inputs]);
-
-	console.log(value);
 	return (
 		<>
 			<CssBaseline />
