@@ -14,13 +14,12 @@ import GlobalStyles from "./Styles/globalStyles";
 ReactDOM.render(
 	<BrowserRouter>
 		<GlobalStyles />
-		<SocketProvider url = "http://localhost:4000">
+		<SocketProvider url="http://localhost:4000">
 			<Routes>
 				<Route exact path="/" element={<Home />} />
 				<Route exact path=":roomID" element={<Map />} />
-				{/* <Route path=":roomId/map" element={<Map />} /> */}
 				<Route path=":roomId/search" element={<Individual />} />
-				<Route path=":roomID/share" element={<ShareVideo/>} />
+				<Route path=":roomID/share" element={<ShareVideo />} />
 			</Routes>
 		</SocketProvider>
 	</BrowserRouter>,

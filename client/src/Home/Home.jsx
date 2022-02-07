@@ -22,7 +22,6 @@ const Wrapper = styled.div`
 	padding-top: 50px;
 `;
 
-
 function Home() {
 	// const socket = useSocket();
 	const [inputs, setInputs] = useState({
@@ -39,7 +38,6 @@ function Home() {
 			[name]: value,
 		});
 	};
-	
 
 	return (
 		<Grid
@@ -81,25 +79,24 @@ function Home() {
 						userName: username,
 					}}
 				>
-					<Button variant="contained"style={{ fontSize: "1.5rem" }}>
-					{/* onClick = {() => socket.emit("entering room", [roomname, username])} */}
+					<Button variant="contained" style={{ fontSize: "1.5rem" }}>
+						{/* onClick = {() => socket.emit("entering room", [roomname, username])} */}
 						입장하기
 					</Button>
 				</Link>
-			
-				<Link
+
+				{/* <Link
 					to={`/${roomname}/share`}
 					state={{
 						GroupID: roomname,
 						userName: username,
 					}}
 				>
-					<Button variant="contained"style={{ fontSize: "1.5rem" }}>
-					{/* onClick = {() => socket.emit("entering room", [roomname, username])} */}
-						Share Video 입장하기
+					<Button variant="contained" style={{ fontSize: "1.5rem" }}> */}
+				{/* onClick = {() => socket.emit("entering room", [roomname, username])} */}
+				{/* Share Video 입장하기
 					</Button>
-				</Link>
-
+				</Link> */}
 			</Wrapper>
 		</Grid>
 	);

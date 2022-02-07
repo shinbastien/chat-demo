@@ -3,6 +3,7 @@ import * as firebase from "firebase/app";
 import { initializeApp } from "firebase/app";
 import "firebase/auth";
 import { getFirestore, addDoc, getDocs, collection } from "firebase/firestore";
+import axios from "axios";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -28,15 +29,40 @@ function firebaseInstance() {
 async function readFromFirebase(element) {
 	firebaseInstance();
 	const db = getFirestore();
+	const dataInstance = [];
 	try {
 		const docRef = await getDocs(collection(db, element));
-		return docRef;
+		docRef.forEach((doc) => {
+			dataInstance.push(doc.data());
+		});
+		return dataInstance;
 	} catch (error) {
 		console.log(error);
 	}
 }
 
-export { readFromFirebase };
+async function searchOnYoutube(props) {
+	const API_URL = "https://www.googleapis.com/youtube/v3/search";
+
+	try {
+		const {
+			data: { items },
+		} = await axios(API_URL, {
+			method: "GET",
+			params: {
+				key: process.env.REACT_APP_YOUTUBE_API_KEY,
+				part: "snippet",
+				q: `대전 유성구` + props,
+				maxResults: 1,
+			},
+		});
+		return items;
+	} catch (err) {
+		console.log(err);
+	}
+}
+
+export { readFromFirebase, searchOnYoutube };
 
 // {
 // 	groups: {

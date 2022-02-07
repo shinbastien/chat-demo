@@ -3,26 +3,51 @@ import React, { useState, useEffect } from "react";
 import useInput from "../functions/useInput";
 import axios from "axios";
 import { readFromFirebase } from "../functions/firebase";
+import KeepCard from "./KeepCard";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
 
 const Keep = () => {
 	const [keep, setKeep] = useState(false);
-	const [keeplist, setKeeplist] = useState([]);
-	const [keepPlace, setKeepPlace] = useState([]);
+	const [keepPlace, setKeepPlace] = useState({ visited: "", notVisited: "" });
 
 	useEffect(async () => {
 		const photos = await readFromFirebase("photos");
-		await setKeepPlace([...keepPlace, photos]);
-		await photos.forEach((photo) => {
-			setKeepPlace([...keepPlace, photo.data()]);
-			console.log(keepPlace);
-		});
+		const visited = photos.filter((photo) => photo.visited === true);
+		const notVisited = photos.filter((photo) => photo.visited === false);
+		setKeepPlace((keepPlace) => ({ ...keepPlace, visited: visited }));
+		setKeepPlace((keepPlace) => ({ ...keepPlace, notVisited: notVisited }));
 	}, []);
+
+	console.log(keepPlace);
 
 	return (
 		<div>
-			{keepPlace.length > 0
-				? keepPlace.map((list, index) => <div key={index}>{list.title}</div>)
-				: null}
+			<Typography variant="h3" component="span">
+				Keep
+			</Typography>
+			<Grid item container>
+				<Grid item>
+					<Typography variant="h5" component="span">
+						오늘 방문한 장소
+					</Typography>
+					{keepPlace.notVisited.length > 0
+						? keepPlace.notVisited.map((list, index) => (
+								<KeepCard key={index} place={list.title}></KeepCard>
+						  ))
+						: null}
+				</Grid>
+				<Grid item>
+					<Typography variant="h5" component="span">
+						과거 방문한 장소
+					</Typography>
+					{keepPlace.visited.length > 0
+						? keepPlace.visited.map((list, index) => (
+								<KeepCard key={index} place={list.title}></KeepCard>
+						  ))
+						: null}
+				</Grid>
+			</Grid>
 		</div>
 	);
 };

@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
+import useChat from "../useChat";
 import io from "socket.io-client";
 import Peer from "simple-peer";
-import { StyledVideo, Video, videoConstraints } from "./videostyle";
-import { useSocket } from "../lib/socket";
+import { StyledVideo, Video, videoConstraints } from "../VideoCall/video";
 import Grid from "@mui/material/Grid";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import IconButton from "@mui/material/IconButton";
+import Box from "@mui/material/Box";
+
 import styled from "styled-components";
 
 // Main handles connection between users and sends those to other pages
@@ -21,17 +24,15 @@ const TextWrapper = styled.span`
 	align-items: center; /* align vertical */
 `;
 
-function VideoCall(props) {
+function Main(props) {
 	// let is_ncons location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();ew = true;
 	// const location = useLocation();
 	// const {groupID, userName}= location.state;
 	// const [users, setUsers] = useState([]);
-	// const [stream, setStream] = useState();
+	const [stream, setStream] = useState();
 	const [peers, setPeers] = useState([]);
 
-	// const socket = useRef();
-	const { socket } = useSocket();
-	// const {socket, error} = useSocket();
+	const socket = useRef();
 	const userVideo = useRef();
 	const peersRef = useRef([]);
 
@@ -41,12 +42,20 @@ function VideoCall(props) {
 
 	// Set socket connection
 	useEffect(() => {
+		socket.current = io(SOCKET_SERVER_URL, {
+			query: {
+				GroupID: props.groupID,
+				userName: props.userName,
+				userLocation: props.userLocation,
+			},
+		});
+
 		navigator.mediaDevices
 			.getUserMedia({ video: videoConstraints, audio: true })
 			.then((stream) => {
 				userVideo.current.srcObject = stream;
-				socket.emit("start videocall", props.groupID);
-				socket.on("bring all users in group for videocall", (users) => {
+				socket.current.emit("join group", props.groupID);
+				socket.current.on("all users in group", (users) => {
 					const peers = [];
 					console.log("get users from server", users);
 
@@ -57,7 +66,7 @@ function VideoCall(props) {
 							const peer = createPeer(
 								users[user].userID,
 								users[user].userName,
-								socket.id,
+								socket.current.id,
 								props.userName,
 								stream,
 							);
@@ -77,7 +86,7 @@ function VideoCall(props) {
 				});
 
 				// When a new member joined, and I'm an existing member
-				socket.on("user joined", (payload) => {
+				socket.current.on("user joined", (payload) => {
 					const peer = addPeer(
 						payload.signal,
 						payload.callerID,
@@ -96,7 +105,7 @@ function VideoCall(props) {
 				});
 
 				// receive the returned signal the newbie gets from the existing peers
-				socket.on("receiving returned signal", (payload) => {
+				socket.current.on("receiving returned signal", (payload) => {
 					const item = peersRef.current.find(
 						(p) => p.peerID === payload.callerID,
 					);
@@ -107,7 +116,7 @@ function VideoCall(props) {
 					item.peer.signal(payload.signal);
 				});
 
-				socket.on("user left", (id) => {
+				socket.current.on("user left", (id) => {
 					const peerObj = peersRef.current.find((p) => p.peerID === id);
 					console.log("The user left is: ", peerObj.peerName);
 					if (peerObj) {
@@ -119,26 +128,8 @@ function VideoCall(props) {
 					console.log("current peersRef after user leaving is: ", peers);
 					setPeers(peers);
 				});
-			})
-			.catch(function onError() {
-				alert("There has been a problem retrieving the streams");
 			});
-
-		return () => {
-			socket.on("user left", (id) => {
-				const peerObj = peersRef.current.find((p) => p.peerID === id);
-				console.log("The user left is: ", peerObj.peerName);
-				if (peerObj) {
-					peerObj.peer.destroy();
-				}
-
-				const peers = peersRef.current.filter((p) => p.peerID !== id);
-				peersRef.current = peers;
-				console.log("current peersRef after user leaving is: ", peers);
-				setPeers(peers);
-			});
-		};
-	}, [socket]);
+	}, []);
 
 	function createPeer(
 		userIDToSignal,
@@ -152,9 +143,10 @@ function VideoCall(props) {
 			trickle: false,
 			stream,
 		});
+		console.log(peer);
 
 		peer.on("signal", (signal) => {
-			socket.emit("sending signal", {
+			socket.current.emit("sending signal", {
 				userIDToSignal,
 				userNameToSignal,
 				callerID,
@@ -175,7 +167,7 @@ function VideoCall(props) {
 
 		// send returning signal from: existing to: newbie
 		peer.on("signal", (signal) => {
-			socket.emit("returning signal", { signal, callerID, callerName });
+			socket.current.emit("returning signal", { signal, callerID, callerName });
 		});
 		console.log("addPeer from: ", callerName);
 		peer.signal(incomingSignal);
@@ -183,8 +175,8 @@ function VideoCall(props) {
 		return peer;
 	}
 	return (
-		<div>
-			현재 접속자 수: {peers.length} 명
+		<Box component={"div"} style={{ padding: "1.5rem" }}>
+			현재 접속자 수: {peers.length + 1} 명
 			<Grid container>
 				<Grid item style={{ padding: "1.5rem" }}>
 					<StyledVideo
@@ -226,11 +218,11 @@ function VideoCall(props) {
 					);
 				})}
 			</Grid>
-		</div>
+		</Box>
 	);
 }
 
-export default VideoCall;
+export default Main;
 
 // Get Chat from Server
 //   socket.current.on(NEW_CHAT_MESSAGE_EVENT, ({messageId, body, senderId, senderName, ownedByCurrentUser}) => {

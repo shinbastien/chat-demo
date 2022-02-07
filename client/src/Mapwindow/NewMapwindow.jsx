@@ -1,9 +1,23 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import axios from "axios";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import SearchIcon from "@material-ui/icons/Search";
+import IconButton from "@mui/material/IconButton";
+import point1 from "../Styles/source/point1.png";
+import point2 from "../Styles/source/point2.png";
+import Grid from "@mui/material/Grid";
+import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+
+import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
+import MyLocationIcon from "@material-ui/icons/MyLocation";
+import { useThemeProps } from "@mui/system";
 import { useSocket } from "../lib/socket";
 
 const Navigation = styled.div`
@@ -17,6 +31,27 @@ const SearchBox = styled.div`
 const ResultList = styled.div`
 	flex: 1;
 `;
+
+const Wrapper = styled.div`
+	position: relative;
+	width: 100%;
+`;
+
+const MenuWrapper = styled.div`
+	> button {
+		width: 70px;
+		height: 70px;
+		background-color: white;
+	}
+`;
+
+const MapButtonWrapper = styled.div`
+	position: absolute;
+	z-index: 10;
+`;
+
+const CardWrapper = styled.div``;
+
 ResultList.Item = styled.div`
 	display: flex;
 	align-items: center;
@@ -31,15 +66,25 @@ export default function NewMapwindow() {
 	const [map, setMap] = useState(null);
 	const [start, setStart] = useState(null);
 	const [end, setEnd] = useState(null);
-	const [searchKey, setSearchKey] = useState("상봉 듀오트리스");
+	const [searchKey, setSearchKey] = useState("신사역");
 	const [searchResult, setSearchResult] = useState([]);
 	const [resultDrawArr, setResultDrawArr] = useState([]);
 	const [chktraffic, setChktraffic] = useState([]);
 	const [resultMarkerArr, setResultMarkerArr] = useState([]);
 	const [markerS, setMarkerS] = useState(null);
 	const [markerE, setMarkerE] = useState(null);
+	const [markerC, setMarkerC] = useState(null);
 	const [searchMarkers, setSearchMarkers] = useState([]);
-	const {socket} = useSocket();
+	const [recvideo, setrecvideo] = useState([]);
+	const [keepPlace, setKeepPlace] = useState([]);
+	const [recvideoLoc, setrecvideoLoc] = useState([]);
+	const types = ["경로 설정", "정보 보기"];
+	const [active, setActive] = useState(types[0]);
+	const [totalDaytime, setTotalDaytime] = useState({
+		totalD: "",
+		totalTime: "",
+	});
+	const { socket } = useSocket();
 
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
@@ -49,13 +94,6 @@ export default function NewMapwindow() {
 			socket.emit("start mapwindow", [lat, lng]);
 			console.log("send location info to server", [lat, lng]);
 			var center = new Tmapv2.LatLng(lat, lng);
-
-			const current = {
-				pointType: "P",
-				lat: lat,
-				lng: lng,
-				markerImage: "http://topopen.tmap.co.kr/imgs/point.png",
-			};
 
 			setMap(
 				new Tmapv2.Map("map_div", {
@@ -67,20 +105,151 @@ export default function NewMapwindow() {
 					scrollwheel: true,
 				}),
 			);
-			getMarkers(current);
 		});
-
-		// const noorLat = 4522710.51119176;
-		// const noorLon = 14147851.82614338;
-		// const pointCng = new Tmapv2.Point(noorLon, noorLat);
-		// const projectionCng = new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(
-		// 	pointCng,
-		// );
 	};
 
 	useEffect(() => {
 		initMap();
 	}, []);
+
+	//current point
+	useEffect(() => {
+		if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(function (position) {
+				const lat = position.coords.latitude;
+				const lng = position.coords.longitude;
+
+				setMarkerC(
+					new Tmapv2.Marker({
+						position: new Tmapv2.LatLng(lat, lng),
+						icon: point1,
+						iconSize: new Tmapv2.Size(24, 24),
+						title: "현재위치",
+						map: map,
+						label:
+							"<span style='background-color: #46414E; color:white'>" +
+							"이동중" +
+							"</span>",
+					}),
+				);
+			});
+		}
+
+		// new Tmapv2.extension.MeasureDistance({
+		// 	map: map,
+		// });
+	}, [map]);
+
+	//이동시
+	useEffect(() => {
+		const interval = setInterval(() => {
+			navigator.geolocation.getCurrentPosition(function (position) {
+				const lat = position.coords.latitude;
+				const lng = position.coords.longitude;
+
+				if (markerC !== null) {
+					markerC.setMap(null);
+				}
+				setMarkerC(
+					new Tmapv2.Marker({
+						position: new Tmapv2.LatLng(lat, lng),
+						icon: point1,
+						iconSize: new Tmapv2.Size(24, 24),
+						title: "현재위치",
+						map: map,
+					}),
+				);
+			});
+		}, 5000);
+
+		loadKeepList();
+
+		return () => {
+			clearInterval(interval);
+		};
+	}, []);
+
+	useMemo(() => {
+		if (markerC) {
+			markerC.addListener("click", (e) => {
+				const { _lat, _lng } = markerC.getPosition();
+				// reverseGeoCoding(_lat, _lng);
+				loadpointInfo(_lat, _lng);
+			});
+		}
+	}, [markerC]);
+
+	useMemo(async () => {
+		if (recvideo.length > 0) {
+			for (let i = 0; i < recvideo.length; i++) {
+				const video = await searchOnYoutube(recvideo[i].name);
+				setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
+			}
+		}
+	}, [recvideo]);
+
+	const loadKeepList = async () => {
+		const keeplist = await readFromFirebase("photos");
+		setKeepPlace(keeplist);
+	};
+
+	const loadpointInfo = async (lat, lng) => {
+		try {
+			const { data: items } = await axios({
+				method: "get",
+				url: "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&format=json&callback=result",
+				params: {
+					categories: "카페;음식점;",
+					appKey: process.env.REACT_APP_TMAP_API_KEY,
+					reqLevel: 15,
+					radius: 1,
+					centerLon: lng,
+					centerLat: lat,
+					reqCoordType: "WGS84GEO",
+					resCoordType: "WGS84GEO",
+					count: 5,
+				},
+			});
+			setrecvideo(items.searchPoiInfo.pois.poi);
+		} catch (err) {
+			console.log(err);
+		}
+	};
+
+	// const reverseGeoCoding = (lat, lng) => {
+	// 	var tData = new Tmapv2.extension.TData();
+	// 	const params = {
+	// 		onComplete: onComplete, //데이터 로드가 성공적으로 완료 되었을때 실행하는 함수 입니다.
+	// 		onProgress: onProgress, //데이터 로드 중에 실행하는 함수 입니다.
+	// 		onError: onError, //데이터 로드가 실패했을때 실행하는 함수 입니다.
+	// 	};
+
+	// 	const optionObj = {
+	// 		coordType: "WGS84GEO",
+	// 		addressType: "A04",
+	// 	};
+
+	// 	tData.getAddressFromGeoJson(lat, lng, optionObj, params);
+
+	// 	function onComplete() {
+	// 		console.log("Complete");
+	// 		console.log(this._responseData);
+
+	// 		const loadVideoList = async (loc) => {
+	// 			const videoList = await searchOnYoutube(loc);
+	// 			setrecvideo(videoList);
+	// 		};
+	// 	}
+	// 	//데이터 로드중 실행하는 함수입니다.
+	// 	function onProgress() {
+	// 		console.log("onprogress");
+	// 	}
+
+	// 	//데이터 로드 중 에러가 발생시 실행하는 함수입니다.
+	// 	function onError() {
+	// 		console.log("error");
+	// 	}
+	// };
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -108,9 +277,14 @@ export default function NewMapwindow() {
 		const {
 			data: { features: resultData },
 		} = res;
+
 		const totalDistance = (
 			resultData[0].properties.totalDistance / 1000
 		).toFixed(1);
+
+		const totalTime = (resultData[0].properties.totalTime / 60).toFixed(0);
+		console.log(totalTime);
+		setTotalDaytime({ totalD: totalDistance, totalTime: totalTime });
 
 		setChktraffic(
 			resultData
@@ -204,15 +378,23 @@ export default function NewMapwindow() {
 	};
 
 	const getMarkers = (infoObj) => {
-		const { pointType, lat, lng, markerImage } = infoObj;
+		const { pointType, lat, lng, markerImage, title } = infoObj;
 		const size =
 			pointType === "P" ? new Tmapv2.Size(8, 8) : new Tmapv2.Size(24, 38); //아이콘 크기 설정합니다.
 
+		if (title) {
+			var label =
+				"<span style='background-color: #46414E;color:white'>" +
+				title +
+				"</span>";
+		}
 		return new Tmapv2.Marker({
 			position: new Tmapv2.LatLng(lat, lng),
 			icon: markerImage,
 			iconSize: size,
 			map: map,
+			title: title,
+			label: label,
 		});
 	};
 
@@ -437,6 +619,37 @@ export default function NewMapwindow() {
 		);
 	};
 
+	const onLoadCurrent = (e) => {
+		const currentPosition = markerC.getPosition();
+		if (!markerC.isLoaded()) {
+			markerC.setMap(map);
+		}
+		map.setCenter(currentPosition);
+	};
+
+	const onClickKeep = (list) => {
+		const { _lat, _long } = list.coords;
+		const keepLocation = new Tmapv2.LatLng(_lat, _long);
+		const newMarker = new Tmapv2.Marker({
+			position: keepLocation,
+			icon: point2,
+			iconSize: new Tmapv2.Size(24, 24),
+			map: map,
+			title: list.title,
+		});
+		newMarker.addListener("mouseenter", function (evt) {
+			new Tmapv2.InfoWindow({
+				position: keepLocation,
+				content: `<img src=${list.url} width="300px" height="auto"></img>`,
+				type: 2,
+				map: map,
+			});
+		});
+
+		newMarker.setMap(map);
+		map.setCenter(keepLocation);
+	};
+
 	const getPositionFromData = (data) => {
 		const noorLat = Number(data.noorLat);
 		const noorLon = Number(data.noorLon);
@@ -451,38 +664,108 @@ export default function NewMapwindow() {
 		return new Tmapv2.LatLng(lat, lon);
 	};
 
+	const KeepPlaceCard = (props) => {
+		const { coords, date, id, title, url, visited } = props.info;
+		return (
+			<Box componenet={"div"}>
+				{title}
+				<img src={url} width="100%" height="auto"></img>
+				<Button variant="outlined" onClick={() => onClickKeep(props.info)}>
+					link
+				</Button>
+			</Box>
+		);
+	};
+
+	const trackMenu = () => {
+		return (
+			<div id="searchResult">
+				<form onSubmit={handleSubmit}>
+					<TextField type="text" value={searchKey} onChange={handleChange} />
+					<IconButton variant="contained" type="submit">
+						<SearchIcon></SearchIcon>
+					</IconButton>
+				</form>
+				<div>
+					<div>
+						총 거리:{" "}
+						{totalDaytime.totalD < 1
+							? totalDaytime.totalD * 1000 + "m"
+							: totalDaytime.totalD + "km"}
+					</div>
+					<div>총 시간: {totalDaytime.totalTime} 분</div>
+					<div>출발: {start && start.name}</div>
+					<div>도착: {end && end.name}</div>
+				</div>
+				<ResultList>
+					{searchResult
+						? searchResult.map((result, idx) => (
+								<ResultList.Item>
+									<img
+										src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
+									/>
+									{result.name}
+									<Button onClick={() => handleStartSetting(result)}>
+										출발
+									</Button>
+									<Button onClick={() => handleEndSetting(result)}>도착</Button>
+								</ResultList.Item>
+						  ))
+						: "검색 결과"}
+				</ResultList>
+			</div>
+		);
+	};
+
+	const infoMenu = () => {
+		return (
+			<MenuWrapper>
+				<Box>Keep Place</Box>
+				{keepPlace.map((list, idx) => (
+					<KeepPlaceCard key={idx} info={list}></KeepPlaceCard>
+				))}
+
+				<Grid item>
+					<Divider></Divider>
+					<Box component="span">주변 영상</Box>
+					<Box>
+						{recvideoLoc.length > 0
+							? recvideoLoc.map((list, idx) => (
+									<img
+										key={idx}
+										src={list.snippet.thumbnails.medium.url}
+										width={list.snippet.thumbnails.medium.width}
+										height={list.snippet.thumbnails.medium.height}
+									></img>
+							  ))
+							: "아직 관련된 영상이 없습니다"}
+					</Box>
+				</Grid>
+			</MenuWrapper>
+		);
+	};
+
 	return (
 		<React.Fragment>
 			<Navigation>
-				<SearchBox id="searchResult">
-					<div>
-						<div>출발: {start && start.name}</div>
-						<div>도착: {end && end.name}</div>
-					</div>
-					<form onSubmit={handleSubmit}>
-						<input type="text" value={searchKey} onChange={handleChange} />
-						<button type="submit">검색하기</button>
-					</form>
-					<ResultList>
-						{searchResult
-							? searchResult.map((result, idx) => (
-									<ResultList.Item>
-										<img
-											src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
-										/>
-										{result.name}
-										<button onClick={() => handleStartSetting(result)}>
-											출발
-										</button>
-										<button onClick={() => handleEndSetting(result)}>
-											도착
-										</button>
-									</ResultList.Item>
-							  ))
-							: "검색 결과"}
-					</ResultList>
+				<SearchBox>
+					<Stack direction="row" alignItems="center" justifyContent="center">
+						{types.map((type, i) => (
+							<Button key={i} onClick={() => setActive(type)}>
+								{type}
+							</Button>
+						))}
+					</Stack>
+					{active === types[0] ? trackMenu() : infoMenu()}
 				</SearchBox>
-				<div id="map_div"></div>
+				<Wrapper>
+					<MapButtonWrapper>
+						<IconButton onClick={onLoadCurrent}>
+							<MyLocationIcon></MyLocationIcon>
+						</IconButton>
+					</MapButtonWrapper>
+					<div id="map_div"></div>
+				</Wrapper>
 			</Navigation>
 		</React.Fragment>
 	);

@@ -1,5 +1,5 @@
 //search YouTube video
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import useInput from "../functions/useInput";
 import { SearchResult } from "./SearchResult";
 import axios from "axios";
@@ -8,11 +8,21 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Grid";
 
-const Search = () => {
+const Search = (props) => {
 	const termInput = useInput("");
 	const [submit, setSubmit] = useState(false);
 	const [videos, setVideos] = useState([]);
 	const [share, setShare] = useState(false);
+	const inputRef = useRef();
+
+	const filterWords = props.value.filter(
+		(prop) => prop.name.includes("주차장") === false,
+	);
+
+	const onClickFocus = (event) => {
+		console.log(event.target.value);
+	};
+
 	async function searchOnYoutube() {
 		const API_URL = "https://www.googleapis.com/youtube/v3/search";
 		try {
@@ -23,9 +33,12 @@ const Search = () => {
 				params: {
 					key: process.env.REACT_APP_YOUTUBE_API_KEY,
 					part: "snippet",
-					q: `맛집 | 가볼만한 곳 | 핫플레이스 ` + termInput.value,
+					q: `-집 맛집 |가볼만한 곳 ` + termInput.value,
 				},
 			});
+			if (videos.length > 0) {
+				setVideos([]);
+			}
 			setVideos(items);
 			setSubmit(!submit);
 		} catch (err) {
@@ -38,6 +51,7 @@ const Search = () => {
 				<Grid item xs={6} md={4}>
 					<Stack direction="row">
 						<Item
+							ref={inputRef}
 							value={termInput.value}
 							onChange={termInput.onChange}
 							placeholder="검색"
@@ -51,6 +65,10 @@ const Search = () => {
 							검색
 						</Button>
 					</Stack>
+					추천 키워드
+					{filterWords.map((prop, inx) => (
+						<div>{prop.name}</div>
+					))}
 				</Grid>
 				<Grid item xs={6} md={8}>
 					<Stack direction={"column"} spacing={2} alignItems={"baseline"}>

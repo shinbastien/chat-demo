@@ -28,11 +28,3 @@ export function SearchResult(props) {
 		</Grid>
 	);
 }
-
-{
-	/* <img
-						src={video.snippet.thumbnails.medium.url}
-						width={video.snippet.thumbnails.medium.width}
-						height={video.snippet.thumbnails.medium.height}
-					></img> */
-}
