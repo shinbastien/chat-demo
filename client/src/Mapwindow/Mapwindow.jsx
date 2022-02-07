@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import {useLocation } from "react-router-dom";
 import styled from "styled-components";
 import Peer from "simple-peer";
-import Main from "../Main/Main";
+import VideoCall from "../VideoCall/VideoCall";
+import { Video } from "../VideoCall/videostyle";
 
 const Wrapper = styled.div`
 	width: 1000px;
@@ -141,7 +142,7 @@ export default function Mapwindow(params) {
 				</MenuWrapper>
 			</div>
 			<div>
-				<Main groupID={groupID} userName={userName} userLocation={loc}></Main>
+				<VideoCall groupID={groupID} userName={userName} userLocation={loc}></VideoCall>
 			</div>
 		</div>
 	);

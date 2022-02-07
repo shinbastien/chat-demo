@@ -13,7 +13,7 @@ const Search = (props) => {
 	const [submit, setSubmit] = useState(false);
 	const [videos, setVideos] = useState([]);
 	const [share, setShare] = useState(false);
-	
+
 	async function searchOnYoutube() {
 		const API_URL = "https://www.googleapis.com/youtube/v3/search";
 		try {
@@ -27,6 +27,9 @@ const Search = (props) => {
 					q: `맛집 | 가볼만한 곳 | 핫플레이스 ` + termInput.value,
 				},
 			});
+			if (videos.length > 0) {
+				setVideos([]);
+			}
 			setVideos(items);
 			setSubmit(!submit);
 		} catch (err) {

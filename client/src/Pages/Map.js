@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import NewMapwindow from "../Mapwindow/NewMapwindow";
-import Main from "../Main/Main";
+import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
 import AppBar from "@mui/material/AppBar";
 import Typography from "@mui/material/Typography";
@@ -13,12 +13,14 @@ import Menu from "@mui/material/Menu";
 import { MenuItem } from "@mui/material";
 import Button from "@mui/material/Button";
 
+import { useSocket } from "../lib/socket";
 import styled from "styled-components";
 
 const ImgWrapper = styled.img`
 	display: block;
 	width: 10%;
 `;
+const SOCKET_SERVER_URL = "http://localhost:4000";
 
 const TextWrapper = styled.span`
 	display: flex;
@@ -32,8 +34,6 @@ function Map() {
 	const [anchorEl, setAnchorEl] = React.useState(null);
 	const open = Boolean(anchorEl);
 
-	const { groupID, userName } = location.state;
-
 	const handleClose = () => {
 		setAnchorEl(null);
 	};
@@ -41,6 +41,18 @@ function Map() {
 	const handleClick = (event) => {
 		setAnchorEl(event.currentTarget);
 	};
+	const { groupID, userName } = location.state;
+	console.log("groupID obtained from Home is: ", groupID);
+	console.log("userName obtained from Home is: ", userName);
+
+	const { socket, connected } = useSocket();
+
+	useEffect(() => {
+		if (connected) {
+			socket.emit("join group", [groupID, userName]);
+			console.log("joining group");
+		}
+	}, [socket]);
 
 	return (
 		<>
@@ -106,7 +118,7 @@ function Map() {
 					<NewMapwindow></NewMapwindow>
 				</Grid>
 				<Grid item xs={6} md={4}>
-					<Main groupID={groupID} userName={userName} userLocation={""}></Main>
+					<VideoCall groupID={groupID} userName={userName}></VideoCall>
 				</Grid>
 			</Grid>
 		</>

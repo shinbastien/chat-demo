@@ -18,6 +18,7 @@ import Divider from "@mui/material/Divider";
 import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
 import MyLocationIcon from "@material-ui/icons/MyLocation";
 import { useThemeProps } from "@mui/system";
+import { useSocket } from "../lib/socket";
 
 const Navigation = styled.div`
 	display: flex;
@@ -59,6 +60,8 @@ ResultList.Item = styled.div`
 	}
 `;
 
+const SOCKET_SERVER_URL = "http://localhost:4000";
+
 export default function NewMapwindow() {
 	const [map, setMap] = useState(null);
 	const [start, setStart] = useState(null);
@@ -81,12 +84,15 @@ export default function NewMapwindow() {
 		totalD: "",
 		totalTime: "",
 	});
+	const { socket } = useSocket();
 
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
 			const lat = position.coords.latitude;
 			const lng = position.coords.longitude;
 
+			socket.emit("start mapwindow", [lat, lng]);
+			console.log("send location info to server", [lat, lng]);
 			var center = new Tmapv2.LatLng(lat, lng);
 
 			setMap(
