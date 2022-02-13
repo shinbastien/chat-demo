@@ -173,7 +173,7 @@ export default function Individual() {
 			</AppBar>
 
 			<Box sx={{ padding: "2%" }}>
-				<Tabs style={{ marginTop: 60 }} value={value} onChange={handleChange}>
+				<Tabs style={{ marginTop: 30 }} value={value} onChange={handleChange}>
 					<Tab label="Search"></Tab>
 					<Tab label="Keep"></Tab>
 				</Tabs>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
@@ -13,7 +13,6 @@ const KeepCard = (props) => {
 				<Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
 					{props.place}
 				</Typography>
-				
 			</CardContent>
 			<CardActions>
 				<Button size="small">Learn More</Button>
@@ -28,7 +27,6 @@ const KeepCard = (props) => {
 };
 
 export default KeepCard;
-
 
 {
 	/* <Typography variant="h5" component="div"></Typography>

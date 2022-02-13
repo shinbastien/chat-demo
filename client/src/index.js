@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { SocketProvider } from "./lib/socket";
-import "./index.css";
+// import "./index.css";
 import Home from "./Home/Home";
 // import Main from "./Main/Main";
 import Map from "./Pages/Map";

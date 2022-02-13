@@ -5,44 +5,25 @@ import React, { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
 import SearchIcon from "@material-ui/icons/Search";
 import IconButton from "@mui/material/IconButton";
 import point1 from "../Styles/source/point1.png";
 import point2 from "../Styles/source/point2.png";
-import Grid from "@mui/material/Grid";
+// import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
+import GestureIcon from "@material-ui/icons/Gesture";
+import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
+import PanToolIcon from "@material-ui/icons/PanTool";
+import ImageSearchIcon from "@material-ui/icons/ImageSearch";
 
 import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
 import MyLocationIcon from "@material-ui/icons/MyLocation";
-import { useThemeProps } from "@mui/system";
 import { useSocket } from "../lib/socket";
+import Canvas from "./Canvas";
 
-const Navigation = styled.div`
-	display: flex;
-`;
-const SearchBox = styled.div`
-	display: flex;
-	flex-direction: column;
-	width: 30%;
-`;
 const ResultList = styled.div`
 	flex: 1;
-`;
-
-const Wrapper = styled.div`
-	position: relative;
-	width: 100%;
-`;
-
-const MenuWrapper = styled.div`
-	> button {
-		width: 70px;
-		height: 70px;
-		background-color: white;
-	}
 `;
 
 const MapButtonWrapper = styled.div`
@@ -50,7 +31,76 @@ const MapButtonWrapper = styled.div`
 	z-index: 10;
 `;
 
-const CardWrapper = styled.div``;
+const Wrapper = styled.div`
+	position: relative;
+	width: 100%;
+`;
+
+const InputWrapper = styled.form`
+	margin: 0 0 20px 20px;
+	width: 30vw;
+	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	border-radius: 12px;
+	padding: 7px 8px;
+	background-color: white;
+	height: 3vw;
+	display: flex;
+	flex-direction: row;
+	> input {
+		border: none;
+		width: inherit;
+	}
+	> button {
+		padding: 0;
+		margin: 0;
+	}
+`;
+
+const MenuWrapper = styled.div`
+	width: 300px;
+	height: 100%;
+	overflow-y: scroll;
+	margin: 0 0 0 20px;
+	background-color: white;
+	border-radius: 12px;
+	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+`;
+
+const SubmenuWrapper = styled.div`
+	font-weight: 300;
+	width: auto;
+	> span {
+		margin: 20px;
+	}
+	> div {
+		margin: 20px;
+		> button {
+			padding-left: 2%;
+			border: none;
+			background: none;
+			> img {
+				width: 75px;
+				height: 75px;
+
+				margin: 0 auto;
+			}
+		}
+	}
+`;
+
+const BoardWarpper = styled.div`
+	width: fit-content;
+	background-color: white;
+	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	border-radius: 12px;
+
+	> div button {
+		color: #151ca2;
+	}
+`;
 
 ResultList.Item = styled.div`
 	display: flex;
@@ -667,26 +717,31 @@ export default function NewMapwindow() {
 	const KeepPlaceCard = (props) => {
 		const { coords, date, id, title, url, visited } = props.info;
 		return (
-			<Box componenet={"div"}>
-				{title}
+			<button variant="outlined" onClick={() => onClickKeep(props.info)}>
 				<img src={url} width="100%" height="auto"></img>
-				<Button variant="outlined" onClick={() => onClickKeep(props.info)}>
-					link
-				</Button>
-			</Box>
+			</button>
+		);
+	};
+
+	const SharedPlaceCard = (props) => {
+		const { coords, date, id, title, url, visited } = props.info;
+		return (
+			<button variant="outlined" onClick={() => onClickKeep(props.info)}>
+				<img src={url} width="100%" height="auto"></img>
+			</button>
 		);
 	};
 
 	const trackMenu = () => {
 		return (
 			<div id="searchResult">
-				<form onSubmit={handleSubmit}>
-					<TextField type="text" value={searchKey} onChange={handleChange} />
+				<InputWrapper onSubmit={handleSubmit}>
+					<input type="text" value={searchKey} onChange={handleChange} />
 					<IconButton variant="contained" type="submit">
 						<SearchIcon></SearchIcon>
 					</IconButton>
-				</form>
-				<div>
+				</InputWrapper>
+				{/* <div>
 					<div>
 						총 거리:{" "}
 						{totalDaytime.totalD < 1
@@ -696,7 +751,7 @@ export default function NewMapwindow() {
 					<div>총 시간: {totalDaytime.totalTime} 분</div>
 					<div>출발: {start && start.name}</div>
 					<div>도착: {end && end.name}</div>
-				</div>
+				</div> */}
 				<ResultList>
 					{searchResult
 						? searchResult.map((result, idx) => (
@@ -720,53 +775,93 @@ export default function NewMapwindow() {
 	const infoMenu = () => {
 		return (
 			<MenuWrapper>
-				<Box>Keep Place</Box>
-				{keepPlace.map((list, idx) => (
-					<KeepPlaceCard key={idx} info={list}></KeepPlaceCard>
-				))}
+				<Box
+					component="div"
+					style={{ fontWeight: 600, marginLeft: 20, fontSize: "1.5vw" }}
+					pt={3}
+					pb={3}
+				>
+					Meaningful Places
+				</Box>
 
-				<Grid item>
-					<Divider></Divider>
-					<Box component="span">주변 영상</Box>
-					<Box>
-						{recvideoLoc.length > 0
-							? recvideoLoc.map((list, idx) => (
-									<img
-										key={idx}
-										src={list.snippet.thumbnails.medium.url}
-										width={list.snippet.thumbnails.medium.width}
-										height={list.snippet.thumbnails.medium.height}
-									></img>
-							  ))
-							: "아직 관련된 영상이 없습니다"}
+				<SubmenuWrapper>
+					<Box component="span">
+						<span role="img" aria-label="Woman Running">
+							🏃🏻‍♀️
+						</span>{" "}
+						Keep Places
 					</Box>
-				</Grid>
+					<Box component="div">
+						{keepPlace.map((list, idx) => (
+							<KeepPlaceCard key={idx} info={list}></KeepPlaceCard>
+						))}
+					</Box>
+
+					<Box component="span">
+						<span role="img" aria-label="Beach with Umbrella">
+							🏖️
+						</span>{" "}
+						Shared Places
+					</Box>
+					<Box component="div">
+						{keepPlace.map((list, idx) => (
+							<SharedPlaceCard key={idx} info={list}></SharedPlaceCard>
+						))}
+					</Box>
+					<Box>
+						{/* {recvideoLoc.length > 0
+								? recvideoLoc.map((list, idx) => (
+										<img
+											key={idx}
+											src={list.snippet.thumbnails.medium.url}
+											width={list.snippet.thumbnails.medium.width}
+											height={list.snippet.thumbnails.medium.height}
+										></img>
+								  ))
+								: "아직 관련된 영상이 없습니다"} */}
+					</Box>
+				</SubmenuWrapper>
 			</MenuWrapper>
 		);
 	};
 
 	return (
 		<React.Fragment>
-			<Navigation>
-				<SearchBox>
-					<Stack direction="row" alignItems="center" justifyContent="center">
+			<Wrapper>
+				<MapButtonWrapper>
+					{/* <Stack direction="row" alignItems="center" justifyContent="center">
 						{types.map((type, i) => (
 							<Button key={i} onClick={() => setActive(type)}>
 								{type}
 							</Button>
 						))}
-					</Stack>
-					{active === types[0] ? trackMenu() : infoMenu()}
-				</SearchBox>
-				<Wrapper>
-					<MapButtonWrapper>
-						<IconButton onClick={onLoadCurrent}>
-							<MyLocationIcon></MyLocationIcon>
-						</IconButton>
-					</MapButtonWrapper>
-					<div id="map_div"></div>
-				</Wrapper>
-			</Navigation>
+					</Stack> */}
+					{trackMenu()}
+					{infoMenu()}
+					<IconButton onClick={onLoadCurrent}>
+						<MyLocationIcon></MyLocationIcon>
+					</IconButton>
+					<BoardWarpper>
+						<Stack direction="row">
+							<IconButton>
+								<PanToolIcon></PanToolIcon>
+							</IconButton>
+							<IconButton>
+								<GestureIcon></GestureIcon>
+							</IconButton>
+							<IconButton>
+								<ImageSearchIcon></ImageSearchIcon>
+							</IconButton>
+							<IconButton>
+								<EmojiEmotionsIcon></EmojiEmotionsIcon>
+							</IconButton>
+						</Stack>
+					</BoardWarpper>
+				</MapButtonWrapper>
+
+				<Canvas width={700} height={1000}></Canvas>
+				<div id="map_div"></div>
+			</Wrapper>
 		</React.Fragment>
 	);
 }

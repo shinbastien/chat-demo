@@ -5,13 +5,17 @@ const GlobalStyles = createGlobalStyle`
         box-sizing: border-box;
     }
     html{
+		@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;600&display=swap');
         font-size: 20px;
         width: 100%;
+		height: 101%;
+		overflow: -moz-scrollbars-vertical; 
+		overflow-y:scroll;
         &:lang(ko) {
-            font-family: 'Do Hyeon', sans-serif;
+            font-family: 'Open Sans', sans-serif;
         }
         &:lang(en){
-            font-family: 'Lobster', cursive;
+            font-family: 'Open Sans', sans-serif;
         }
     }
     body{

@@ -4,7 +4,7 @@ import { useLocation, Link } from "react-router-dom";
 import VideoCall from "../VideoCall/VideoCall";
 import Peer from "simple-peer";
 import styled from "styled-components";
-import { StyledVideo, Video, videoConstraints } from "../VideoCall/videostyle";
+// import { StyledVideo, Video, videoConstraints } from "../VideoCall/videostyle";
 import AppBar from "@mui/material/AppBar";
 import Typography from "@mui/material/Typography";
 import logoWhite from "../Styles/source/logo_w.png";

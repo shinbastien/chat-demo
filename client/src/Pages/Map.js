@@ -113,11 +113,11 @@ function Map() {
 					</Menu>
 				</Typography>
 			</AppBar>
-			<Grid container spacing={2} style={{ marginTop: 60, padding: 20 }}>
-				<Grid item xs={6} md={8}>
+			<Grid container spacing={2} style={{ marginTop: 30 }}>
+				<Grid item xs={6} md={9}>
 					<NewMapwindow></NewMapwindow>
 				</Grid>
-				<Grid item xs={6} md={4}>
+				<Grid item xs={6} md={3}>
 					<VideoCall groupID={groupID} userName={userName}></VideoCall>
 				</Grid>
 			</Grid>

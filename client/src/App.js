@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import "./index.css";
+// import "./index.css";
 import Home from "./Home/Home";
 import ChatRoom from "./ChatRoom/ChatRoom";
 import Map from "./Pages/Map";
