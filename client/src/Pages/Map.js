@@ -24,13 +24,15 @@ function Map() {
 	console.log("userName obtained from Home is: ", userName);
 
 	const {socket, connected} = useSocket();
+	console.log("check socket: ", socket.id);
+	console.log("check connected: " ,connected);
 	
 	useEffect(() => {
 		if (connected) {
-			socket.emit("join group", [groupID, userName]);
+			socket.emit("join group", {GroupID: groupID, userName: userName});
 			console.log("joining group");
 		}
-	}, [socket])
+	}, [])
 	
 
 

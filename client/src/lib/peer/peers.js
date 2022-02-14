@@ -3,6 +3,8 @@ import Peer from "simple-peer";
 
 
 function createPeer(roomName, userName, participants, peers, peerStreams, socket, stream) {
+    const newPeers = {}
+
     Object.keys(participants)
     .filter((participantName) => participantName != userName)
     .forEach((participantName) => {
@@ -34,9 +36,10 @@ function createPeer(roomName, userName, participants, peers, peerStreams, socket
 
         console.log("create Peer of: ", participantName);
 
-        peers[participantName] = peer;
+        newPeers[participantName] = peer;
     });
-    return peers;
+
+    return newPeers
 }
 
 
@@ -69,10 +72,7 @@ function addPeer(roomName, userName, participants, peers, peerStreams, socket) {
         console.log(err);
     })
 
-
-    peers[newUser] = peer;
-
-    return peers;
+    return {...peers, [newUser]: peer};
 }
 
 function disconnectPeer(peers, userName) {

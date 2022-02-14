@@ -19,30 +19,26 @@ const userInfo = {};
 // Socket.io connection for Chatting
 io.on("connection", (socket) => {
 
+  console.log("socket connected");
   // Join a conversation
   // console.log(socket.handshake.query);
-  // const {GroupID, userName} = socket.handshake.query;
+  const {roomName, userName} = socket.handshake.query;
   // console.log("1", GroupID);
   // console.log("2", userName);
-  // socket.join(GroupID);
-
-
-  socket.on("join group", (data) => {
-    console.log(data);
-    var GroupID = data.GroupID;
-    var userName = data.userName;
-    console.log("groupID is: ", GroupID);
-    console.log("socket id is: ", socket.id);
-    if (!users[GroupID]) {
-      users[GroupID] = {};
+  
+  socket.on("join", (roomName, userName) => {
+    socket.join(roomName);
+      if (!users[roomName]) {
+      users[roomName] = {participants: {}, youtubeLink: ""};
     }
-    socket.join(GroupID);
-    socket.groupID = GroupID;
+    socket.roomName = roomName;
     socket.userName = userName;
-    users[GroupID][socket.id]={userName: userName, userID: socket.id, "location": [0, 0]}
-    console.log("new user joined in room to server", userName);
+    users[roomName].participants[userName] = {socket: socket.id, location: [0, 0]}
+    console.log("current users after join: ", Object.keys(users[roomName].participants));
+    console.log(users[roomName].participants)
+    io.to(roomName).emit("joinResponse", users[roomName].participants);
+    console.log("server sends joinResponse");
 
-    console.log("users in room", users[GroupID]);
   })
 
   socket.on("start videocall", GroupID => {
@@ -58,11 +54,15 @@ io.on("connection", (socket) => {
 
   // --------------------PEERCONNECTION-------------------
     // when a peer is created from newbie, the created peer sends a signal by socket and socket sends the signal to existing peers
-    socket.on("sending signal", payload => {
-      io.to(payload.userIDToSignal).emit('user joined', {signal: payload.signal, callerID: payload.callerID, callerName: payload.callerName});
-      console.log("signal sended from newbie: ", payload.callerName);
-      console.log("to: ", payload.userNameToSignal);
-      console.log("to ID: ", payload.userIDToSignal);
+    socket.on("RTC_offer", (signal, caller, receiver, roomName) => {
+      try {
+        io.to(roomName).emit("RTC_answer", caller, receiver, signal);
+        console.log("signal sended from newbie: ", caller);
+        console.log("to: ", receiver);
+
+      } catch(error) {
+        console.log(error);
+      }  
     })
   
     socket.on("returning signal", payload => {
@@ -100,8 +100,8 @@ io.on("connection", (socket) => {
     [lat, lng] = loc;
     console.log("latitude is: ", lat);
     console.log("longitude is: ", lng);
-    users[socket.groupID][socket.id].location=[lat, lng];
-    console.log("updated user info of current socket: ", users[socket.groupID][socket.id]);
+    users[socket.roomName].participants[socket.userName].location=[lat, lng];
+    console.log("updated user info of current socket: ", socket.userName);
   });
 
   // // Listen for new messages
@@ -116,12 +116,25 @@ io.on("connection", (socket) => {
 
 
   // Leave the room if the user closes the socket
+
   socket.on("disconnect", () => {
-    Object.keys(users).filter((user) => users[user])
-    delete users[socket.groupID][socket.id];
-    socket.broadcast.emit("user left", socket.id)
-    socket.leave(socket.groupID);
-    console.log("current users: ", users[socket.groupID]);
+    console.log("socket disconnected");
+    console.log("current socket is: ", socket.id);
+    console.log("current socket room is: ", socket.roomName);
+    console.log("current.socket userName is: ", socket.userName);
+    if (socket.roomName && socket.userName) {
+      delete users[socket.roomName].participants[socket.userName];
+      if (Object.keys(users[socket.roomName].participants).length === 0) {
+        delete users[socket.roomName];
+      } else {
+        io.to(socket.roomName).emit(
+          "disconnectResponse",
+          users[socket.roomName].participants,
+          socket.userName
+        );
+      }
+    }
+    console.log("current users: ", users[socket.roomName]);
   });
 });
 

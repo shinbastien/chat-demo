@@ -20,7 +20,7 @@ const ImgWrapper = styled.img`
 const SOCKET_SERVER_URL = "http://localhost:4000";
 const delay = require("delay");
 
-function Main() {
+const Main= () => {
     const [peers, setPeers] = useState({});
 	const [participants, setParticipants] = useState([]);
 	const [isNew, setIsNew] = useState(true);
@@ -33,39 +33,50 @@ function Main() {
 
     const location = useLocation();
 	const {roomName, userName}= location.state;
-	console.log("groupID obtained from Home is: ", roomName);
-	console.log("userName obtained from Home is: ", userName);
 
     // build socket connection
 	useEffect(() => {
+		console.log("groupID obtained from Home is: ", roomName);
+		console.log("userName obtained from Home is: ", userName);
 		socket.current = io(SOCKET_SERVER_URL, { query : 
 			{
 			groupID : roomName,
 			userName: userName,
 			}
 		});
-
-
 	
 		socket.current.emit("join", roomName, userName)
-
-		socket.current.on("joinResponse", participants => {
+	}, [])
+	useEffect(() => {
+		const handleJoinParticipants = participants => {
+			console.log("isnew is", isNew);
 			if (isNew) {
-				const peerlist = createPeer(roomName, userName, participants, peers, peerStreams, socket);
-				setPeers(peerlist);
-				console.log(peerlist);
+				setPeers((peers)=>{
+					return createPeer(roomName, userName, participants, peers, peerStreams, socket)
+				});
+				console.log("create peer for: ", userName);
+				setIsNew(false)
 			}
 			else {
-				const peerlist = addPeer(roomName, userName, participants, peers, peerStreams, socket);
-				setPeers(peerlist);
-				console.log(peerlist);
+				setPeers((peers) => {
+					return addPeer(roomName, userName, participants, peers, peerStreams, socket)
+				})
+				console.log("add peer for: ", userName);
 			}
 			// setIsNew not working right now ...
-			setIsNew(false);
-			console.log("changed isnew", isNew);
+			
+			// setTimeout(100000);
+			// console.log("changed isnew", isNew);
 			setParticipants(participants)
-		})
+		}
+		socket.current.on("joinResponse", handleJoinParticipants)
+		return () => {
+			socket.current.off("joinResponse", handleJoinParticipants)
+			
+		}
+	}, [isNew])
 
+	useEffect(() => {
 		socket.current.on("RTC_answer", async(offerer, receiver, data) => {
 			try {
 				if (receiver === userName) {
@@ -86,28 +97,14 @@ function Main() {
 
 		})
 
-		navigator.mediaDevices
-		.getUserMedia({ video: videoConstraints, audio: true })
-		.then((stream) => {
-			if(stream) {
-				console.log("stream is okay");
-			}
-			if (userVideo.current) {
-				userVideo.current.srcObject = stream;
-				console.log("uservideo okay");
-			}
-			
-			setStream(stream);
-			Object.values(peers).forEach((p) => {
-				try {
-					p.addStream(stream);
-				} catch (error) {
-					console.log(error);
-				}
-			});
-		})
+		return () => {
+			// 함수를 반환하자 => 다음 useEffect가 실행되기 전에 이 부분이 실행되고 윗 부분이 실행된다. 
+		}
+	}, [])
 
-	}, [socket])
+	useEffect(()=>{
+		console.log("\n\n\t Test Peers", peers)
+	}, [peers])
 
 	return (
 		<>
@@ -132,4 +129,4 @@ function Main() {
 	</>
 	)
 }
-export default Main;
+export default React.memo(Main);

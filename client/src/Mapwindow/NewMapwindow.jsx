@@ -27,7 +27,7 @@ ResultList.Item = styled.div`
 
 const SOCKET_SERVER_URL = "http://localhost:4000";
 
-export default function NewMapwindow() {
+export default function NewMapwindow(props) {
 	const [map, setMap] = useState(null);
 	const [start, setStart] = useState(null);
 	const [end, setEnd] = useState(null);
@@ -38,16 +38,21 @@ export default function NewMapwindow() {
 	const [resultMarkerArr, setResultMarkerArr] = useState([]);
 	const [markerS, setMarkerS] = useState(null);
 	const [markerE, setMarkerE] = useState(null);
+	const [latitude, setlatitude] = useState();
+	const [longitude, setlongitude] = useState();
 	const [searchMarkers, setSearchMarkers] = useState([]);
-	const {socket} = useSocket();
 
+	
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
 			const lat = position.coords.latitude;
 			const lng = position.coords.longitude;
 
-			socket.emit("start mapwindow", [lat, lng]);
+			
+			props.socket.current.emit("start mapwindow", [lat, lng]);
 			console.log("send location info to server", [lat, lng]);
+			
+			
 			var center = new Tmapv2.LatLng(lat, lng);
 
 			const current = {
