@@ -12,6 +12,7 @@ const io = require("socket.io")(server, {
 const PORT = 4000;
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 const REMOVE_CHAT = "removeChat";
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
 const users = {};
 const userInfo = {};

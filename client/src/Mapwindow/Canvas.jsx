@@ -81,9 +81,9 @@ const Canvas = ({ width, height }) => {
 
 		if (ctx == null) throw new Error("Could not get context");
 		if (ctx) {
-			ctx.strokeStyle = "red";
+			ctx.strokeStyle = "#151ca2";
 			ctx.lineJoin = "round";
-			ctx.lineWidth = 5;
+			ctx.lineWidth = 3;
 
 			ctx.beginPath();
 			ctx.moveTo(originalMousePosition[0], originalMousePosition[1]);

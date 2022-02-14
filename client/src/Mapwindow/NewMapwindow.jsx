@@ -21,6 +21,7 @@ import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
 import MyLocationIcon from "@material-ui/icons/MyLocation";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas";
+import Picker from "emoji-picker-react";
 
 const ResultList = styled.div`
 	flex: 1;
@@ -90,16 +91,36 @@ const SubmenuWrapper = styled.div`
 	}
 `;
 
-const BoardWarpper = styled.div`
-	width: fit-content;
-	background-color: white;
-	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
-	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
-	border-radius: 12px;
+const BoardWrapper = styled.div`
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	left: -13%;
 
-	> div button {
-		color: #151ca2;
+	> div {
+		margin: 0 0 20px 20px;
+		width: fit-content;
+		background-color: white;
+		-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+		box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+		border-radius: 12px;
+
+		> div button {
+			&:active {
+				color: #151ca2;
+			}
+			&.active {
+				color: #151ca2;
+			}
+		}
 	}
+`;
+
+const EmojiWrapper = styled.div`
+	display: absolute;
+	z-index: 11;
 `;
 
 ResultList.Item = styled.div`
@@ -116,7 +137,7 @@ export default function NewMapwindow() {
 	const [map, setMap] = useState(null);
 	const [start, setStart] = useState(null);
 	const [end, setEnd] = useState(null);
-	const [searchKey, setSearchKey] = useState("신사역");
+	const [searchKey, setSearchKey] = useState("월평역");
 	const [searchResult, setSearchResult] = useState([]);
 	const [resultDrawArr, setResultDrawArr] = useState([]);
 	const [chktraffic, setChktraffic] = useState([]);
@@ -128,13 +149,19 @@ export default function NewMapwindow() {
 	const [recvideo, setrecvideo] = useState([]);
 	const [keepPlace, setKeepPlace] = useState([]);
 	const [recvideoLoc, setrecvideoLoc] = useState([]);
-	const types = ["경로 설정", "정보 보기"];
-	const [active, setActive] = useState(types[0]);
+	const [active, setActive] = useState("hand");
 	const [totalDaytime, setTotalDaytime] = useState({
 		totalD: "",
 		totalTime: "",
 	});
 	const { socket } = useSocket();
+	const [chosenEmoji, setChosenEmoji] = useState(null);
+	const [drawing, setDrawing] = useState(false);
+	const [drawObject, setDrawObject] = useState(null);
+
+	const onEmojiClick = (event, emojiObject) => {
+		setChosenEmoji(emojiObject);
+	};
 
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
@@ -178,7 +205,7 @@ export default function NewMapwindow() {
 						map: map,
 						label:
 							"<span style='background-color: #46414E; color:white'>" +
-							"이동중" +
+							"현재위치" +
 							"</span>",
 					}),
 				);
@@ -237,6 +264,25 @@ export default function NewMapwindow() {
 			}
 		}
 	}, [recvideo]);
+
+	const getDrawingObject = () => {
+		if (drawing) {
+			if (drawObject === null) {
+				drawObject = new Tmapv2.extension.Drawing({
+					map: map, // 지도 객체
+					strokeWeight: 4, // 테두리 두께
+					strokeColor: "blue", // 테두리 색상
+					strokeOpacity: 1, // 테두리 투명도
+					fillColor: "red", // 도형 내부 색상
+					fillOpacity: 0.2,
+				}); // 도형 내부 투명도
+			}
+		}
+	};
+
+	const drawRectangle = () => {
+		getDrawingObject().drawRectangle();
+	};
 
 	const loadKeepList = async () => {
 		const keeplist = await readFromFirebase("photos");
@@ -732,6 +778,27 @@ export default function NewMapwindow() {
 		);
 	};
 
+	const onHandleClick = (props) => {
+		switch (props) {
+			case "hand":
+				setActive("hand");
+				break;
+			case "draw":
+				setActive("draw");
+				break;
+			case "search":
+				setActive("search");
+				setDrawing(true);
+				drawRectangle();
+				break;
+			case "emoji":
+				setActive("emoji");
+				break;
+			default:
+				break;
+		}
+	};
+
 	const trackMenu = () => {
 		return (
 			<div id="searchResult">
@@ -829,37 +896,68 @@ export default function NewMapwindow() {
 		<React.Fragment>
 			<Wrapper>
 				<MapButtonWrapper>
-					{/* <Stack direction="row" alignItems="center" justifyContent="center">
+					{trackMenu()}
+					{infoMenu()}
+
+					<BoardWrapper>
+						{/* <Stack direction="row" alignItems="center" justifyContent="center">
 						{types.map((type, i) => (
 							<Button key={i} onClick={() => setActive(type)}>
 								{type}
 							</Button>
 						))}
 					</Stack> */}
-					{trackMenu()}
-					{infoMenu()}
+						<div>
+							<Stack
+								direction="row"
+								alignItems="center"
+								justifyContent="center"
+							>
+								<IconButton
+									className={active === "hand" ? "active" : ""}
+									onClick={() => onHandleClick("hand")}
+								>
+									<PanToolIcon></PanToolIcon>
+								</IconButton>
+								<IconButton
+									className={active === "draw" ? "active" : ""}
+									onClick={() => onHandleClick("draw")}
+								>
+									<GestureIcon></GestureIcon>
+								</IconButton>
+								<IconButton
+									className={active === "search" ? "active" : ""}
+									onClick={() => onHandleClick("search")}
+								>
+									<ImageSearchIcon></ImageSearchIcon>
+								</IconButton>
+								<IconButton
+									className={active === "emoji" ? "active" : ""}
+									onClick={() => onHandleClick("emoji")}
+								>
+									<EmojiEmotionsIcon></EmojiEmotionsIcon>
+								</IconButton>
+							</Stack>
+						</div>
+					</BoardWrapper>
 					<IconButton onClick={onLoadCurrent}>
 						<MyLocationIcon></MyLocationIcon>
 					</IconButton>
-					<BoardWarpper>
-						<Stack direction="row">
-							<IconButton>
-								<PanToolIcon></PanToolIcon>
-							</IconButton>
-							<IconButton>
-								<GestureIcon></GestureIcon>
-							</IconButton>
-							<IconButton>
-								<ImageSearchIcon></ImageSearchIcon>
-							</IconButton>
-							<IconButton>
-								<EmojiEmotionsIcon></EmojiEmotionsIcon>
-							</IconButton>
-						</Stack>
-					</BoardWarpper>
+					{active === "emoji" ? (
+						<EmojiWrapper>
+							<Picker
+								onEmojiClick={onEmojiClick}
+								disableAutoFocus={true}
+								groupNames={{ smileys_people: "PEOPLE" }}
+								native
+							/>
+						</EmojiWrapper>
+					) : null}
 				</MapButtonWrapper>
 
-				<Canvas width={700} height={1000}></Canvas>
+				{active === "draw" ? (
+					<Canvas width={window.innerWidth} height={1000}></Canvas>
+				) : null}
 				<div id="map_div"></div>
 			</Wrapper>
 		</React.Fragment>
