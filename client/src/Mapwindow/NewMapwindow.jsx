@@ -22,9 +22,19 @@ import MyLocationIcon from "@material-ui/icons/MyLocation";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas";
 import Picker from "emoji-picker-react";
+import { Divider } from "@mui/material";
 
 const ResultList = styled.div`
-	flex: 1;
+	background-color: white;
+	width: calc(100% - 20px);
+	top: calc(-20px);
+
+	overflow: scroll;
+	height: 100px;
+	border-radius: 10px;
+	padding: 24px;
+	margin-left: 20px;
+	box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.1);
 `;
 
 const MapButtonWrapper = styled.div`
@@ -38,7 +48,7 @@ const Wrapper = styled.div`
 `;
 
 const InputWrapper = styled.form`
-	margin: 0 0 20px 20px;
+	margin: 0 0 0 20px;
 	width: 30vw;
 	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
 	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
@@ -158,6 +168,7 @@ export default function NewMapwindow() {
 	const [chosenEmoji, setChosenEmoji] = useState(null);
 	const [drawing, setDrawing] = useState(false);
 	const [drawObject, setDrawObject] = useState(null);
+	const [openResult, setOpenResult] = useState(true);
 
 	const onEmojiClick = (event, emojiObject) => {
 		setChosenEmoji(emojiObject);
@@ -176,7 +187,7 @@ export default function NewMapwindow() {
 				new Tmapv2.Map("map_div", {
 					center: center,
 					width: "100%",
-					height: "1000px",
+					height: "100vh",
 					zoom: 18,
 					zoomControl: true,
 					scrollwheel: true,
@@ -450,6 +461,7 @@ export default function NewMapwindow() {
 
 		setResultMarkerArr(resultMarkerArr_);
 		setResultDrawArr(resultDrawArr_);
+		setOpenResult(true);
 
 		map.panToBounds(positionBounds);
 	}, [start, end]);
@@ -788,8 +800,6 @@ export default function NewMapwindow() {
 				break;
 			case "search":
 				setActive("search");
-				setDrawing(true);
-				drawRectangle();
 				break;
 			case "emoji":
 				setActive("emoji");
@@ -808,32 +818,19 @@ export default function NewMapwindow() {
 						<SearchIcon></SearchIcon>
 					</IconButton>
 				</InputWrapper>
-				{/* <div>
-					<div>
-						총 거리:{" "}
-						{totalDaytime.totalD < 1
-							? totalDaytime.totalD * 1000 + "m"
-							: totalDaytime.totalD + "km"}
-					</div>
-					<div>총 시간: {totalDaytime.totalTime} 분</div>
-					<div>출발: {start && start.name}</div>
-					<div>도착: {end && end.name}</div>
-				</div> */}
 				<ResultList>
-					{searchResult
-						? searchResult.map((result, idx) => (
-								<ResultList.Item>
-									<img
-										src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
-									/>
-									{result.name}
-									<Button onClick={() => handleStartSetting(result)}>
-										출발
-									</Button>
-									<Button onClick={() => handleEndSetting(result)}>도착</Button>
-								</ResultList.Item>
-						  ))
-						: "검색 결과"}
+					{searchResult &&
+						openResult &&
+						searchResult.map((result, idx) => (
+							<ResultList.Item>
+								<img
+									src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
+								/>
+								{result.name}
+								<Button onClick={() => handleStartSetting(result)}>출발</Button>
+								<Button onClick={() => handleEndSetting(result)}>도착</Button>
+							</ResultList.Item>
+						))}
 				</ResultList>
 			</div>
 		);
@@ -844,19 +841,30 @@ export default function NewMapwindow() {
 			<MenuWrapper>
 				<Box
 					component="div"
-					style={{ fontWeight: 600, marginLeft: 20, fontSize: "1.5vw" }}
+					style={{ fontWeight: 600, marginLeft: 20, fontSize: "1.3vw" }}
 					pt={3}
 					pb={3}
 				>
-					Meaningful Places
+					Information
 				</Box>
-
+				<Divider></Divider>
 				<SubmenuWrapper>
+					<Box component="div">
+						총 거리:{" "}
+						{totalDaytime.totalD < 1
+							? totalDaytime.totalD * 1000 + "m"
+							: totalDaytime.totalD + "km"}
+					</Box>
+					<Box component="div">총 시간: {totalDaytime.totalTime} 분</Box>
+					<Box component="div">출발: {start && start.name}</Box>
+					<Box component="div">도착: {end && end.name}</Box>
+					<Divider></Divider>
 					<Box component="span">
 						<span role="img" aria-label="Woman Running">
 							🏃🏻‍♀️
 						</span>{" "}
 						Keep Places
+						<input type="checkbox" checked="checked"></input>
 					</Box>
 					<Box component="div">
 						{keepPlace.map((list, idx) => (
@@ -869,6 +877,7 @@ export default function NewMapwindow() {
 							🏖️
 						</span>{" "}
 						Shared Places
+						<input type="checkbox" checked="checked"></input>
 					</Box>
 					<Box component="div">
 						{keepPlace.map((list, idx) => (
@@ -917,31 +926,35 @@ export default function NewMapwindow() {
 									className={active === "hand" ? "active" : ""}
 									onClick={() => onHandleClick("hand")}
 								>
-									<PanToolIcon></PanToolIcon>
+									<PanToolIcon style={{ fontSize: "3vw" }}></PanToolIcon>
 								</IconButton>
 								<IconButton
 									className={active === "draw" ? "active" : ""}
 									onClick={() => onHandleClick("draw")}
 								>
-									<GestureIcon></GestureIcon>
+									<GestureIcon style={{ fontSize: "3vw" }}></GestureIcon>
 								</IconButton>
 								<IconButton
 									className={active === "search" ? "active" : ""}
 									onClick={() => onHandleClick("search")}
 								>
-									<ImageSearchIcon></ImageSearchIcon>
+									<ImageSearchIcon
+										style={{ fontSize: "3vw" }}
+									></ImageSearchIcon>
 								</IconButton>
 								<IconButton
 									className={active === "emoji" ? "active" : ""}
 									onClick={() => onHandleClick("emoji")}
 								>
-									<EmojiEmotionsIcon></EmojiEmotionsIcon>
+									<EmojiEmotionsIcon
+										style={{ fontSize: "3vw" }}
+									></EmojiEmotionsIcon>
 								</IconButton>
 							</Stack>
 						</div>
 					</BoardWrapper>
 					<IconButton onClick={onLoadCurrent}>
-						<MyLocationIcon></MyLocationIcon>
+						<MyLocationIcon style={{ fontSize: "3vw" }}></MyLocationIcon>
 					</IconButton>
 					{active === "emoji" ? (
 						<EmojiWrapper>
