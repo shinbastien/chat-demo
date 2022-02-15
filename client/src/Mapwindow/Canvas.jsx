@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 const CanvasWrapper = styled.canvas`
 	position: absolute;
-	z-index: 8;
+	z-index: 20;
 `;
 
 const Canvas = ({ width, height }) => {

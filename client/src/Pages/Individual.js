@@ -114,64 +114,6 @@ export default function Individual() {
 
 	return (
 		<>
-			<AppBar postiion="static" style={{ backgroundColor: "#151ca2" }}>
-				<Typography
-					variant="h5"
-					noWrap
-					component="div"
-					sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
-				>
-					<ImgWrapper src={logoWhite}></ImgWrapper>
-					<IconButton style={{ color: "white" }}>
-						<ShareIcon onClick={handleCopy}></ShareIcon>
-					</IconButton>
-					<Box sx={{ flexGrow: 1 }}></Box>
-
-					<Button
-						id="basic-button"
-						aria-controls={open ? "basic-menu" : undefined}
-						aria-haspopup="true"
-						aria-expanded={open ? "true" : undefined}
-						onClick={handleClick}
-						style={{ color: "white" }}
-					>
-						<TextWrapper>{groupID}&nbsp; 개인 화면</TextWrapper>
-					</Button>
-					<Menu
-						anchorEl={anchorEl}
-						open={open}
-						MenuListProps={{
-							"aria-labelledby": "basic-button",
-						}}
-						onClose={handleClose}
-					>
-						<MenuItem>
-							<Link
-								to={`/${groupID}`}
-								state={{
-									groupID: groupID,
-									userName: userName,
-								}}
-							>
-								<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
-							</Link>
-						</MenuItem>
-
-						<MenuItem>
-							<Link
-								to={`/${groupID}/share`}
-								state={{
-									groupID: groupID,
-									userName: userName,
-								}}
-							>
-								<TextWrapper>{groupID}&nbsp; 공유 화면</TextWrapper>
-							</Link>
-						</MenuItem>
-					</Menu>
-				</Typography>
-			</AppBar>
-
 			<Box sx={{ padding: "2%" }}>
 				<Tabs style={{ marginTop: 30 }} value={value} onChange={handleChange}>
 					<Tab label="Search"></Tab>

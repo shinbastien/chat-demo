@@ -2,27 +2,41 @@
 // Do not delete above comment
 
 import React, { useState, useEffect, useMemo } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import SearchIcon from "@material-ui/icons/Search";
 import IconButton from "@mui/material/IconButton";
 import point1 from "../Styles/source/point1.png";
-import point2 from "../Styles/source/point2.png";
-// import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
-import Box from "@mui/material/Box";
 import GestureIcon from "@material-ui/icons/Gesture";
 import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
 import PanToolIcon from "@material-ui/icons/PanTool";
 import ImageSearchIcon from "@material-ui/icons/ImageSearch";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
 import MyLocationIcon from "@material-ui/icons/MyLocation";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas";
+import ShareVideo from "../Pages/ShareVideo";
+import Individual from "../Pages/Individual";
 import Picker from "emoji-picker-react";
-import { Divider } from "@mui/material";
+import InfoMenu from "./InfoMenu";
+import { useCallback } from "react";
+
+const boxFade = keyframes`
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+`;
 
 const ResultList = styled.div`
 	background-color: white;
@@ -39,12 +53,7 @@ const ResultList = styled.div`
 
 const MapButtonWrapper = styled.div`
 	position: absolute;
-	z-index: 10;
-`;
-
-const Wrapper = styled.div`
-	position: relative;
-	width: 100%;
+	z-index: 100;
 `;
 
 const InputWrapper = styled.form`
@@ -68,39 +77,6 @@ const InputWrapper = styled.form`
 	}
 `;
 
-const MenuWrapper = styled.div`
-	width: 300px;
-	height: 100%;
-	overflow-y: scroll;
-	margin: 0 0 0 20px;
-	background-color: white;
-	border-radius: 12px;
-	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
-	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
-`;
-
-const SubmenuWrapper = styled.div`
-	font-weight: 300;
-	width: auto;
-	> span {
-		margin: 20px;
-	}
-	> div {
-		margin: 20px;
-		> button {
-			padding-left: 2%;
-			border: none;
-			background: none;
-			> img {
-				width: 75px;
-				height: 75px;
-
-				margin: 0 auto;
-			}
-		}
-	}
-`;
-
 const BoardWrapper = styled.div`
 	position: fixed;
 	bottom: 0;
@@ -108,6 +84,7 @@ const BoardWrapper = styled.div`
 	display: flex;
 	justify-content: center;
 	left: -13%;
+	z-index: 11;
 
 	> div {
 		margin: 0 0 20px 20px;
@@ -117,7 +94,7 @@ const BoardWrapper = styled.div`
 		box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
 		border-radius: 12px;
 
-		> div button {
+		> button {
 			&:active {
 				color: #151ca2;
 			}
@@ -129,8 +106,34 @@ const BoardWrapper = styled.div`
 `;
 
 const EmojiWrapper = styled.div`
-	display: absolute;
-	z-index: 11;
+	position: fixed;
+	bottom: 7%;
+	display: flex;
+	z-index: 222;
+	left: 43%;
+`;
+
+const EmojiDisplayWrapper = styled.div`
+	font-size: 7vw;
+	position: absolute;
+	z-index: 300;
+	${(props) =>
+		props.active &&
+		`
+   animation: ${boxFade} 2s 1s infinite linear alternate;
+  `}
+`;
+
+const VideoWrapper = styled.div`
+	position: absolute;
+	z-index: 300;
+	position: absolute;
+	left: 40%;
+	transform: translateX(-50%);
+	background-color: white;
+
+	text-align: center;
+	margin: 0 auto;
 `;
 
 ResultList.Item = styled.div`
@@ -141,10 +144,11 @@ ResultList.Item = styled.div`
 	}
 `;
 
-const SOCKET_SERVER_URL = "http://localhost:4000";
-
 export default function NewMapwindow() {
+	//map
 	const [map, setMap] = useState(null);
+
+	//root-tracking
 	const [start, setStart] = useState(null);
 	const [end, setEnd] = useState(null);
 	const [searchKey, setSearchKey] = useState("월평역");
@@ -156,22 +160,38 @@ export default function NewMapwindow() {
 	const [markerE, setMarkerE] = useState(null);
 	const [markerC, setMarkerC] = useState(null);
 	const [searchMarkers, setSearchMarkers] = useState([]);
-	const [recvideo, setrecvideo] = useState([]);
-	const [keepPlace, setKeepPlace] = useState([]);
-	const [recvideoLoc, setrecvideoLoc] = useState([]);
-	const [active, setActive] = useState("hand");
 	const [totalDaytime, setTotalDaytime] = useState({
 		totalD: "",
 		totalTime: "",
 	});
-	const { socket } = useSocket();
+	const [openResult, setOpenResult] = useState(true);
+
+	//video-list
+	const [recvideo, setrecvideo] = useState([]);
+	const [keepPlace, setKeepPlace] = useState([]);
+	const [recvideoLoc, setrecvideoLoc] = useState([]);
+
+	//board
+	const [active, setActive] = useState("hand");
 	const [chosenEmoji, setChosenEmoji] = useState(null);
+	const [emojiResult, setEmojiResult] = useState(true);
 	const [drawing, setDrawing] = useState(false);
 	const [drawObject, setDrawObject] = useState(null);
-	const [openResult, setOpenResult] = useState(true);
+
+	const [searchPoint, setSearchPoint] = useState({
+		nelat: "",
+		nelng: "",
+		swlat: "",
+		swlng: "",
+	});
+
+	const [sharing, setSharing] = useState(false);
+
+	const { socket } = useSocket();
 
 	const onEmojiClick = (event, emojiObject) => {
 		setChosenEmoji(emojiObject);
+		setEmojiResult(false);
 	};
 
 	const initMap = () => {
@@ -222,10 +242,6 @@ export default function NewMapwindow() {
 				);
 			});
 		}
-
-		// new Tmapv2.extension.MeasureDistance({
-		// 	map: map,
-		// });
 	}, [map]);
 
 	//이동시
@@ -261,11 +277,13 @@ export default function NewMapwindow() {
 		if (markerC) {
 			markerC.addListener("click", (e) => {
 				const { _lat, _lng } = markerC.getPosition();
-				// reverseGeoCoding(_lat, _lng);
-				loadpointInfo(_lat, _lng);
+				setSharing(true);
+				// loadpointInfo(_lat, _lng);
 			});
 		}
 	}, [markerC]);
+
+	// useEffect(() => {}, [chosenEmoji]);
 
 	useMemo(async () => {
 		if (recvideo.length > 0) {
@@ -275,88 +293,6 @@ export default function NewMapwindow() {
 			}
 		}
 	}, [recvideo]);
-
-	const getDrawingObject = () => {
-		if (drawing) {
-			if (drawObject === null) {
-				drawObject = new Tmapv2.extension.Drawing({
-					map: map, // 지도 객체
-					strokeWeight: 4, // 테두리 두께
-					strokeColor: "blue", // 테두리 색상
-					strokeOpacity: 1, // 테두리 투명도
-					fillColor: "red", // 도형 내부 색상
-					fillOpacity: 0.2,
-				}); // 도형 내부 투명도
-			}
-		}
-	};
-
-	const drawRectangle = () => {
-		getDrawingObject().drawRectangle();
-	};
-
-	const loadKeepList = async () => {
-		const keeplist = await readFromFirebase("photos");
-		setKeepPlace(keeplist);
-	};
-
-	const loadpointInfo = async (lat, lng) => {
-		try {
-			const { data: items } = await axios({
-				method: "get",
-				url: "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&format=json&callback=result",
-				params: {
-					categories: "카페;음식점;",
-					appKey: process.env.REACT_APP_TMAP_API_KEY,
-					reqLevel: 15,
-					radius: 1,
-					centerLon: lng,
-					centerLat: lat,
-					reqCoordType: "WGS84GEO",
-					resCoordType: "WGS84GEO",
-					count: 5,
-				},
-			});
-			setrecvideo(items.searchPoiInfo.pois.poi);
-		} catch (err) {
-			console.log(err);
-		}
-	};
-
-	// const reverseGeoCoding = (lat, lng) => {
-	// 	var tData = new Tmapv2.extension.TData();
-	// 	const params = {
-	// 		onComplete: onComplete, //데이터 로드가 성공적으로 완료 되었을때 실행하는 함수 입니다.
-	// 		onProgress: onProgress, //데이터 로드 중에 실행하는 함수 입니다.
-	// 		onError: onError, //데이터 로드가 실패했을때 실행하는 함수 입니다.
-	// 	};
-
-	// 	const optionObj = {
-	// 		coordType: "WGS84GEO",
-	// 		addressType: "A04",
-	// 	};
-
-	// 	tData.getAddressFromGeoJson(lat, lng, optionObj, params);
-
-	// 	function onComplete() {
-	// 		console.log("Complete");
-	// 		console.log(this._responseData);
-
-	// 		const loadVideoList = async (loc) => {
-	// 			const videoList = await searchOnYoutube(loc);
-	// 			setrecvideo(videoList);
-	// 		};
-	// 	}
-	// 	//데이터 로드중 실행하는 함수입니다.
-	// 	function onProgress() {
-	// 		console.log("onprogress");
-	// 	}
-
-	// 	//데이터 로드 중 에러가 발생시 실행하는 함수입니다.
-	// 	function onError() {
-	// 		console.log("error");
-	// 	}
-	// };
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -461,7 +397,6 @@ export default function NewMapwindow() {
 
 		setResultMarkerArr(resultMarkerArr_);
 		setResultDrawArr(resultDrawArr_);
-		setOpenResult(true);
 
 		map.panToBounds(positionBounds);
 	}, [start, end]);
@@ -671,9 +606,7 @@ export default function NewMapwindow() {
 		setSearchMarkers(
 			result.map((data, k) => {
 				const name = data.name;
-
 				const markerPosition = getPositionFromData(data);
-
 				const marker = new Tmapv2.Marker({
 					position: markerPosition,
 					icon: `http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${k}.png`,
@@ -725,6 +658,64 @@ export default function NewMapwindow() {
 				map: map,
 			}),
 		);
+
+		existSearch();
+	};
+
+	useEffect(() => {
+		if (drawing === true && drawObject !== null) {
+			drawObject.drawRectangle();
+			console.log(drawObject);
+		}
+	}, [drawObject]);
+
+	useCallback(() => {
+		loadpointInfo(searchPoint);
+	}, [searchPoint]);
+
+	const onSearchedPoint = (drawObject) => {
+		const { _data } = drawObject;
+
+		if (_data.shapeArray.length > 0) {
+			setSearchPoint({
+				nelat: _data.shapeArray[0]._shape_data.bounds._ne._lat,
+				nelng: _data.shapeArray[0]._shape_data.bounds._ne._lng,
+				swlat: _data.shapeArray[0]._shape_data.bounds._sw._lat,
+				swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
+			});
+		}
+	};
+
+	const existSearch = () => {
+		setOpenResult(false);
+	};
+
+	const loadKeepList = async () => {
+		const keeplist = await readFromFirebase("photos");
+		setKeepPlace(keeplist);
+	};
+
+	const loadpointInfo = async (lat, lng) => {
+		try {
+			const { data: items } = await axios({
+				method: "get",
+				url: "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&format=json&callback=result",
+				params: {
+					categories: "카페;음식점;",
+					appKey: process.env.REACT_APP_TMAP_API_KEY,
+					reqLevel: 15,
+					radius: 1,
+					centerLon: searchPoint.nelng,
+					centerLat: searchPoint.nelat,
+					reqCoordType: "WGS84GEO",
+					resCoordType: "WGS84GEO",
+					count: 5,
+				},
+			});
+			setrecvideo(items.searchPoiInfo.pois.poi);
+		} catch (err) {
+			console.log(err);
+		}
 	};
 
 	const onLoadCurrent = (e) => {
@@ -733,29 +724,6 @@ export default function NewMapwindow() {
 			markerC.setMap(map);
 		}
 		map.setCenter(currentPosition);
-	};
-
-	const onClickKeep = (list) => {
-		const { _lat, _long } = list.coords;
-		const keepLocation = new Tmapv2.LatLng(_lat, _long);
-		const newMarker = new Tmapv2.Marker({
-			position: keepLocation,
-			icon: point2,
-			iconSize: new Tmapv2.Size(24, 24),
-			map: map,
-			title: list.title,
-		});
-		newMarker.addListener("mouseenter", function (evt) {
-			new Tmapv2.InfoWindow({
-				position: keepLocation,
-				content: `<img src=${list.url} width="300px" height="auto"></img>`,
-				type: 2,
-				map: map,
-			});
-		});
-
-		newMarker.setMap(map);
-		map.setCenter(keepLocation);
 	};
 
 	const getPositionFromData = (data) => {
@@ -772,207 +740,150 @@ export default function NewMapwindow() {
 		return new Tmapv2.LatLng(lat, lon);
 	};
 
-	const KeepPlaceCard = (props) => {
-		const { coords, date, id, title, url, visited } = props.info;
-		return (
-			<button variant="outlined" onClick={() => onClickKeep(props.info)}>
-				<img src={url} width="100%" height="auto"></img>
-			</button>
-		);
-	};
-
-	const SharedPlaceCard = (props) => {
-		const { coords, date, id, title, url, visited } = props.info;
-		return (
-			<button variant="outlined" onClick={() => onClickKeep(props.info)}>
-				<img src={url} width="100%" height="auto"></img>
-			</button>
-		);
+	const onHandleDrawObject = () => {
+		if (drawObject !== null) {
+			drawObject.clear();
+			setDrawObject(null);
+		}
+		setDrawing(false);
 	};
 
 	const onHandleClick = (props) => {
 		switch (props) {
 			case "hand":
 				setActive("hand");
+				onHandleDrawObject();
 				break;
 			case "draw":
 				setActive("draw");
+				onHandleDrawObject();
 				break;
 			case "search":
 				setActive("search");
+				setDrawing(true);
+				setDrawObject(
+					new Tmapv2.extension.Drawing({
+						map: map, // 지도 객체
+						strokeWeight: 4, // 테두리 두께
+						strokeColor: "blue", // 테두리 색상
+						strokeOpacity: 1, // 테두리 투명도
+						fillColor: "red", // 도형 내부 색상
+						fillOpacity: 0.2,
+					}),
+				);
+
 				break;
 			case "emoji":
 				setActive("emoji");
+				setEmojiResult(true);
+				onHandleDrawObject();
 				break;
 			default:
 				break;
 		}
 	};
 
-	const trackMenu = () => {
-		return (
-			<div id="searchResult">
-				<InputWrapper onSubmit={handleSubmit}>
-					<input type="text" value={searchKey} onChange={handleChange} />
-					<IconButton variant="contained" type="submit">
-						<SearchIcon></SearchIcon>
-					</IconButton>
-				</InputWrapper>
-				<ResultList>
-					{searchResult &&
-						openResult &&
-						searchResult.map((result, idx) => (
-							<ResultList.Item>
-								<img
-									src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
-								/>
-								{result.name}
-								<Button onClick={() => handleStartSetting(result)}>출발</Button>
-								<Button onClick={() => handleEndSetting(result)}>도착</Button>
-							</ResultList.Item>
-						))}
-				</ResultList>
-			</div>
-		);
-	};
-
-	const infoMenu = () => {
-		return (
-			<MenuWrapper>
-				<Box
-					component="div"
-					style={{ fontWeight: 600, marginLeft: 20, fontSize: "1.3vw" }}
-					pt={3}
-					pb={3}
-				>
-					Information
-				</Box>
-				<Divider></Divider>
-				<SubmenuWrapper>
-					<Box component="div">
-						총 거리:{" "}
-						{totalDaytime.totalD < 1
-							? totalDaytime.totalD * 1000 + "m"
-							: totalDaytime.totalD + "km"}
-					</Box>
-					<Box component="div">총 시간: {totalDaytime.totalTime} 분</Box>
-					<Box component="div">출발: {start && start.name}</Box>
-					<Box component="div">도착: {end && end.name}</Box>
-					<Divider></Divider>
-					<Box component="span">
-						<span role="img" aria-label="Woman Running">
-							🏃🏻‍♀️
-						</span>{" "}
-						Keep Places
-						<input type="checkbox" checked="checked"></input>
-					</Box>
-					<Box component="div">
-						{keepPlace.map((list, idx) => (
-							<KeepPlaceCard key={idx} info={list}></KeepPlaceCard>
-						))}
-					</Box>
-
-					<Box component="span">
-						<span role="img" aria-label="Beach with Umbrella">
-							🏖️
-						</span>{" "}
-						Shared Places
-						<input type="checkbox" checked="checked"></input>
-					</Box>
-					<Box component="div">
-						{keepPlace.map((list, idx) => (
-							<SharedPlaceCard key={idx} info={list}></SharedPlaceCard>
-						))}
-					</Box>
-					<Box>
-						{/* {recvideoLoc.length > 0
-								? recvideoLoc.map((list, idx) => (
-										<img
-											key={idx}
-											src={list.snippet.thumbnails.medium.url}
-											width={list.snippet.thumbnails.medium.width}
-											height={list.snippet.thumbnails.medium.height}
-										></img>
-								  ))
-								: "아직 관련된 영상이 없습니다"} */}
-					</Box>
-				</SubmenuWrapper>
-			</MenuWrapper>
-		);
-	};
-
 	return (
 		<React.Fragment>
-			<Wrapper>
-				<MapButtonWrapper>
-					{trackMenu()}
-					{infoMenu()}
+			{chosenEmoji ? (
+				<EmojiDisplayWrapper className="active">
+					{chosenEmoji.emoji}
+				</EmojiDisplayWrapper>
+			) : null}
+			{sharing ? (
+				<VideoWrapper>
+					<button onClick={() => setSharing(false)}>
+						<FontAwesomeIcon icon={faXmark} />
+					</button>
+					<ShareVideo></ShareVideo>
+				</VideoWrapper>
+			) : null}
+			{/* <Individual></Individual> */}
 
-					<BoardWrapper>
-						{/* <Stack direction="row" alignItems="center" justifyContent="center">
-						{types.map((type, i) => (
-							<Button key={i} onClick={() => setActive(type)}>
-								{type}
-							</Button>
-						))}
-					</Stack> */}
-						<div>
-							<Stack
-								direction="row"
-								alignItems="center"
-								justifyContent="center"
-							>
-								<IconButton
-									className={active === "hand" ? "active" : ""}
-									onClick={() => onHandleClick("hand")}
-								>
-									<PanToolIcon style={{ fontSize: "3vw" }}></PanToolIcon>
-								</IconButton>
-								<IconButton
-									className={active === "draw" ? "active" : ""}
-									onClick={() => onHandleClick("draw")}
-								>
-									<GestureIcon style={{ fontSize: "3vw" }}></GestureIcon>
-								</IconButton>
-								<IconButton
-									className={active === "search" ? "active" : ""}
-									onClick={() => onHandleClick("search")}
-								>
-									<ImageSearchIcon
-										style={{ fontSize: "3vw" }}
-									></ImageSearchIcon>
-								</IconButton>
-								<IconButton
-									className={active === "emoji" ? "active" : ""}
-									onClick={() => onHandleClick("emoji")}
-								>
-									<EmojiEmotionsIcon
-										style={{ fontSize: "3vw" }}
-									></EmojiEmotionsIcon>
-								</IconButton>
-							</Stack>
-						</div>
-					</BoardWrapper>
-					<IconButton onClick={onLoadCurrent}>
-						<MyLocationIcon style={{ fontSize: "3vw" }}></MyLocationIcon>
-					</IconButton>
-					{active === "emoji" ? (
-						<EmojiWrapper>
-							<Picker
-								onEmojiClick={onEmojiClick}
-								disableAutoFocus={true}
-								groupNames={{ smileys_people: "PEOPLE" }}
-								native
-							/>
-						</EmojiWrapper>
-					) : null}
-				</MapButtonWrapper>
+			<MapButtonWrapper>
+				<div id="searchResult">
+					<InputWrapper onSubmit={handleSubmit}>
+						<input type="text" value={searchKey} onChange={handleChange} />
+						<IconButton variant="contained" type="submit">
+							<SearchIcon></SearchIcon>
+						</IconButton>
+					</InputWrapper>
+					{searchResult.length > 0 && openResult && (
+						<ResultList>
+							{searchResult.map((result, idx) => (
+								<ResultList.Item key={idx}>
+									<img
+										src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
+									/>
+									{result.name}
+									<Button onClick={() => handleStartSetting(result)}>
+										출발
+									</Button>
+									<Button onClick={() => handleEndSetting(result)}>도착</Button>
+								</ResultList.Item>
+							))}
+						</ResultList>
+					)}
+				</div>
+				<InfoMenu
+					map={map}
+					totalDaytime={totalDaytime}
+					start={start}
+					end={end}
+					keepPlace={keepPlace}
+				></InfoMenu>
 
-				{active === "draw" ? (
-					<Canvas width={window.innerWidth} height={1000}></Canvas>
+				{drawObject ? (
+					<Button onClick={() => onSearchedPoint(drawObject)}>정보 찾기</Button>
 				) : null}
-				<div id="map_div"></div>
-			</Wrapper>
+				<BoardWrapper>
+					<Stack direction="row" alignItems="center" justifyContent="center">
+						<IconButton
+							className={active === "hand" ? "active" : ""}
+							onClick={() => onHandleClick("hand")}
+						>
+							<PanToolIcon style={{ fontSize: "3vw" }}></PanToolIcon>
+						</IconButton>
+						<IconButton
+							className={active === "draw" ? "active" : ""}
+							onClick={() => onHandleClick("draw")}
+						>
+							<GestureIcon style={{ fontSize: "3vw" }}></GestureIcon>
+						</IconButton>
+
+						<IconButton
+							className={active === "search" ? "active" : ""}
+							onClick={() => onHandleClick("search")}
+						>
+							<ImageSearchIcon style={{ fontSize: "3vw" }}></ImageSearchIcon>
+						</IconButton>
+						<IconButton
+							className={active === "emoji" ? "active" : ""}
+							onClick={() => onHandleClick("emoji")}
+						>
+							<EmojiEmotionsIcon
+								style={{ fontSize: "3vw" }}
+							></EmojiEmotionsIcon>
+						</IconButton>
+					</Stack>
+				</BoardWrapper>
+				<IconButton onClick={onLoadCurrent}>
+					<MyLocationIcon style={{ fontSize: "3vw" }}></MyLocationIcon>
+				</IconButton>
+			</MapButtonWrapper>
+			{active === "emoji" && emojiResult ? (
+				<EmojiWrapper>
+					<Picker
+						onEmojiClick={onEmojiClick}
+						disableAutoFocus={true}
+						groupNames={{ smileys_people: "PEOPLE" }}
+						native
+					/>
+				</EmojiWrapper>
+			) : null}
+
+			{active === "draw" ? <Canvas width={2000} height={1000}></Canvas> : null}
+			<div id="map_div"></div>
 		</React.Fragment>
 	);
 }

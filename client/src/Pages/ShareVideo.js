@@ -1,56 +1,56 @@
+/*global YT*/
+// Do not delete above comment
+
 import React, { useState, useEffect, useRef } from "react";
 import { useSocket } from "../lib/socket";
 import { useLocation, Link } from "react-router-dom";
-import VideoCall from "../VideoCall/VideoCall";
-import Peer from "simple-peer";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPause, faPlay } from "@fortawesome/free-solid-svg-icons";
+
 import styled from "styled-components";
-// import { StyledVideo, Video, videoConstraints } from "../VideoCall/videostyle";
-import AppBar from "@mui/material/AppBar";
-import Typography from "@mui/material/Typography";
-import logoWhite from "../Styles/source/logo_w.png";
-import ShareIcon from "@material-ui/icons/Share";
-import IconButton from "@mui/material/IconButton";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Menu from "@mui/material/Menu";
-import { MenuItem } from "@mui/material";
-
-const ImgWrapper = styled.img`
-	display: block;
-	width: 10%;
-`;
-
-const TextWrapper = styled.span`
-	display: flex;
-	justify-content: center; /* align horizontal */
-	align-items: center; /* align vertical */
-`;
 
 const Container = styled.div`
 	display: flex;
-	width: 100%;
-	height: 100vh;
-	flex-direction: row;
-`;
+	width: fit-content;
 
-const LeftRow = styled.div`
-	width: 40%;
-	height: 100%;
-`;
-
-const RightRow = styled.div`
-	flex: 1;
-	height: 100%;
-	display: flex;
 	flex-direction: column;
+
+	> div {
+		/* center */
+		margin-left: auto;
+		margin-right: auto;
+		left: 0;
+	}
+`;
+const VideoWrapper = styled.div``;
+
+const VideoBarWrapper = styled.div`
+	display: flex;
+	justify-content: space-between;
 	align-items: center;
+	width: 100%;
+	padding: 2%;
+
+	> button {
+		font-size: 2.5vw;
+		cursor: pointer;
+	}
 `;
 
-// const Video = styled.video`
-//     height: 50%;
-//     width: 100%;
-//     border: 1px solid black;
-// `;
+const ProgressBar = styled.span`
+	position: relative;
+	flex-grow: 10;
+	height: 4px;
+	background-color: rgb(138, 138, 138);
+
+	#progress {
+		position: absolute;
+		width: 1%;
+		height: 100%;
+		z-index: 999;
+		background-color: yellow;
+	}
+`;
 
 function ShareVideo() {
 	const { socket, connected } = useSocket();
@@ -60,11 +60,10 @@ function ShareVideo() {
 	const [peers, setPeers] = useState([]);
 	const location = useLocation();
 	const { GroupID, userName } = location.state;
-	console.log("groupID obtained from Home is: ", GroupID);
-	console.log("userName obtained from Home is: ", userName);
-	const [anchorEl, setAnchorEl] = React.useState(null);
+	const [playing, setPlaying] = useState(false);
 
-	const open = Boolean(anchorEl);
+	// console.log("groupID obtained from Home is: ", GroupID);
+	// console.log("userName obtained from Home is: ", userName);
 
 	useEffect(() => {
 		const tag = document.createElement("script");
@@ -75,25 +74,14 @@ function ShareVideo() {
 		console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
 	}, []);
 
-	useEffect(() => {
-		if (connected) {
-			socket.emit("join group", { GroupID: GroupID, userName: userName });
-			console.log("joining group in ShareVideo");
-		}
-
-		socket.emit("start shareVideo", GroupID);
-		socket.on("ShareVideoAction", (data) => {
-			handleVideo(data);
-		});
-	}, [socket]);
-
 	function loadVideoPlayer() {
-		const player = new window.YT.Player("player", {
+		const player = new YT.Player("player", {
 			height: "390",
 			width: "640",
+			videoId: "dWZznGbsLbE",
 			playerVars: {
 				playsinline: 1,
-				autoplay: 1,
+				autoplay: 0,
 				controls: 0,
 				autohide: 1,
 				wmode: "opaque",
@@ -110,6 +98,7 @@ function ShareVideo() {
 		// })
 		socket.emit("pause", GroupID);
 		youtubePlayer.current.pauseVideo();
+		setPlaying(false);
 	}
 
 	function playVideo() {
@@ -118,6 +107,7 @@ function ShareVideo() {
 		// })
 		socket.emit("play", GroupID);
 		youtubePlayer.current.playVideo();
+		setPlaying(true);
 	}
 
 	function loadVideo() {
@@ -141,92 +131,34 @@ function ShareVideo() {
 		}
 	}
 
-	const handleClose = () => {
-		setAnchorEl(null);
-	};
-
-	const handleClick = (event) => {
-		setAnchorEl(event.currentTarget);
-	};
-
 	return (
 		<>
-			<AppBar postiion="static" style={{ backgroundColor: "#151ca2" }}>
-				<Typography
-					variant="h5"
-					noWrap
-					component="div"
-					sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
-				>
-					<ImgWrapper src={logoWhite}></ImgWrapper>
-					<IconButton style={{ color: "white" }}>
-						<ShareIcon></ShareIcon>
-					</IconButton>
-					<Box sx={{ flexGrow: 1 }}></Box>
-
-					<Button
-						id="basic-button"
-						aria-controls={open ? "basic-menu" : undefined}
-						aria-haspopup="true"
-						aria-expanded={open ? "true" : undefined}
-						onClick={handleClick}
-						style={{ color: "white" }}
-					>
-						<TextWrapper>{GroupID}&nbsp; 공유 화면</TextWrapper>
-					</Button>
-					<Menu
-						anchorEl={anchorEl}
-						open={open}
-						MenuListProps={{
-							"aria-labelledby": "basic-button",
-						}}
-						onClose={handleClose}
-					>
-						<MenuItem>
-							<Link
-								to={`/${GroupID}/search`}
-								state={{
-									groupID: GroupID,
-									userName: userName,
-								}}
-							>
-								<TextWrapper>{GroupID}&nbsp; 개인 화면</TextWrapper>
-							</Link>
-						</MenuItem>
-
-						<MenuItem>
-							<Link
-								to={`/${GroupID}`}
-								state={{
-									groupID: GroupID,
-									userName: userName,
-								}}
-							>
-								<TextWrapper>{GroupID}&nbsp; 그룹 화면</TextWrapper>
-							</Link>
-						</MenuItem>
-					</Menu>
-				</Typography>
-			</AppBar>
 			<Container>
-				<LeftRow>
-					<VideoCall groupID={GroupID} userName={userName}>
-						{" "}
-					</VideoCall>
-				</LeftRow>
+				<VideoWrapper>
+					<div id="player" ref={youtubePlayer} />
+				</VideoWrapper>
+				<VideoBarWrapper>
+					{playing ? (
+						<button onClick={stopVideo}>
+							<FontAwesomeIcon icon={faPause} />
+						</button>
+					) : (
+						<button onClick={playVideo}>
+							<FontAwesomeIcon icon={faPlay} />
+						</button>
+					)}
+					<ProgressBar>
+						<div id="progress"></div>
+					</ProgressBar>
 
-				<RightRow>
-					<div id="player" />
-					<button onClick={stopVideo}>Stop Video</button>
-					<button onClick={playVideo}>Play Video</button>
-					<input
+					{/* <input
 						type="text"
 						placeholder="video link"
 						value={videoID}
 						onChange={(e) => setVideoID(e.target.value)}
-					/>
-					<button onClick={loadVideo}>Load video</button>
-				</RightRow>
+					/> */}
+					{/* <button onClick={loadVideo}>Load video</button> */}
+				</VideoBarWrapper>
 			</Container>
 		</>
 	);
