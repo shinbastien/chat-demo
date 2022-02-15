@@ -5,8 +5,8 @@ import { StyledVideo, Video, videoConstraints } from "./videostyle";
 import Grid from "@mui/material/Grid";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
-import MoreVertIcon from "@material-ui/icons/MoreVert";
 import IconButton from "@mui/material/IconButton";
+import {MoreVert} from "@mui/icons-material"
 import {addPeer, createPeer} from "../lib/peer/peers";
 
 // Main handles connection between users and sends those to other pages
@@ -86,7 +86,7 @@ const VideoCall = (props) => {
 						</Grid>
 						<Grid item>
 							<IconButton onClick={() => console.log("test")}>
-								<MoreVertIcon></MoreVertIcon>
+								<MoreVert/>
 							</IconButton>
 						</Grid>
 					</Grid>
