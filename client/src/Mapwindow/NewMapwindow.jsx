@@ -2,55 +2,155 @@
 // Do not delete above comment
 
 import React, { useState, useEffect, useMemo } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
 import SearchIcon from "@material-ui/icons/Search";
 import IconButton from "@mui/material/IconButton";
 import point1 from "../Styles/source/point1.png";
-import point2 from "../Styles/source/point2.png";
-import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
-import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
+import GestureIcon from "@material-ui/icons/Gesture";
+import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
+import PanToolIcon from "@material-ui/icons/PanTool";
+import ImageSearchIcon from "@material-ui/icons/ImageSearch";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
 import MyLocationIcon from "@material-ui/icons/MyLocation";
-import { useThemeProps } from "@mui/system";
 import { useSocket } from "../lib/socket";
+import Canvas from "./Canvas/Canvas";
+import ShareVideo from "./ShareVideo/ShareVideo";
+import Individual from "../Individual/Individual";
+import Picker from "emoji-picker-react";
+import InfoMenu from "./Menu/InfoMenu";
+import { useCallback } from "react";
 
-const Navigation = styled.div`
-	display: flex;
-`;
-const SearchBox = styled.div`
-	display: flex;
-	flex-direction: column;
-	width: 30%;
-`;
 const ResultList = styled.div`
-	flex: 1;
-`;
+	background-color: white;
+	width: calc(100% - 20px);
+	top: calc(-20px);
 
-const Wrapper = styled.div`
-	position: relative;
-	width: 100%;
-`;
-
-const MenuWrapper = styled.div`
-	> button {
-		width: 70px;
-		height: 70px;
-		background-color: white;
-	}
+	overflow: scroll;
+	height: 100px;
+	border-radius: 10px;
+	padding: 24px;
+	margin-left: 20px;
+	box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.1);
 `;
 
 const MapButtonWrapper = styled.div`
 	position: absolute;
-	z-index: 10;
+	z-index: 100;
 `;
 
-const CardWrapper = styled.div``;
+const InputWrapper = styled.form`
+	margin: 0 0 0 20px;
+	width: 30vw;
+	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	border-radius: 12px;
+	padding: 7px 8px;
+	background-color: white;
+	height: 3vw;
+	display: flex;
+	flex-direction: row;
+	> input {
+		border: none;
+		width: inherit;
+	}
+	> button {
+		padding: 0;
+		margin: 0;
+	}
+`;
+
+const BoardWrapper = styled.div`
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	left: -13%;
+	z-index: 11;
+
+	> div {
+		margin: 0 0 20px 20px;
+		width: fit-content;
+		background-color: white;
+		-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+		box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+		border-radius: 12px;
+
+		> button {
+			&:active {
+				color: #151ca2;
+			}
+			&.active {
+				color: #151ca2;
+			}
+		}
+	}
+`;
+
+const ButtonWrapper = styled.button`
+	position: absolute;
+	z-index: 300;
+	font-size: 2vw;
+
+	text-align: center;
+	left: 40%;
+	transform: translateX(-50%);
+	background-color: white;
+	padding: 1.5%;
+	border-radius: 10px;
+	margin: 2%;
+
+	&:active {
+		color: white;
+		background-color: black;
+	}
+
+	&:hover {
+		color: white;
+		background-color: black;
+	}
+`;
+
+const IndividualWrapper = styled.div`
+	position: fixed;
+	bottom: 7%;
+	display: flex;
+	z-index: 222;
+	left: 43%;
+	background-color: white;
+`;
+
+const EmojiWrapper = styled.div`
+	position: fixed;
+	bottom: 7%;
+	display: flex;
+	z-index: 222;
+	left: 43%;
+`;
+
+const EmojiDisplayWrapper = styled.div`
+	font-size: 7vw;
+	position: absolute;
+	z-index: 300;
+`;
+
+const VideoWrapper = styled.div`
+	position: absolute;
+	z-index: 300;
+
+	left: 40%;
+	transform: translateX(-50%);
+	background-color: white;
+
+	text-align: center;
+	margin: 0 auto;
+`;
 
 ResultList.Item = styled.div`
 	display: flex;
@@ -60,13 +160,14 @@ ResultList.Item = styled.div`
 	}
 `;
 
-const SOCKET_SERVER_URL = "http://localhost:4000";
-
 export default function NewMapwindow() {
+	//map
 	const [map, setMap] = useState(null);
+
+	//root-tracking
 	const [start, setStart] = useState(null);
 	const [end, setEnd] = useState(null);
-	const [searchKey, setSearchKey] = useState("신사역");
+	const [searchKey, setSearchKey] = useState("월평역");
 	const [searchResult, setSearchResult] = useState([]);
 	const [resultDrawArr, setResultDrawArr] = useState([]);
 	const [chktraffic, setChktraffic] = useState([]);
@@ -75,15 +176,35 @@ export default function NewMapwindow() {
 	const [markerE, setMarkerE] = useState(null);
 	const [markerC, setMarkerC] = useState(null);
 	const [searchMarkers, setSearchMarkers] = useState([]);
-	const [recvideo, setrecvideo] = useState([]);
-	const [keepPlace, setKeepPlace] = useState([]);
-	const [recvideoLoc, setrecvideoLoc] = useState([]);
-	const types = ["경로 설정", "정보 보기"];
-	const [active, setActive] = useState(types[0]);
 	const [totalDaytime, setTotalDaytime] = useState({
 		totalD: "",
 		totalTime: "",
 	});
+	const [openResult, setOpenResult] = useState(true);
+
+	//video-list
+	const [recvideo, setrecvideo] = useState([]);
+	const [keepPlace, setKeepPlace] = useState([]);
+	const [recvideoLoc, setrecvideoLoc] = useState([]);
+
+	//board
+	const [active, setActive] = useState("hand");
+	const [chosenEmoji, setChosenEmoji] = useState(null);
+	const [emojiResult, setEmojiResult] = useState(true);
+	const [searching, setSearching] = useState(false);
+	const [drawObject, setDrawObject] = useState(null);
+
+	const [searchPoint, setSearchPoint] = useState({
+		nelat: "",
+		nelng: "",
+		swlat: "",
+		swlng: "",
+	});
+
+	const [individual, setIndividual] = useState(false);
+
+	const [sharing, setSharing] = useState(false);
+
 	const { socket } = useSocket();
 
 	const initMap = () => {
@@ -99,7 +220,7 @@ export default function NewMapwindow() {
 				new Tmapv2.Map("map_div", {
 					center: center,
 					width: "100%",
-					height: "1000px",
+					height: "100vh",
 					zoom: 18,
 					zoomControl: true,
 					scrollwheel: true,
@@ -128,16 +249,12 @@ export default function NewMapwindow() {
 						map: map,
 						label:
 							"<span style='background-color: #46414E; color:white'>" +
-							"이동중" +
+							"현재위치" +
 							"</span>",
 					}),
 				);
 			});
 		}
-
-		// new Tmapv2.extension.MeasureDistance({
-		// 	map: map,
-		// });
 	}, [map]);
 
 	//이동시
@@ -173,8 +290,8 @@ export default function NewMapwindow() {
 		if (markerC) {
 			markerC.addListener("click", (e) => {
 				const { _lat, _lng } = markerC.getPosition();
-				// reverseGeoCoding(_lat, _lng);
-				loadpointInfo(_lat, _lng);
+				setSharing(true);
+				// loadpointInfo(_lat, _lng);
 			});
 		}
 	}, [markerC]);
@@ -187,69 +304,6 @@ export default function NewMapwindow() {
 			}
 		}
 	}, [recvideo]);
-
-	const loadKeepList = async () => {
-		const keeplist = await readFromFirebase("photos");
-		setKeepPlace(keeplist);
-	};
-
-	const loadpointInfo = async (lat, lng) => {
-		try {
-			const { data: items } = await axios({
-				method: "get",
-				url: "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&format=json&callback=result",
-				params: {
-					categories: "카페;음식점;",
-					appKey: process.env.REACT_APP_TMAP_API_KEY,
-					reqLevel: 15,
-					radius: 1,
-					centerLon: lng,
-					centerLat: lat,
-					reqCoordType: "WGS84GEO",
-					resCoordType: "WGS84GEO",
-					count: 5,
-				},
-			});
-			setrecvideo(items.searchPoiInfo.pois.poi);
-		} catch (err) {
-			console.log(err);
-		}
-	};
-
-	// const reverseGeoCoding = (lat, lng) => {
-	// 	var tData = new Tmapv2.extension.TData();
-	// 	const params = {
-	// 		onComplete: onComplete, //데이터 로드가 성공적으로 완료 되었을때 실행하는 함수 입니다.
-	// 		onProgress: onProgress, //데이터 로드 중에 실행하는 함수 입니다.
-	// 		onError: onError, //데이터 로드가 실패했을때 실행하는 함수 입니다.
-	// 	};
-
-	// 	const optionObj = {
-	// 		coordType: "WGS84GEO",
-	// 		addressType: "A04",
-	// 	};
-
-	// 	tData.getAddressFromGeoJson(lat, lng, optionObj, params);
-
-	// 	function onComplete() {
-	// 		console.log("Complete");
-	// 		console.log(this._responseData);
-
-	// 		const loadVideoList = async (loc) => {
-	// 			const videoList = await searchOnYoutube(loc);
-	// 			setrecvideo(videoList);
-	// 		};
-	// 	}
-	// 	//데이터 로드중 실행하는 함수입니다.
-	// 	function onProgress() {
-	// 		console.log("onprogress");
-	// 	}
-
-	// 	//데이터 로드 중 에러가 발생시 실행하는 함수입니다.
-	// 	function onError() {
-	// 		console.log("error");
-	// 	}
-	// };
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -563,9 +617,7 @@ export default function NewMapwindow() {
 		setSearchMarkers(
 			result.map((data, k) => {
 				const name = data.name;
-
 				const markerPosition = getPositionFromData(data);
-
 				const marker = new Tmapv2.Marker({
 					position: markerPosition,
 					icon: `http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${k}.png`,
@@ -617,6 +669,66 @@ export default function NewMapwindow() {
 				map: map,
 			}),
 		);
+
+		existSearch();
+	};
+
+	useEffect(() => {
+		if (searching === true && drawObject !== null) {
+			drawObject.drawRectangle();
+		}
+	}, [searching, drawObject]);
+
+	useEffect(() => {
+		loadpointInfo(searchPoint);
+	}, [searchPoint]);
+
+	const onSearchedPoint = (drawObject) => {
+		const { _data } = drawObject;
+
+		console.log(drawObject);
+		if (drawObject._data.shapeArray.length > 0) {
+			setSearchPoint({
+				nelat: _data.shapeArray[0]._shape_data.bounds._ne._lat,
+				nelng: _data.shapeArray[0]._shape_data.bounds._ne._lng,
+				swlat: _data.shapeArray[0]._shape_data.bounds._sw._lat,
+				swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
+			});
+		}
+	};
+
+	const existSearch = () => {
+		setOpenResult(false);
+	};
+
+	const loadKeepList = async () => {
+		const keeplist = await readFromFirebase("photos");
+		setKeepPlace(keeplist);
+	};
+
+	const loadpointInfo = async (lat, lng) => {
+		try {
+			const { data: items } = await axios({
+				method: "get",
+				url: "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&format=json&callback=result",
+				params: {
+					categories: "카페;음식점;",
+					appKey: process.env.REACT_APP_TMAP_API_KEY,
+					reqLevel: 15,
+					radius: 1,
+					centerLon: searchPoint.nelng,
+					centerLat: searchPoint.nelat,
+					reqCoordType: "WGS84GEO",
+					resCoordType: "WGS84GEO",
+					count: 5,
+				},
+			});
+			setrecvideo(items.searchPoiInfo.pois.poi);
+
+			setIndividual(true);
+		} catch (err) {
+			console.log(err);
+		}
 	};
 
 	const onLoadCurrent = (e) => {
@@ -625,29 +737,6 @@ export default function NewMapwindow() {
 			markerC.setMap(map);
 		}
 		map.setCenter(currentPosition);
-	};
-
-	const onClickKeep = (list) => {
-		const { _lat, _long } = list.coords;
-		const keepLocation = new Tmapv2.LatLng(_lat, _long);
-		const newMarker = new Tmapv2.Marker({
-			position: keepLocation,
-			icon: point2,
-			iconSize: new Tmapv2.Size(24, 24),
-			map: map,
-			title: list.title,
-		});
-		newMarker.addListener("mouseenter", function (evt) {
-			new Tmapv2.InfoWindow({
-				position: keepLocation,
-				content: `<img src=${list.url} width="300px" height="auto"></img>`,
-				type: 2,
-				map: map,
-			});
-		});
-
-		newMarker.setMap(map);
-		map.setCenter(keepLocation);
 	};
 
 	const getPositionFromData = (data) => {
@@ -664,43 +753,93 @@ export default function NewMapwindow() {
 		return new Tmapv2.LatLng(lat, lon);
 	};
 
-	const KeepPlaceCard = (props) => {
-		const { coords, date, id, title, url, visited } = props.info;
-		return (
-			<Box componenet={"div"}>
-				{title}
-				<img src={url} width="100%" height="auto"></img>
-				<Button variant="outlined" onClick={() => onClickKeep(props.info)}>
-					link
-				</Button>
-			</Box>
-		);
+	const onHandleSearchObject = () => {
+		if (drawObject !== null) {
+			drawObject.clear();
+			setDrawObject(null);
+		}
+		if (searching) {
+			setSearching(false);
+		}
+	};
+	const onEmojiClick = (event, emojiObject) => {
+		setChosenEmoji(emojiObject);
+		setEmojiResult(false);
 	};
 
-	const trackMenu = () => {
-		return (
-			<div id="searchResult">
-				<form onSubmit={handleSubmit}>
-					<TextField type="text" value={searchKey} onChange={handleChange} />
-					<IconButton variant="contained" type="submit">
-						<SearchIcon></SearchIcon>
-					</IconButton>
-				</form>
-				<div>
-					<div>
-						총 거리:{" "}
-						{totalDaytime.totalD < 1
-							? totalDaytime.totalD * 1000 + "m"
-							: totalDaytime.totalD + "km"}
-					</div>
-					<div>총 시간: {totalDaytime.totalTime} 분</div>
-					<div>출발: {start && start.name}</div>
-					<div>도착: {end && end.name}</div>
-				</div>
-				<ResultList>
-					{searchResult
-						? searchResult.map((result, idx) => (
-								<ResultList.Item>
+	const onHandleClick = (props) => {
+		switch (props) {
+			case "hand":
+				setActive("hand");
+				onHandleSearchObject();
+				break;
+			case "draw":
+				setActive("draw");
+				onHandleSearchObject();
+				break;
+			case "search":
+				setActive("search");
+				setSearching(true);
+				setDrawObject(
+					new Tmapv2.extension.Drawing({
+						map: map, // 지도 객체
+						strokeWeight: 4, // 테두리 두께
+						strokeColor: "blue", // 테두리 색상
+						strokeOpacity: 1, // 테두리 투명도
+						fillColor: "red", // 도형 내부 색상
+						fillOpacity: 0.2,
+					}),
+				);
+
+				break;
+			case "emoji":
+				setActive("emoji");
+				setEmojiResult(true);
+				onHandleSearchObject();
+				break;
+			default:
+				break;
+		}
+	};
+
+	return (
+		<React.Fragment>
+			{chosenEmoji ? (
+				<EmojiDisplayWrapper className="active">
+					{chosenEmoji.emoji}
+				</EmojiDisplayWrapper>
+			) : null}
+			{drawObject && drawObject._data.shapeArray.length > 0 ? (
+				<ButtonWrapper onClick={() => onSearchedPoint(drawObject)}>
+					정보 찾기
+				</ButtonWrapper>
+			) : null}
+			{sharing ? (
+				<VideoWrapper>
+					<button onClick={() => setSharing(false)}>
+						<FontAwesomeIcon icon={faXmark} />
+					</button>
+					<ShareVideo></ShareVideo>
+				</VideoWrapper>
+			) : null}
+			{individual ? (
+				<IndividualWrapper>
+					<Individual data={recvideo}></Individual>{" "}
+				</IndividualWrapper>
+			) : null}
+
+			<MapButtonWrapper>
+				<div id="searchResult">
+					<InputWrapper onSubmit={handleSubmit}>
+						<input type="text" value={searchKey} onChange={handleChange} />
+						<IconButton variant="contained" type="submit">
+							<SearchIcon></SearchIcon>
+						</IconButton>
+					</InputWrapper>
+					{searchResult.length > 0 && openResult && (
+						<ResultList>
+							{searchResult.map((result, idx) => (
+								<ResultList.Item key={idx}>
 									<img
 										src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
 									/>
@@ -710,63 +849,79 @@ export default function NewMapwindow() {
 									</Button>
 									<Button onClick={() => handleEndSetting(result)}>도착</Button>
 								</ResultList.Item>
-						  ))
-						: "검색 결과"}
-				</ResultList>
-			</div>
-		);
-	};
+							))}
+						</ResultList>
+					)}
+				</div>
+				<InfoMenu
+					map={map}
+					totalDaytime={totalDaytime}
+					start={start}
+					end={end}
+					keepPlace={keepPlace}
+				></InfoMenu>
 
-	const infoMenu = () => {
-		return (
-			<MenuWrapper>
-				<Box>Keep Place</Box>
-				{keepPlace.map((list, idx) => (
-					<KeepPlaceCard key={idx} info={list}></KeepPlaceCard>
-				))}
-
-				<Grid item>
-					<Divider></Divider>
-					<Box component="span">주변 영상</Box>
-					<Box>
-						{recvideoLoc.length > 0
-							? recvideoLoc.map((list, idx) => (
-									<img
-										key={idx}
-										src={list.snippet.thumbnails.medium.url}
-										width={list.snippet.thumbnails.medium.width}
-										height={list.snippet.thumbnails.medium.height}
-									></img>
-							  ))
-							: "아직 관련된 영상이 없습니다"}
-					</Box>
-				</Grid>
-			</MenuWrapper>
-		);
-	};
-
-	return (
-		<React.Fragment>
-			<Navigation>
-				<SearchBox>
+				<BoardWrapper>
 					<Stack direction="row" alignItems="center" justifyContent="center">
-						{types.map((type, i) => (
-							<Button key={i} onClick={() => setActive(type)}>
-								{type}
-							</Button>
-						))}
-					</Stack>
-					{active === types[0] ? trackMenu() : infoMenu()}
-				</SearchBox>
-				<Wrapper>
-					<MapButtonWrapper>
-						<IconButton onClick={onLoadCurrent}>
-							<MyLocationIcon></MyLocationIcon>
+						<IconButton
+							className={active === "hand" ? "active" : ""}
+							onClick={() => onHandleClick("hand")}
+						>
+							<PanToolIcon style={{ fontSize: "3vw" }}></PanToolIcon>
 						</IconButton>
-					</MapButtonWrapper>
-					<div id="map_div"></div>
-				</Wrapper>
-			</Navigation>
+						<IconButton
+							className={active === "draw" ? "active" : ""}
+							onClick={() => onHandleClick("draw")}
+						>
+							<GestureIcon style={{ fontSize: "3vw" }}></GestureIcon>
+						</IconButton>
+
+						<IconButton
+							className={active === "search" ? "active" : ""}
+							onClick={() => onHandleClick("search")}
+						>
+							<ImageSearchIcon style={{ fontSize: "3vw" }}></ImageSearchIcon>
+						</IconButton>
+						<IconButton
+							className={active === "emoji" ? "active" : ""}
+							onClick={() => onHandleClick("emoji")}
+						>
+							<EmojiEmotionsIcon
+								style={{ fontSize: "3vw" }}
+							></EmojiEmotionsIcon>
+						</IconButton>
+					</Stack>
+				</BoardWrapper>
+				<IconButton onClick={onLoadCurrent}>
+					<MyLocationIcon style={{ fontSize: "3vw" }}></MyLocationIcon>
+				</IconButton>
+			</MapButtonWrapper>
+			{active === "emoji" && emojiResult ? (
+				<EmojiWrapper>
+					<Picker
+						onEmojiClick={onEmojiClick}
+						disableAutoFocus={true}
+						groupNames={{ smileys_people: "PEOPLE" }}
+						native
+					/>
+				</EmojiWrapper>
+			) : null}
+
+			{active === "draw" ? <Canvas width={2000} height={1000}></Canvas> : null}
+			<div id="map_div"></div>
 		</React.Fragment>
 	);
 }
+
+// {
+// 	/* {recvideoLoc.length > 0
+// 							? recvideoLoc.map((list, idx) => (
+// 									<img
+// 										key={idx}
+// 										src={list.snippet.thumbnails.medium.url}
+// 										width={list.snippet.thumbnails.medium.width}
+// 										height={list.snippet.thumbnails.medium.height}
+// 									></img>
+// 							  ))
+// 							: "아직 관련된 영상이 없습니다"} */
+// }

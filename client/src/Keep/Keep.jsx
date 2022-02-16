@@ -1,5 +1,5 @@
 //search YouTube video
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import useInput from "../functions/useInput";
 import axios from "axios";
 import { readFromFirebase } from "../functions/firebase";
@@ -11,15 +11,13 @@ const Keep = () => {
 	const [keep, setKeep] = useState(false);
 	const [keepPlace, setKeepPlace] = useState({ visited: "", notVisited: "" });
 
-	useEffect(async () => {
+	useCallback(async () => {
 		const photos = await readFromFirebase("photos");
 		const visited = photos.filter((photo) => photo.visited === true);
 		const notVisited = photos.filter((photo) => photo.visited === false);
 		setKeepPlace((keepPlace) => ({ ...keepPlace, visited: visited }));
 		setKeepPlace((keepPlace) => ({ ...keepPlace, notVisited: notVisited }));
 	}, []);
-
-	console.log(keepPlace);
 
 	return (
 		<div>

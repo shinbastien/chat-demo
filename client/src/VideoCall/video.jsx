@@ -2,17 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
 import styled from "styled-components";
 
-const Container = styled.div`
-	// padding: 20px;
-	// display: flex;
-	// height: 100vh;
-	// width: 90%;
-	// margin: auto;
-	// flex-wrap: wrap;
-`;
-
 const StyledVideo = styled.video`
-	// height: 40%;
 	width: 100%;
 	border-radius: 15px;
 	overflow: hidden;
@@ -135,4 +125,4 @@ function addPeer(incomingSignal, callerName, stream, socket) {
 }
 
 export default MakePeerConnection;
-export { Video, videoConstraints, Container, StyledVideo };
+export { Video, videoConstraints, StyledVideo };

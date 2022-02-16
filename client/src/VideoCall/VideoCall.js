@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import Peer from "simple-peer";
 import { StyledVideo, Video, videoConstraints } from "./videostyle";
@@ -184,7 +184,7 @@ function VideoCall(props) {
 	}
 	return (
 		<div>
-			현재 접속자 수: {peers.length} 명
+			현재 접속자 수: {peers.length + 1} 명
 			<Grid container>
 				<Grid item style={{ padding: "1.5rem" }}>
 					<StyledVideo

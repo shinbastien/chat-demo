@@ -30,7 +30,6 @@ const TextWrapper = styled.span`
 
 function Map() {
 	const location = useLocation();
-	//'keep' button open > submenu
 	const [anchorEl, setAnchorEl] = React.useState(null);
 	const open = Boolean(anchorEl);
 
@@ -46,6 +45,11 @@ function Map() {
 	console.log("userName obtained from Home is: ", userName);
 
 	const { socket, connected } = useSocket();
+
+	const onHandleCopy = (e) => {
+		navigator.clipboard.writeText(window.location.href);
+		alert("url이 복사되었습니다.");
+	};
 
 	useEffect(() => {
 		if (connected) {
@@ -64,7 +68,7 @@ function Map() {
 					sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
 				>
 					<ImgWrapper src={logoWhite}></ImgWrapper>
-					<IconButton style={{ color: "white" }}>
+					<IconButton style={{ color: "white" }} onClick={onHandleCopy}>
 						<ShareIcon></ShareIcon>
 					</IconButton>
 					<Box sx={{ flexGrow: 1 }}></Box>
@@ -113,11 +117,11 @@ function Map() {
 					</Menu>
 				</Typography>
 			</AppBar>
-			<Grid container spacing={2} style={{ marginTop: 60, padding: 20 }}>
-				<Grid item xs={6} md={8}>
+			<Grid container spacing={2} style={{ marginTop: 40 }}>
+				<Grid item xs={6} md={9}>
 					<NewMapwindow></NewMapwindow>
 				</Grid>
-				<Grid item xs={6} md={4}>
+				<Grid item xs={6} md={3}>
 					<VideoCall groupID={groupID} userName={userName}></VideoCall>
 				</Grid>
 			</Grid>
