@@ -5,21 +5,13 @@ import React, { useState, useEffect } from "react";
 import Search from "../Search/Search";
 import Keep from "../Keep/Keep";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import AppBar from "@mui/material/AppBar";
+
 import Typography from "@mui/material/Typography";
-import logoWhite from "../Styles/source/logo_w.png";
-import ShareIcon from "@material-ui/icons/Share";
-import IconButton from "@mui/material/IconButton";
-import Stack from "@mui/material/Stack";
-import Menu from "@mui/material/Menu";
+
 import { useLocation, Link } from "react-router-dom";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import axios from "axios";
-
-import { MenuItem } from "@mui/material";
-
 import styled from "styled-components";
 
 const ImgWrapper = styled.img`
@@ -53,28 +45,16 @@ function TabPanel(props) {
 	);
 }
 
-export default function Individual() {
+export default function Individual(props) {
+	const { data } = props;
+
 	const location = useLocation();
 	const types = ["Search", "Keep"];
-	const [anchorEl, setAnchorEl] = useState(null);
-	const open = Boolean(anchorEl);
+
 	const [recvideo, setrecvideo] = useState([]);
 
 	const { groupID, userName } = location.state;
 	const [value, setValue] = React.useState(0);
-
-	const handleClose = () => {
-		setAnchorEl(null);
-	};
-
-	const handleClick = (event) => {
-		setAnchorEl(event.currentTarget);
-	};
-
-	const handleCopy = (event) => {
-		window.navigator.clipboard.writeText(window.location.href);
-		alert("주소가 복사되었습니다" + window.location.href);
-	};
 
 	const handleChange = (event, newValue) => {
 		setValue(newValue);
@@ -117,14 +97,14 @@ export default function Individual() {
 			<Box sx={{ padding: "2%" }}>
 				<Tabs style={{ marginTop: 30 }} value={value} onChange={handleChange}>
 					<Tab label="Search"></Tab>
-					<Tab label="Keep"></Tab>
+					{/* <Tab label="Keep"></Tab> */}
 				</Tabs>
 				<TabPanel value={value} index={0}>
 					<Search value={recvideo}></Search>
 				</TabPanel>
-				<TabPanel value={value} index={1}>
+				{/* <TabPanel value={value} index={1}>
 					<Keep></Keep>
-				</TabPanel>
+				</TabPanel> */}
 			</Box>
 		</>
 	);

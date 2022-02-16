@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { Divider } from "@mui/material";
 import styled from "styled-components";
 import Box from "@mui/material/Box";
-import point2 from "../Styles/source/point2.png";
+import point2 from "../../Styles/source/point2.png";
 
 const MenuWrapper = styled.div`
 	width: 300px;
@@ -143,18 +143,7 @@ const InfoMenu = (props) => {
 						<SharedPlaceCard key={idx} info={list}></SharedPlaceCard>
 					))}
 				</Box>
-				<Box>
-					{/* {recvideoLoc.length > 0
-								? recvideoLoc.map((list, idx) => (
-										<img
-											key={idx}
-											src={list.snippet.thumbnails.medium.url}
-											width={list.snippet.thumbnails.medium.width}
-											height={list.snippet.thumbnails.medium.height}
-										></img>
-								  ))
-								: "아직 관련된 영상이 없습니다"} */}
-				</Box>
+				<Box></Box>
 			</SubmenuWrapper>
 		</MenuWrapper>
 	);

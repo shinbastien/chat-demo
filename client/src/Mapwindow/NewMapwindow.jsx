@@ -19,24 +19,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
 import MyLocationIcon from "@material-ui/icons/MyLocation";
 import { useSocket } from "../lib/socket";
-import Canvas from "./Canvas";
-import ShareVideo from "../Pages/ShareVideo";
-import Individual from "../Pages/Individual";
+import Canvas from "./Canvas/Canvas";
+import ShareVideo from "./ShareVideo/ShareVideo";
+import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
-import InfoMenu from "./InfoMenu";
+import InfoMenu from "./Menu/InfoMenu";
 import { useCallback } from "react";
-
-const boxFade = keyframes`
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-`;
 
 const ResultList = styled.div`
 	background-color: white;
@@ -105,6 +93,39 @@ const BoardWrapper = styled.div`
 	}
 `;
 
+const ButtonWrapper = styled.button`
+	position: absolute;
+	z-index: 300;
+	font-size: 2vw;
+
+	text-align: center;
+	left: 40%;
+	transform: translateX(-50%);
+	background-color: white;
+	padding: 1.5%;
+	border-radius: 10px;
+	margin: 2%;
+
+	&:active {
+		color: white;
+		background-color: black;
+	}
+
+	&:hover {
+		color: white;
+		background-color: black;
+	}
+`;
+
+const IndividualWrapper = styled.div`
+	position: fixed;
+	bottom: 7%;
+	display: flex;
+	z-index: 222;
+	left: 43%;
+	background-color: white;
+`;
+
 const EmojiWrapper = styled.div`
 	position: fixed;
 	bottom: 7%;
@@ -117,17 +138,12 @@ const EmojiDisplayWrapper = styled.div`
 	font-size: 7vw;
 	position: absolute;
 	z-index: 300;
-	${(props) =>
-		props.active &&
-		`
-   animation: ${boxFade} 2s 1s infinite linear alternate;
-  `}
 `;
 
 const VideoWrapper = styled.div`
 	position: absolute;
 	z-index: 300;
-	position: absolute;
+
 	left: 40%;
 	transform: translateX(-50%);
 	background-color: white;
@@ -175,7 +191,7 @@ export default function NewMapwindow() {
 	const [active, setActive] = useState("hand");
 	const [chosenEmoji, setChosenEmoji] = useState(null);
 	const [emojiResult, setEmojiResult] = useState(true);
-	const [drawing, setDrawing] = useState(false);
+	const [searching, setSearching] = useState(false);
 	const [drawObject, setDrawObject] = useState(null);
 
 	const [searchPoint, setSearchPoint] = useState({
@@ -185,14 +201,11 @@ export default function NewMapwindow() {
 		swlng: "",
 	});
 
+	const [individual, setIndividual] = useState(false);
+
 	const [sharing, setSharing] = useState(false);
 
 	const { socket } = useSocket();
-
-	const onEmojiClick = (event, emojiObject) => {
-		setChosenEmoji(emojiObject);
-		setEmojiResult(false);
-	};
 
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
@@ -282,8 +295,6 @@ export default function NewMapwindow() {
 			});
 		}
 	}, [markerC]);
-
-	// useEffect(() => {}, [chosenEmoji]);
 
 	useMemo(async () => {
 		if (recvideo.length > 0) {
@@ -663,20 +674,20 @@ export default function NewMapwindow() {
 	};
 
 	useEffect(() => {
-		if (drawing === true && drawObject !== null) {
+		if (searching === true && drawObject !== null) {
 			drawObject.drawRectangle();
-			console.log(drawObject);
 		}
-	}, [drawObject]);
+	}, [searching, drawObject]);
 
-	useCallback(() => {
+	useEffect(() => {
 		loadpointInfo(searchPoint);
 	}, [searchPoint]);
 
 	const onSearchedPoint = (drawObject) => {
 		const { _data } = drawObject;
 
-		if (_data.shapeArray.length > 0) {
+		console.log(drawObject);
+		if (drawObject._data.shapeArray.length > 0) {
 			setSearchPoint({
 				nelat: _data.shapeArray[0]._shape_data.bounds._ne._lat,
 				nelng: _data.shapeArray[0]._shape_data.bounds._ne._lng,
@@ -713,6 +724,8 @@ export default function NewMapwindow() {
 				},
 			});
 			setrecvideo(items.searchPoiInfo.pois.poi);
+
+			setIndividual(true);
 		} catch (err) {
 			console.log(err);
 		}
@@ -740,27 +753,33 @@ export default function NewMapwindow() {
 		return new Tmapv2.LatLng(lat, lon);
 	};
 
-	const onHandleDrawObject = () => {
+	const onHandleSearchObject = () => {
 		if (drawObject !== null) {
 			drawObject.clear();
 			setDrawObject(null);
 		}
-		setDrawing(false);
+		if (searching) {
+			setSearching(false);
+		}
+	};
+	const onEmojiClick = (event, emojiObject) => {
+		setChosenEmoji(emojiObject);
+		setEmojiResult(false);
 	};
 
 	const onHandleClick = (props) => {
 		switch (props) {
 			case "hand":
 				setActive("hand");
-				onHandleDrawObject();
+				onHandleSearchObject();
 				break;
 			case "draw":
 				setActive("draw");
-				onHandleDrawObject();
+				onHandleSearchObject();
 				break;
 			case "search":
 				setActive("search");
-				setDrawing(true);
+				setSearching(true);
 				setDrawObject(
 					new Tmapv2.extension.Drawing({
 						map: map, // 지도 객체
@@ -776,7 +795,7 @@ export default function NewMapwindow() {
 			case "emoji":
 				setActive("emoji");
 				setEmojiResult(true);
-				onHandleDrawObject();
+				onHandleSearchObject();
 				break;
 			default:
 				break;
@@ -790,6 +809,11 @@ export default function NewMapwindow() {
 					{chosenEmoji.emoji}
 				</EmojiDisplayWrapper>
 			) : null}
+			{drawObject && drawObject._data.shapeArray.length > 0 ? (
+				<ButtonWrapper onClick={() => onSearchedPoint(drawObject)}>
+					정보 찾기
+				</ButtonWrapper>
+			) : null}
 			{sharing ? (
 				<VideoWrapper>
 					<button onClick={() => setSharing(false)}>
@@ -798,7 +822,11 @@ export default function NewMapwindow() {
 					<ShareVideo></ShareVideo>
 				</VideoWrapper>
 			) : null}
-			{/* <Individual></Individual> */}
+			{individual ? (
+				<IndividualWrapper>
+					<Individual data={recvideo}></Individual>{" "}
+				</IndividualWrapper>
+			) : null}
 
 			<MapButtonWrapper>
 				<div id="searchResult">
@@ -833,9 +861,6 @@ export default function NewMapwindow() {
 					keepPlace={keepPlace}
 				></InfoMenu>
 
-				{drawObject ? (
-					<Button onClick={() => onSearchedPoint(drawObject)}>정보 찾기</Button>
-				) : null}
 				<BoardWrapper>
 					<Stack direction="row" alignItems="center" justifyContent="center">
 						<IconButton
@@ -887,3 +912,16 @@ export default function NewMapwindow() {
 		</React.Fragment>
 	);
 }
+
+// {
+// 	/* {recvideoLoc.length > 0
+// 							? recvideoLoc.map((list, idx) => (
+// 									<img
+// 										key={idx}
+// 										src={list.snippet.thumbnails.medium.url}
+// 										width={list.snippet.thumbnails.medium.width}
+// 										height={list.snippet.thumbnails.medium.height}
+// 									></img>
+// 							  ))
+// 							: "아직 관련된 영상이 없습니다"} */
+// }

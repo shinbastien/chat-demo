@@ -2,7 +2,7 @@
 // Do not delete above comment
 
 import React, { useState, useEffect, useRef } from "react";
-import { useSocket } from "../lib/socket";
+import { useSocket } from "../../lib/socket";
 import { useLocation, Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPause, faPlay } from "@fortawesome/free-solid-svg-icons";
