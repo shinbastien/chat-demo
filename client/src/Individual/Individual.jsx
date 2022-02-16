@@ -46,12 +46,10 @@ function TabPanel(props) {
 }
 
 export default function Individual(props) {
-	const { data } = props;
-
 	const location = useLocation();
 	const types = ["Search", "Keep"];
 
-	const [recvideo, setrecvideo] = useState([]);
+	const [recvideo, setrecvideo] = useState(props.data);
 
 	const { groupID, userName } = location.state;
 	const [value, setValue] = React.useState(0);
@@ -60,37 +58,37 @@ export default function Individual(props) {
 		setValue(newValue);
 	};
 
-	useEffect(() => {
-		navigator.geolocation.getCurrentPosition(function (position) {
-			const lat = position.coords.latitude;
-			const lng = position.coords.longitude;
+	// useEffect(() => {
+	// 	navigator.geolocation.getCurrentPosition(function (position) {
+	// 		const lat = position.coords.latitude;
+	// 		const lng = position.coords.longitude;
 
-			loadpointInfo(lat, lng);
-		});
-	}, []);
+	// 		// loadpointInfo(lat, lng);
+	// 	});
+	// }, []);
 
-	const loadpointInfo = async (lat, lng) => {
-		try {
-			const { data: items } = await axios({
-				method: "get",
-				url: "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&format=json&callback=result",
-				params: {
-					categories: "카페;",
-					appKey: process.env.REACT_APP_TMAP_API_KEY,
-					reqLevel: 15,
-					radius: 3,
-					centerLon: lng,
-					centerLat: lat,
-					reqCoordType: "WGS84GEO",
-					resCoordType: "WGS84GEO",
-					count: 10,
-				},
-			});
-			setrecvideo(items.searchPoiInfo.pois.poi);
-		} catch (err) {
-			console.log(err);
-		}
-	};
+	// const loadpointInfo = async (lat, lng) => {
+	// 	try {
+	// 		const { data: items } = await axios({
+	// 			method: "get",
+	// 			url: "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&format=json&callback=result",
+	// 			params: {
+	// 				categories: "카페;",
+	// 				appKey: process.env.REACT_APP_TMAP_API_KEY,
+	// 				reqLevel: 15,
+	// 				radius: 3,
+	// 				centerLon: lng,
+	// 				centerLat: lat,
+	// 				reqCoordType: "WGS84GEO",
+	// 				resCoordType: "WGS84GEO",
+	// 				count: 10,
+	// 			},
+	// 		});
+	// 		setrecvideo(items.searchPoiInfo.pois.poi);
+	// 	} catch (err) {
+	// 		console.log(err);
+	// 	}
+	// };
 
 	return (
 		<>

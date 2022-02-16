@@ -24,7 +24,37 @@ import ShareVideo from "./ShareVideo/ShareVideo";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
-import { useCallback } from "react";
+import { merge } from "react-animations";
+
+import bounceInUp from "react-animations/lib/bounce-in-up";
+import fadeOut from "react-animations/lib/fade-out";
+
+// const bounceAnimation = keyframes`${merge(bounceInUp, fadeOut)}`;
+
+// const BouncyDiv = styled.div`
+// 	animation: 2s ${bounceAnimation};
+// 	display: visible;
+// `;
+
+const bounceAnimation = keyframes`
+  0% {
+    transform: translateY(0);
+    animation-timing-function: ease-out;
+  }
+  50% {
+    transform: translateY(-200px);
+  }
+   100% {
+   opacity: 0;
+   display: none;
+  }
+`;
+
+const BouncyDiv = styled.div`
+	animation: ${bounceAnimation} 1s;
+	animation-delay: 1s;
+	animation-fill-mode: both;
+`;
 
 const ResultList = styled.div`
 	background-color: white;
@@ -135,6 +165,8 @@ const EmojiWrapper = styled.div`
 `;
 
 const EmojiDisplayWrapper = styled.div`
+	bottom: 0;
+	left: 50%;
 	font-size: 7vw;
 	position: absolute;
 	z-index: 300;
@@ -189,8 +221,11 @@ export default function NewMapwindow() {
 
 	//board
 	const [active, setActive] = useState("hand");
-	const [chosenEmoji, setChosenEmoji] = useState(null);
+	const [chosenEmoji, setChosenEmoji] = useState();
+
 	const [emojiResult, setEmojiResult] = useState(true);
+	const [aniemoji, setAniEmoji] = useState(false);
+
 	const [searching, setSearching] = useState(false);
 	const [drawObject, setDrawObject] = useState(null);
 
@@ -202,7 +237,6 @@ export default function NewMapwindow() {
 	});
 
 	const [individual, setIndividual] = useState(false);
-
 	const [sharing, setSharing] = useState(false);
 
 	const { socket } = useSocket();
@@ -235,22 +269,20 @@ export default function NewMapwindow() {
 
 	//current point
 	useEffect(() => {
+		if (map !== null) {
+			map.addListener("click", onClickMarker);
+		}
 		if (navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(function (position) {
 				const lat = position.coords.latitude;
 				const lng = position.coords.longitude;
 
 				setMarkerC(
-					new Tmapv2.Marker({
-						position: new Tmapv2.LatLng(lat, lng),
-						icon: point1,
-						iconSize: new Tmapv2.Size(24, 24),
+					getMarkers({
+						lat: lat,
+						lng: lng,
+						markerImage: point1,
 						title: "현재위치",
-						map: map,
-						label:
-							"<span style='background-color: #46414E; color:white'>" +
-							"현재위치" +
-							"</span>",
 					}),
 				);
 			});
@@ -264,19 +296,16 @@ export default function NewMapwindow() {
 				const lat = position.coords.latitude;
 				const lng = position.coords.longitude;
 
-				if (markerC !== null) {
-					markerC.setMap(null);
-				}
 				setMarkerC(
-					new Tmapv2.Marker({
-						position: new Tmapv2.LatLng(lat, lng),
-						icon: point1,
-						iconSize: new Tmapv2.Size(24, 24),
-						title: "현재위치",
-						map: map,
+					getMarkers({
+						lat: lat,
+						lng: lng,
+						markerImage: point1,
+						title: "이동중",
 					}),
 				);
 			});
+			console.log("I am moving...");
 		}, 5000);
 
 		loadKeepList();
@@ -284,26 +313,25 @@ export default function NewMapwindow() {
 		return () => {
 			clearInterval(interval);
 		};
-	}, []);
-
-	useMemo(() => {
-		if (markerC) {
-			markerC.addListener("click", (e) => {
-				const { _lat, _lng } = markerC.getPosition();
-				setSharing(true);
-				// loadpointInfo(_lat, _lng);
-			});
-		}
 	}, [markerC]);
 
-	useMemo(async () => {
-		if (recvideo.length > 0) {
-			for (let i = 0; i < recvideo.length; i++) {
-				const video = await searchOnYoutube(recvideo[i].name);
-				setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
-			}
-		}
-	}, [recvideo]);
+	// useMemo(async () => {
+	// 	if (recvideo.length > 0) {
+	// 		for (let i = 0; i < recvideo.length; i++) {
+	// 			const video = await searchOnYoutube(recvideo[i].name);
+	// 			setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
+	// 		}
+	// 	}
+	// }, [recvideo]);
+
+	const onClickMarker = (e) => {
+		const latlng = e.latLng;
+		const marker = new Tmapv2.Marker({
+			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
+			map: map,
+		});
+		console.log(marker);
+	};
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -686,7 +714,6 @@ export default function NewMapwindow() {
 	const onSearchedPoint = (drawObject) => {
 		const { _data } = drawObject;
 
-		console.log(drawObject);
 		if (drawObject._data.shapeArray.length > 0) {
 			setSearchPoint({
 				nelat: _data.shapeArray[0]._shape_data.bounds._ne._lat,
@@ -695,6 +722,9 @@ export default function NewMapwindow() {
 				swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
 			});
 		}
+		drawObject.clear();
+
+		setDrawObject(null);
 	};
 
 	const existSearch = () => {
@@ -762,15 +792,12 @@ export default function NewMapwindow() {
 			setSearching(false);
 		}
 	};
-	const onEmojiClick = (event, emojiObject) => {
-		setChosenEmoji(emojiObject);
-		setEmojiResult(false);
-	};
 
 	const onHandleClick = (props) => {
 		switch (props) {
 			case "hand":
 				setActive("hand");
+
 				onHandleSearchObject();
 				break;
 			case "draw":
@@ -802,57 +829,80 @@ export default function NewMapwindow() {
 		}
 	};
 
+	const onEmojiClick = (event, emojiObject) => {
+		const { emoji } = emojiObject;
+		setChosenEmoji(emoji);
+		setEmojiResult(false);
+	};
+
+	useEffect(() => {
+		if (chosenEmoji == null) {
+			return;
+		}
+
+		setAniEmoji(true);
+
+		setTimeout(() => {
+			setAniEmoji(false);
+		}, 2000);
+
+		// return () => {
+		// 	setChosenEmoji(null);
+		// 	// clearTimeout()
+		// };
+	}, [chosenEmoji]);
+
 	return (
 		<React.Fragment>
-			{chosenEmoji ? (
-				<EmojiDisplayWrapper className="active">
-					{chosenEmoji.emoji}
+			{chosenEmoji && (
+				<EmojiDisplayWrapper>
+					{aniemoji && <BouncyDiv>{chosenEmoji}</BouncyDiv>}
 				</EmojiDisplayWrapper>
-			) : null}
-			{drawObject && drawObject._data.shapeArray.length > 0 ? (
+			)}
+			{drawObject && drawObject._data.shapeArray.length > 0 && (
 				<ButtonWrapper onClick={() => onSearchedPoint(drawObject)}>
 					정보 찾기
 				</ButtonWrapper>
-			) : null}
-			{sharing ? (
+			)}
+			{sharing && (
 				<VideoWrapper>
 					<button onClick={() => setSharing(false)}>
 						<FontAwesomeIcon icon={faXmark} />
 					</button>
 					<ShareVideo></ShareVideo>
 				</VideoWrapper>
-			) : null}
-			{individual ? (
+			)}
+			{individual && (
 				<IndividualWrapper>
+					<button>
+						<FontAwesomeIcon icon={faXmark} />
+					</button>
 					<Individual data={recvideo}></Individual>{" "}
 				</IndividualWrapper>
-			) : null}
+			)}
 
 			<MapButtonWrapper>
-				<div id="searchResult">
-					<InputWrapper onSubmit={handleSubmit}>
-						<input type="text" value={searchKey} onChange={handleChange} />
-						<IconButton variant="contained" type="submit">
-							<SearchIcon></SearchIcon>
-						</IconButton>
-					</InputWrapper>
-					{searchResult.length > 0 && openResult && (
-						<ResultList>
-							{searchResult.map((result, idx) => (
-								<ResultList.Item key={idx}>
-									<img
-										src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
-									/>
-									{result.name}
-									<Button onClick={() => handleStartSetting(result)}>
-										출발
-									</Button>
-									<Button onClick={() => handleEndSetting(result)}>도착</Button>
-								</ResultList.Item>
-							))}
-						</ResultList>
-					)}
-				</div>
+				<InputWrapper onSubmit={handleSubmit}>
+					<input type="text" value={searchKey} onChange={handleChange} />
+					<IconButton variant="contained" type="submit">
+						<SearchIcon></SearchIcon>
+					</IconButton>
+				</InputWrapper>
+				{searchResult.length > 0 && openResult && (
+					<ResultList>
+						{searchResult.map((result, idx) => (
+							<ResultList.Item key={idx}>
+								<img
+									src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
+								/>
+								{result.name}
+								<Button onClick={() => handleStartSetting(result)}>출발</Button>
+								<Button onClick={() => handleEndSetting(result)}>도착</Button>
+							</ResultList.Item>
+						))}
+					</ResultList>
+				)}
+
 				<InfoMenu
 					map={map}
 					totalDaytime={totalDaytime}
@@ -896,7 +946,7 @@ export default function NewMapwindow() {
 					<MyLocationIcon style={{ fontSize: "3vw" }}></MyLocationIcon>
 				</IconButton>
 			</MapButtonWrapper>
-			{active === "emoji" && emojiResult ? (
+			{active === "emoji" && emojiResult && (
 				<EmojiWrapper>
 					<Picker
 						onEmojiClick={onEmojiClick}
@@ -905,7 +955,7 @@ export default function NewMapwindow() {
 						native
 					/>
 				</EmojiWrapper>
-			) : null}
+			)}
 
 			{active === "draw" ? <Canvas width={2000} height={1000}></Canvas> : null}
 			<div id="map_div"></div>
