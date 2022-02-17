@@ -13,14 +13,15 @@ const Search = (props) => {
 	const [submit, setSubmit] = useState(false);
 	const [videos, setVideos] = useState([]);
 	const [share, setShare] = useState(false);
-	const inputRef = useRef();
+	const inputRef = useRef(null);
 
 	const filterWords = props.value.filter(
 		(prop) => prop.name.includes("주차장") === false,
 	);
 
 	const onClickFocus = (event) => {
-		console.log(event.target.value);
+		inputRef.current.focus();
+		inputRef.current.value = event.target.innerText;
 	};
 
 	async function searchOnYoutube() {
@@ -50,7 +51,7 @@ const Search = (props) => {
 			<Grid container spacing={2}>
 				<Grid item xs={6} md={4}>
 					<Stack direction="row">
-						<Item
+						<input
 							ref={inputRef}
 							value={termInput.value}
 							onChange={termInput.onChange}
@@ -60,14 +61,14 @@ const Search = (props) => {
 									searchOnYoutube();
 								}
 							}}
-						></Item>
+						></input>
 						<Button variant="contained" onClick={searchOnYoutube}>
 							검색
 						</Button>
 					</Stack>
 					추천 키워드
 					{filterWords.map((prop, inx) => (
-						<div>{prop.name}</div>
+						<button onClick={onClickFocus}>{prop.name}</button>
 					))}
 				</Grid>
 				<Grid item xs={6} md={8}>
