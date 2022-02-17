@@ -11,7 +11,7 @@ const MenuWrapper = styled.div`
 	width: 300px;
 	height: 100%;
 	overflow-y: scroll;
-	margin: 0 0 0 20px;
+	margin: 20px 0 0 20px;
 	background-color: white;
 	border-radius: 12px;
 	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
@@ -88,7 +88,7 @@ const InfoMenu = (props) => {
 		<MenuWrapper>
 			<Box
 				component="div"
-				style={{ fontWeight: 600, marginLeft: 20, fontSize: "1.7vw" }}
+				style={{ fontWeight: 600, marginLeft: 20, fontSize: "1.3vw" }}
 				pt={3}
 				pb={3}
 			>

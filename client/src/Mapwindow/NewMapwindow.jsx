@@ -24,6 +24,11 @@ import ShareVideo from "./ShareVideo/ShareVideo";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
+<<<<<<< HEAD
+=======
+
+import "./NewMapwindow.css"
+>>>>>>> 9545328b5697fa0519821715935ff93f0c735425
 
 const bounceAnimation = keyframes`
   0% {
@@ -31,7 +36,7 @@ const bounceAnimation = keyframes`
     animation-timing-function: ease-out;
   }
   50% {
-    transform: translateY(-200px);
+    transform: translateY(-300px);
   }
    100% {
    opacity: 0;
@@ -40,7 +45,7 @@ const bounceAnimation = keyframes`
 `;
 
 const BouncyDiv = styled.div`
-	animation: ${bounceAnimation} 1s;
+	animation: ${bounceAnimation} 2s;
 	animation-delay: 1s;
 	animation-fill-mode: both;
 `;
@@ -156,7 +161,7 @@ const EmojiWrapper = styled.div`
 const EmojiDisplayWrapper = styled.div`
 	bottom: 0;
 	left: 50%;
-	font-size: 7vw;
+	font-size: 5vw;
 	position: absolute;
 	z-index: 300;
 `;
@@ -181,7 +186,12 @@ ResultList.Item = styled.div`
 	}
 `;
 
-export default function NewMapwindow() {
+
+export default function NewMapwindow(props) {
+	//username
+	const userName = props.userName;
+	console.log("username:", userName)
+
 	//map
 	const [map, setMap] = useState(null);
 
@@ -858,9 +868,17 @@ export default function NewMapwindow() {
 	return (
 		<React.Fragment>
 			{chosenEmoji && (
-				<EmojiDisplayWrapper>
-					{aniemoji && <BouncyDiv>{chosenEmoji}</BouncyDiv>}
-				</EmojiDisplayWrapper>
+				<div>
+					<EmojiDisplayWrapper>
+						{aniemoji && 
+							<BouncyDiv className = "emoji-username">
+								<div className = "part-emoji">{chosenEmoji}</div>
+								<div className="part-username">{props.userName}</div>
+							</BouncyDiv>}
+						{/* <div>yoonseo</div> */}
+					</EmojiDisplayWrapper>
+					{/* <div>{props.userName}</div> */}
+				</div>
 			)}
 			{drawObject && drawObject._data.shapeArray.length > 0 && (
 				<ButtonWrapper onClick={() => onSearchedPoint(drawObject)}>
