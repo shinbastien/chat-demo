@@ -24,11 +24,8 @@ import ShareVideo from "./ShareVideo/ShareVideo";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
-<<<<<<< HEAD
-=======
 
 import "./NewMapwindow.css"
->>>>>>> 9545328b5697fa0519821715935ff93f0c735425
 
 const bounceAnimation = keyframes`
   0% {
