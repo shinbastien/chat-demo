@@ -24,17 +24,6 @@ import ShareVideo from "./ShareVideo/ShareVideo";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
-import { merge } from "react-animations";
-
-import bounceInUp from "react-animations/lib/bounce-in-up";
-import fadeOut from "react-animations/lib/fade-out";
-
-// const bounceAnimation = keyframes`${merge(bounceInUp, fadeOut)}`;
-
-// const BouncyDiv = styled.div`
-// 	animation: 2s ${bounceAnimation};
-// 	display: visible;
-// `;
 
 const bounceAnimation = keyframes`
   0% {
@@ -272,40 +261,42 @@ export default function NewMapwindow() {
 		if (map !== null) {
 			map.addListener("click", onClickMarker);
 		}
-		if (navigator.geolocation) {
-			navigator.geolocation.getCurrentPosition(function (position) {
-				const lat = position.coords.latitude;
-				const lng = position.coords.longitude;
 
-				setMarkerC(
-					getMarkers({
-						lat: lat,
-						lng: lng,
-						markerImage: point1,
-						title: "현재위치",
-					}),
-				);
-			});
-		}
+		//현재 위치
+		// if (navigator.geolocation) {
+		// 	navigator.geolocation.getCurrentPosition(function (position) {
+		// 		const lat = position.coords.latitude;
+		// 		const lng = position.coords.longitude;
+
+		// 		setMarkerC(
+		// 			getMarkers({
+		// 				lat: lat,
+		// 				lng: lng,
+		// 				markerImage: point1,
+		// 				title: "현재위치",
+		// 			}),
+		// 		);
+		// 	});
+		// }
 	}, [map]);
 
 	//이동시
 	useEffect(() => {
 		const interval = setInterval(() => {
-			navigator.geolocation.getCurrentPosition(function (position) {
-				const lat = position.coords.latitude;
-				const lng = position.coords.longitude;
-
-				setMarkerC(
-					getMarkers({
-						lat: lat,
-						lng: lng,
-						markerImage: point1,
-						title: "이동중",
-					}),
-				);
-			});
-			console.log("I am moving...");
+			//현재 위치
+			// navigator.geolocation.getCurrentPosition(function (position) {
+			// 	const lat = position.coords.latitude;
+			// 	const lng = position.coords.longitude;
+			// 	setMarkerC(
+			// 		getMarkers({
+			// 			lat: lat,
+			// 			lng: lng,
+			// 			markerImage: point1,
+			// 			title: "이동중",
+			// 		}),
+			// 	);
+			// });
+			// console.log("I am moving...");
 		}, 5000);
 
 		loadKeepList();
@@ -330,7 +321,19 @@ export default function NewMapwindow() {
 			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
 			map: map,
 		});
-		console.log(marker);
+
+		const buttonWindow = `
+				<div>
+				<input type="text"/>
+					<button onClick={}>Keep 등록</button>
+				</div>
+			`;
+		const infoWindow = new Tmapv2.InfoWindow({
+			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
+			content: `${buttonWindow}`,
+			map: map,
+			type: 2,
+		});
 	};
 
 	useEffect(async () => {
