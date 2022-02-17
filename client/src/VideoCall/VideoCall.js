@@ -28,7 +28,7 @@ function VideoCall(props) {
 	// const location = useLocation();
 	// const {groupID, userName}= location.state;
 	// const [users, setUsers] = useState([]);
-	// const [stream, setStream] = useState();
+	const [stream, setStream] = useState();
 	const [peers, setPeers] = useState({});
 	const [isNew, setIsNew] = useState(true);
 	// const socket = useRef();
@@ -38,43 +38,62 @@ function VideoCall(props) {
 	const peersRef = useRef([]);
 	const roomName = props.roomName;
 	const userName = props.userName;
+	const delay = require("delay");
 	// excluding chat functions for a second
 	// const { chat, sendMessage, removeMessage } = useChat(groupID, userName);
 	// const ChatRef = useRef();
 	
-	
+	useEffect(async () => {
+		setStream(await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true }));
+		console.log(stream);
+	},[])
+
 	// Set socket connection
 	useEffect(() => {
-		navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true }).then(stream => {
-			const handleJoinParticipants = (participants) => {
-				console.log("isnew is", isNew);
-				if (isNew) {
-					setPeers((peers)=>{
-						return createPeer(roomName, userName, participants, socket, stream);
-					});
-					console.log("create peer for: ", userName);
-					setIsNew(false)
-				}
-				else {
-					setPeers((peers) => {
-						return addPeer(roomName, userName, participants, peers, socket, stream);
-					})
-					console.log("add peer for: ", userName);
-				}
+	const handleJoinParticipants = async (participants) => {
+		console.log("isnew is", isNew);
+		if (stream) {
+			if (isNew) {
+				setPeers((peers)=>{
+					return createPeer(roomName, userName, participants, socket, stream);
+				});
+				console.log("create peer for: ", userName);
+				setIsNew(false)
 			}
-			userVideo.current.srcObject = stream;
-			socket.on("joinResponse", handleJoinParticipants);
-
-		});
-		// return () => {
-		// 	socket.off("joinResponse", handleJoinParticipants);
-		// };
-	}, [isNew, socket, connected]);
+			else {
+				setPeers((peers) => {
+					return addPeer(roomName, userName, participants, peers, socket, stream);
+				})
+				console.log("add peer for: ", userName);
+			}
+		}
+	}
+	userVideo.current.srcObject = stream;
+	socket.on("joinResponse", handleJoinParticipants);
+	return () => {
+		socket.off("joinResponse", handleJoinParticipants);
+	};
+	}, [stream, isNew, socket, connected]);
 
 	useEffect(() => {
 		console.log("\n\n\t Test Peers", peers)
 	}, [peers])
-
+	
+	useEffect(() => {
+		socket.on("RTC_answer", async(offerer, receiver, data) => {
+			try {
+				if (receiver === userName) {
+					while(!Object.keys(peers).includes(offerer)) {
+						await delay(100);
+					}
+					console.log("signal offerer is: ", offerer);
+					peers[offerer].signal(data);
+				}
+			} catch (error) {
+				console.log(error);
+			}
+		})
+	}, [socket, connected])
 	return (
 		<div>
 			현재 접속자 수: {Object.keys(peers).length + 1} 명
