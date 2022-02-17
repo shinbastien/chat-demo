@@ -5,19 +5,14 @@ import React, { useState, useEffect, useMemo } from "react";
 import styled, { keyframes } from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
-import SearchIcon from "@material-ui/icons/Search";
 import IconButton from "@mui/material/IconButton";
 import point1 from "../Styles/source/point1.png";
 import Stack from "@mui/material/Stack";
-import GestureIcon from "@material-ui/icons/Gesture";
-import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
-import PanToolIcon from "@material-ui/icons/PanTool";
-import ImageSearchIcon from "@material-ui/icons/ImageSearch";
+import {Gesture, Search, EmojiEmotions, PanTool, MyLocation, ImageSearch, } from "@mui/icons-material";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
-import MyLocationIcon from "@material-ui/icons/MyLocation";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas/Canvas";
 import ShareVideo from "./ShareVideo/ShareVideo";
@@ -205,14 +200,14 @@ export default function NewMapwindow() {
 
 	const [sharing, setSharing] = useState(false);
 
-	const { socket } = useSocket();
+	const { socket, connected } = useSocket();
 
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
 			const lat = position.coords.latitude;
 			const lng = position.coords.longitude;
 
-			socket.emit("start mapwindow", [lat, lng]);
+			socket.emit("start mapwindow", lat, lng);
 			console.log("send location info to server", [lat, lng]);
 			var center = new Tmapv2.LatLng(lat, lng);
 
@@ -230,8 +225,11 @@ export default function NewMapwindow() {
 	};
 
 	useEffect(() => {
-		initMap();
-	}, []);
+		if (socket &&  connected ) {
+			initMap();
+		}
+		
+	}, [connected, socket]);
 
 	//current point
 	useEffect(() => {
@@ -833,7 +831,7 @@ export default function NewMapwindow() {
 					<InputWrapper onSubmit={handleSubmit}>
 						<input type="text" value={searchKey} onChange={handleChange} />
 						<IconButton variant="contained" type="submit">
-							<SearchIcon></SearchIcon>
+							<Search></Search>
 						</IconButton>
 					</InputWrapper>
 					{searchResult.length > 0 && openResult && (
@@ -867,33 +865,33 @@ export default function NewMapwindow() {
 							className={active === "hand" ? "active" : ""}
 							onClick={() => onHandleClick("hand")}
 						>
-							<PanToolIcon style={{ fontSize: "3vw" }}></PanToolIcon>
+							<PanTool style={{ fontSize: "3vw" }}></PanTool>
 						</IconButton>
 						<IconButton
 							className={active === "draw" ? "active" : ""}
 							onClick={() => onHandleClick("draw")}
 						>
-							<GestureIcon style={{ fontSize: "3vw" }}></GestureIcon>
+							<Gesture style={{ fontSize: "3vw" }}></Gesture>
 						</IconButton>
 
 						<IconButton
 							className={active === "search" ? "active" : ""}
 							onClick={() => onHandleClick("search")}
 						>
-							<ImageSearchIcon style={{ fontSize: "3vw" }}></ImageSearchIcon>
-						</IconButton>
+							<ImageSearch style={{ fontSize: "3vw" }}></ImageSearch>
+				</IconButton>
 						<IconButton
 							className={active === "emoji" ? "active" : ""}
 							onClick={() => onHandleClick("emoji")}
 						>
-							<EmojiEmotionsIcon
+							<EmojiEmotions
 								style={{ fontSize: "3vw" }}
-							></EmojiEmotionsIcon>
+							></EmojiEmotions>
 						</IconButton>
 					</Stack>
 				</BoardWrapper>
 				<IconButton onClick={onLoadCurrent}>
-					<MyLocationIcon style={{ fontSize: "3vw" }}></MyLocationIcon>
+					<MyLocation style={{ fontSize: "3vw" }}></MyLocation>
 				</IconButton>
 			</MapButtonWrapper>
 			{active === "emoji" && emojiResult ? (

@@ -6,7 +6,7 @@ import Grid from "@mui/material/Grid";
 import AppBar from "@mui/material/AppBar";
 import Typography from "@mui/material/Typography";
 import logoWhite from "../Styles/source/logo_w.png";
-import ShareIcon from "@material-ui/icons/Share";
+import {Share} from "@mui/icons-material";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
 import Menu from "@mui/material/Menu";
@@ -45,6 +45,7 @@ function Map() {
 	console.log("userName obtained from Home is: ", userName);
 
 	const { socket, connected } = useSocket();
+	console.log("connected is: ", connected);
 
 	const onHandleCopy = (e) => {
 		navigator.clipboard.writeText(window.location.href);
@@ -52,11 +53,12 @@ function Map() {
 	};
 
 	useEffect(() => {
-		if (connected) {
-			socket.emit("join group", [groupID, userName]);
+		if (socket && connected) {
+			console.log("socket id is:", socket.id);
+			socket.emit("join", groupID, userName);
 			console.log("joining group");
 		}
-	}, [socket]);
+	}, [connected, socket]);
 
 	return (
 		<>
@@ -69,7 +71,7 @@ function Map() {
 				>
 					<ImgWrapper src={logoWhite}></ImgWrapper>
 					<IconButton style={{ color: "white" }} onClick={onHandleCopy}>
-						<ShareIcon></ShareIcon>
+						<Share></Share>
 					</IconButton>
 					<Box sx={{ flexGrow: 1 }}></Box>
 
@@ -122,7 +124,7 @@ function Map() {
 					<NewMapwindow></NewMapwindow>
 				</Grid>
 				<Grid item xs={6} md={3}>
-					<VideoCall groupID={groupID} userName={userName}></VideoCall>
+					<VideoCall roomName={groupID} userName={userName}></VideoCall>
 				</Grid>
 			</Grid>
 		</>

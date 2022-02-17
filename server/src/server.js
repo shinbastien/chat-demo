@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
 		users[roomName].participants[userName] = {socket: socket.id, location: [0, 0]}
 		console.log("current users after join: ", Object.keys(users[roomName].participants));
 		console.log(users[roomName].participants);
-		io.in(roomName).emit("joinResponse", users[roomName].participants);
+		io.to(roomName).emit("joinResponse", users[roomName].participants);
 		console.log("server sends joinResponse");
 	});
 
