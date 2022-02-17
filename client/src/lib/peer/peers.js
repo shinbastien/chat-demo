@@ -2,7 +2,7 @@ import React from "react";
 import Peer from "simple-peer";
 
 
-function createPeer(roomName, userName, participants, socket, stream) {
+function createPeer(roomName, userName, participants, socket) {
     const newPeers = {}
 
     Object.keys(participants)
@@ -13,7 +13,6 @@ function createPeer(roomName, userName, participants, socket, stream) {
         const peer = new Peer({
             initiator: true,
             trickle: false,
-            stream,
         })
 
         peer.on("signal", (signal) => {
@@ -37,14 +36,14 @@ function createPeer(roomName, userName, participants, socket, stream) {
 
         console.log("create Peer of: ", participantName);
 
-        newPeers[participantName] = peer;
+        newPeers[participantName] = {peer: peer, hasstream: false};
     });
 
     return newPeers
 }
 
 
-function addPeer(roomName, userName, participants, peers, socket, stream) {
+function addPeer(roomName, userName, participants, peers, socket) {
     let oldPeers = Object.keys(peers);
     let newPeers = Object.keys(participants);
 
@@ -53,7 +52,6 @@ function addPeer(roomName, userName, participants, peers, socket, stream) {
     const peer = new Peer({
         initiator: false,
         trickle: false,
-        stream,
     });
 
     // send returning signal from: existing to: newbie
@@ -74,13 +72,32 @@ function addPeer(roomName, userName, participants, peers, socket, stream) {
         console.log(err);
     })
 
-    return {...peers, [newUser]: peer};
+    return {...peers, [newUser]: {peer: peer, hasstream: false}};
 }
 
 function disconnectPeer(peers, userName) {
-    delete peers[userName];
-
-    return peers;
+    const newPeers = {};
+    Object.keys(peers).filter((peerName) => peerName != userName).forEach((peerName) => {
+        newPeers[peerName] = peers[peerName];
+    })
+    return newPeers;
 }
 
-export {addPeer, createPeer, disconnectPeer};
+function PeeraddStream(peers, mystream) {
+    const newPeers = {};
+    Object.keys(peers).forEach((participantName) => {
+        if (!peers[participantName].hasstream) {
+            newPeers[participantName] = {peer: peers[participantName].peer, hasstream: true};
+            newPeers[participantName].peer.addStream(mystream);
+            console.log(mystream);
+        }
+        else {
+            newPeers[participantName] = peers[participantName];
+            console.log("already has stream");
+        }
+    })
+
+    return newPeers;
+}
+
+export {addPeer, createPeer, disconnectPeer, PeeraddStream};
