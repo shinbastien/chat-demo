@@ -1,4 +1,4 @@
-import React, { useEffect, useRef} from "react";
+import React, { useEffect, useRef } from "react";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -23,6 +23,7 @@ const Video = (props) => {
 	useEffect(() => {
 		props.peer.on("stream", (stream) => {
 			ref.current.srcObject = stream;
+			console.log("stream is ", stream);
 		});
 	}, []);
 
