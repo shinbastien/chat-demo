@@ -72,36 +72,32 @@ function addPeer(roomName, userName, participants, peers, socket) {
 		console.log(err);
 	});
 
-	return { ...peers, [newUser]: { peer: peer, hasstream: false } };
+    return {...peers, [newUser]: {peer: peer, hasstream: false}};
 }
 
 function disconnectPeer(peers, userName) {
-	const newPeers = {};
-	Object.keys(peers)
-		.filter((peerName) => peerName != userName)
-		.forEach((peerName) => {
-			newPeers[peerName] = peers[peerName];
-		});
-	return newPeers;
+    const newPeers = {};
+    Object.keys(peers).filter((peerName) => peerName != userName).forEach((peerName) => {
+        newPeers[peerName] = peers[peerName];
+    })
+    return newPeers;
 }
 
 function PeeraddStream(peers, mystream) {
-	const newPeers = {};
-	Object.keys(peers).forEach((participantName) => {
-		if (!peers[participantName].hasstream) {
-			newPeers[participantName] = {
-				peer: peers[participantName].peer,
-				hasstream: true,
-			};
-			newPeers[participantName].peer.addStream(mystream);
-			console.log(mystream);
-		} else {
-			newPeers[participantName] = peers[participantName];
-			console.log("already has stream");
-		}
-	});
+    const newPeers = {};
+    Object.keys(peers).forEach((participantName) => {
+        if (!peers[participantName].hasstream) {
+            newPeers[participantName] = {peer: peers[participantName].peer, hasstream: true};
+            newPeers[participantName].peer.addStream(mystream);
+            console.log(mystream);
+        }
+        else {
+            newPeers[participantName] = peers[participantName];
+            console.log("already has stream");
+        }
+    })
 
-	return newPeers;
+    return newPeers;
 }
 
-export { addPeer, createPeer, disconnectPeer, PeeraddStream };
+export {addPeer, createPeer, disconnectPeer, PeeraddStream};
