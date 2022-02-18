@@ -3,6 +3,8 @@ import * as firebase from "firebase/app";
 import { initializeApp } from "firebase/app";
 import "firebase/auth";
 import { getFirestore, addDoc, getDocs, collection } from "firebase/firestore";
+import { getDatabase, ref, set } from "firebase/database";
+
 import axios from "axios";
 
 // TODO: Add SDKs for Firebase products that you want to use
@@ -23,7 +25,20 @@ function firebaseInstance() {
 		appId: "1:83682231706:web:c6ac86a66ddad04293e623",
 		measurementId: "G-F9L1D0QFS8",
 	};
-	const firebaseApp = initializeApp(firebaseConfig);
+
+	return initializeApp(firebaseConfig);
+}
+
+async function writeToPlaceData(element) {
+	const { coords, groupId, userId, placeId } = element;
+	const db = getDatabase(firebaseInstance);
+	set(ref(db, "keeps/" + placeId), {
+		groupId: groupId,
+		coords: coords,
+		userId: userId,
+		placeId: placeId,
+		visited: false,
+	});
 }
 
 async function readFromFirebase(element) {
@@ -62,7 +77,7 @@ async function searchOnYoutube(props) {
 	}
 }
 
-export { readFromFirebase, searchOnYoutube };
+export { readFromFirebase, writeToPlaceData, searchOnYoutube };
 
 // {
 // 	groups: {

@@ -34,7 +34,7 @@ function VideoCall(props) {
 	const [peers, setPeers] = useState({});
 	const [isNew, setIsNew] = useState(true);
 	// const socket = useRef();
-	const {socket, connected} = useSocket();
+	const { socket, connected } = useSocket();
 	console.log("peers is: ", peers);
 	const userVideo = useRef();
 	const peersRef = useRef([]);
@@ -46,35 +46,35 @@ function VideoCall(props) {
 	// const { chat, sendMessage, removeMessage } = useChat(groupID, userName);
 	// const ChatRef = useRef();
 	// 생각하는 상태를 binary (isnew/ isnew 아닌 것 두가지밖에 없는데) 카메라를 받아왔을 수도 있고, 아닐수도 있고, 분기점이 많다 => binary로 하려다보니 복잡하다. 필요한 조건들이 있을텐데, diagram으로 그리고
+
+	// 그걸 가지고 hook을 걸어가지고 하면 될 것 같다.
+	// 가장 간단한 방법은 카메라 요청을 유저에게 받고 비디오 승인을 받은 다음에 join 하자 useEffect 훅을 stream에 걸어놓고 stream 이 생기면, if 문으로 undefined가 아니면 socekt으로 emit을 해라 useEffect hook을 분리해도 돼
+	// 여러 hook으로 분리해서 stream이랑 socket 2개만 다루고, socket이 있고 join room하고 stream을 별도로 넣어서 peer connection을 만들면 될 것이다.
 	// 그걸 가지고 hook을 걸어가지고 하면 될 것 같다. 
 	// 가장 간단한 방법은 카메라 요청을 유저에게 받고 비디오 승인을 받은 다음에 join 하자 useEffect 훅을 stream에 걸어놓고 stream 이 생기면, if 문으로 undefined가 아니면 socekt으로 emit을 해라 useEffect hook을 분리해도 돼
 	// 여러 hook으로 분리해서 stream이랑 socket 2개만 다루고, socket이 있고 join room하고 stream을 별도로 넣어서 peer connection을 만들면 될 것이다. 
 	
-
-
-
-
-
 	// Set socket connection
 	useEffect(() => {
 		const handleJoinParticipants = async (members) => {
 			console.log("isnew is", isNew);
 			if (isNew) {
-				setPeers((peers)=>{
+				setPeers((peers) => {
 					return createPeer(roomName, userName, members, socket);
 				});
 				console.log("create peer for: ", userName);
-				setIsNew(false)
-			}
-			else {
+				setIsNew(false);
+			} else {
 				setPeers((peers) => {
 					return addPeer(roomName, userName, members, peers, socket);
-				})
+				});
+				
 				console.log("add peer for: ", userName);
 			}
 
 			setParticipants([...participants, Object.keys(members)]);
-		}
+
+		};
 
 		if (socket && connected) {
 			socket.on("joinResponse", handleJoinParticipants);
@@ -89,7 +89,60 @@ function VideoCall(props) {
 
 	useEffect(() => {
 		console.log("\n\n\t Test Peers", peers);
-	}, [peers])
+	}, [peers]);
+
+	useEffect(() => {
+		navigator.mediaDevices
+			.getUserMedia({ video: videoConstraints, audio: true })
+			.then((stream) => {
+				userVideo.current.srcObject = stream;
+				setPeers((peers) => {
+					return PeeraddStream(peers, stream);
+				});
+			})
+			.catch(handleGetUserMediaError);
+	}, [participants]);
+
+	useEffect(() => {
+		if (socket && connected) {
+			socket.on("RTC_answer", async (offerer, receiver, data) => {
+				try {
+					if (receiver === userName) {
+						while (!Object.keys(peers).includes(offerer)) {
+							await delay(100);
+						}
+						console.log("signal offerer is: ", offerer);
+						peers[offerer].peer.signal(data);
+					}
+				} catch (error) {
+					console.log(error);
+				}
+			});
+
+			socket.on("disconnectPeer", async (userName) => {
+				console.log("disconnect Peer of :", userName);
+				disconnectPeer(peers, userName);
+			});
+		}
+	}, [participants, socket, connected]);
+
+	function handleGetUserMediaError(e) {
+		switch (e.name) {
+			case "NotFoundError":
+				alert(
+					"Unable to open your call because no camera and/or microphone" +
+						"were found.",
+				);
+				break;
+			case "SecurityError":
+			case "PermissionDeniedError":
+				// Do nothing; this is the same as the user canceling the call.
+				break;
+			default:
+				alert("Error opening your camera and/or microphone: " + e.message);
+				break;
+		}
+	}
 
 	useEffect(() => {
 		navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true }).then(stream => {
@@ -177,9 +230,7 @@ function VideoCall(props) {
 							</Stack>
 						</Grid>
 						<Grid item>
-							<IconButton onClick={() => console.log("test")}>
-								<MoreVert></MoreVert>
-							</IconButton>
+							<IconButton onClick={() => console.log("test")}></IconButton>
 						</Grid>
 					</Grid>
 				</Grid>

@@ -5,7 +5,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSocket } from "../../lib/socket";
 import { useLocation, Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPause, faPlay } from "@fortawesome/free-solid-svg-icons";
+import {
+	faPause,
+	faPlay,
+	faXmark,
+	faVolumeHigh,
+} from "@fortawesome/free-solid-svg-icons";
 
 import styled from "styled-components";
 
@@ -14,12 +19,20 @@ const Container = styled.div`
 	width: fit-content;
 
 	flex-direction: column;
+	border-radius: 12px;
+	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+`;
+
+const BarWrapper = styled.div`
+	display: flex;
 
 	> div {
-		/* center */
-		margin-left: auto;
-		margin-right: auto;
-		left: 0;
+		flex-grow: 10;
+	}
+	> button {
+		padding-right: 2%;
+		font-size: 3vw;
 	}
 `;
 const VideoWrapper = styled.div``;
@@ -32,8 +45,9 @@ const VideoBarWrapper = styled.div`
 	padding: 2%;
 
 	> button {
-		font-size: 2.5vw;
+		font-size: 2vw;
 		cursor: pointer;
+		padding: 3%;
 	}
 `;
 
@@ -42,6 +56,7 @@ const ProgressBar = styled.span`
 	flex-grow: 10;
 	height: 4px;
 	background-color: rgb(138, 138, 138);
+	cursor: pointer;
 
 	#progress {
 		position: absolute;
@@ -52,7 +67,7 @@ const ProgressBar = styled.span`
 	}
 `;
 
-function ShareVideo() {
+function ShareVideo({ stateChanger, ...rest }) {
 	const { socket, connected } = useSocket();
 	const youtubePlayer = useRef();
 	const userVideo = useRef();
@@ -61,9 +76,6 @@ function ShareVideo() {
 	const location = useLocation();
 	const { GroupID, userName } = location.state;
 	const [playing, setPlaying] = useState(false);
-
-	// console.log("groupID obtained from Home is: ", GroupID);
-	// console.log("userName obtained from Home is: ", userName);
 
 	useEffect(() => {
 		const tag = document.createElement("script");
@@ -76,8 +88,8 @@ function ShareVideo() {
 
 	function loadVideoPlayer() {
 		const player = new YT.Player("player", {
-			height: "390",
-			width: "640",
+			height: "400",
+			width: "700",
 			videoId: "dWZznGbsLbE",
 			playerVars: {
 				playsinline: 1,
@@ -92,41 +104,20 @@ function ShareVideo() {
 		youtubePlayer.current = player;
 	}
 
-	function stopVideo() {
-		// peersRef.current.forEach((item) => {
-		//     item.peer.send(JSON.stringify({type: "pause"}));
-		// })
-		socket.emit("pause", GroupID);
-		youtubePlayer.current.pauseVideo();
-		setPlaying(false);
-	}
-
-	function playVideo() {
-		// peersRef.current.forEach((item) => {
-		//     item.peer.send(JSON.stringify({type: "play"}));
-		// })
-		socket.emit("play", GroupID);
-		youtubePlayer.current.playVideo();
-		setPlaying(true);
-	}
-
-	function loadVideo() {
-		// peersRef.current.forEach((item) => {
-		//     item.peer.send(JSON.stringify({type: "newVideo", data: videoID}));
-		// })
-		socket.emit("load", [GroupID, videoID]);
-		youtubePlayer.current.loadVideoById(videoID.split("=")[1]);
-	}
-
 	function handleVideo(data) {
 		if (data === "play") {
 			console.log("play video");
+			socket.emit("play", GroupID);
 			youtubePlayer.current.playVideo();
+			setPlaying(true);
 		} else if (data === "pause") {
 			console.log("pause video");
+			socket.emit("pause", GroupID);
 			youtubePlayer.current.pauseVideo();
+			setPlaying(false);
 		} else {
 			console.log("load video: ", data);
+			socket.emit("load", [GroupID, videoID]);
 			youtubePlayer.current.loadVideoById(data.split("=")[1]);
 		}
 	}
@@ -134,30 +125,31 @@ function ShareVideo() {
 	return (
 		<>
 			<Container>
+				<BarWrapper>
+					<div></div>
+					<button onClick={() => stateChanger(false)}>
+						<FontAwesomeIcon icon={faXmark} />
+					</button>
+				</BarWrapper>
 				<VideoWrapper>
 					<div id="player" ref={youtubePlayer} />
 				</VideoWrapper>
 				<VideoBarWrapper>
 					{playing ? (
-						<button onClick={stopVideo}>
+						<button onClick={() => handleVideo("pause")}>
 							<FontAwesomeIcon icon={faPause} />
 						</button>
 					) : (
-						<button onClick={playVideo}>
+						<button onClick={() => handleVideo("play")}>
 							<FontAwesomeIcon icon={faPlay} />
 						</button>
 					)}
 					<ProgressBar>
-						<div id="progress"></div>
+						<div id="progress" max="100" value="0"></div>
 					</ProgressBar>
-
-					{/* <input
-						type="text"
-						placeholder="video link"
-						value={videoID}
-						onChange={(e) => setVideoID(e.target.value)}
-					/> */}
-					{/* <button onClick={loadVideo}>Load video</button> */}
+					<button>
+						<FontAwesomeIcon icon={faVolumeHigh} />
+					</button>
 				</VideoBarWrapper>
 			</Container>
 		</>
