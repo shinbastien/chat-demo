@@ -6,6 +6,8 @@ const GlobalStyles = createGlobalStyle`
     }
     html{
 		@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;600&display=swap');
+		@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap");
+
         font-size: 20px;
         width: 100%;
 		height: 101%;
@@ -19,6 +21,8 @@ const GlobalStyles = createGlobalStyle`
         }
     }
     body{
+		font-family: "Noto Sans KR", sans-serif;
+
         width: 100%;
 		overflow: scroll; /* Show scrollbars */
     }

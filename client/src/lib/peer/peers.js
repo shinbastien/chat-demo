@@ -1,76 +1,76 @@
 import React from "react";
 import Peer from "simple-peer";
 
-
 function createPeer(roomName, userName, participants, socket) {
-    const newPeers = {}
+	const newPeers = {};
 
-    Object.keys(participants)
-    .filter((participantName) => participantName != userName)
-    .forEach((participantName) => {
-        console.log("gained user name: ", participantName);
+	Object.keys(participants)
+		.filter((participantName) => participantName != userName)
+		.forEach((participantName) => {
+			console.log("gained user name: ", participantName);
 
-        const peer = new Peer({
-            initiator: true,
-            trickle: false,
-        })
+			const peer = new Peer({
+				initiator: true,
+				trickle: false,
+			});
 
-        peer.on("signal", (signal) => {
-            socket.emit("RTC_offer", signal, userName, participantName, roomName)
-            console.log("Offered RTC signal");
-            // socket.emit("sending signal", participants[participant].socket, participant, socket.id, userName, signal)
-        })
+			peer.on("signal", (signal) => {
+				socket.emit("RTC_offer", signal, userName, participantName, roomName);
+				console.log("Offered RTC signal");
+				// socket.emit("sending signal", participants[participant].socket, participant, socket.id, userName, signal)
+			});
 
-        peer.on("connect", () => {
-            console.log("connected");
-        })
-    
-        // peer.on("stream", (stream) => {
-        //     peerStreams[participantName] = stream;
+			peer.on("connect", () => {
+				console.log("connected");
+			});
 
-        // })
+			// peer.on("stream", (stream) => {
+			//     peerStreams[participantName] = stream;
 
-        peer.on("error", (err) => {
-            console.log(err);
-        })
+			// })
 
-        console.log("create Peer of: ", participantName);
+			peer.on("error", (err) => {
+				console.log(err);
+			});
 
-        newPeers[participantName] = {peer: peer, hasstream: false};
-    });
+			console.log("create Peer of: ", participantName);
 
-    return newPeers
+			newPeers[participantName] = { peer: peer, hasstream: false };
+		});
+
+	return newPeers;
 }
 
-
 function addPeer(roomName, userName, participants, peers, socket) {
-    let oldPeers = Object.keys(peers);
-    let newPeers = Object.keys(participants);
+	let oldPeers = Object.keys(peers);
+	let newPeers = Object.keys(participants);
 
-    let newUser = newPeers.filter((x) => !oldPeers.includes(x) && x!= userName)[0];
+	let newUser = newPeers.filter(
+		(x) => !oldPeers.includes(x) && x != userName,
+	)[0];
 
-    const peer = new Peer({
-        initiator: false,
-        trickle: false,
-    });
+	const peer = new Peer({
+		initiator: false,
+		trickle: false,
+	});
 
-    // send returning signal from: existing to: newbie
-    peer.on("signal", (signal) => {
-        socket.emit("RTC_offer", signal, userName, newUser, roomName);
-    });
-    console.log(`${userName} adds Peer of : ${newUser}`);
-    
-    peer.on("connect", () => {
-        console.log("connected");
-    })
+	// send returning signal from: existing to: newbie
+	peer.on("signal", (signal) => {
+		socket.emit("RTC_offer", signal, userName, newUser, roomName);
+	});
+	console.log(`${userName} adds Peer of : ${newUser}`);
 
-    // peer.on("stream", (stream) => {
-    //     peerStreams[newUser] = stream;
-    // })
+	peer.on("connect", () => {
+		console.log("connected");
+	});
 
-    peer.on("error", (err) => {
-        console.log(err);
-    })
+	// peer.on("stream", (stream) => {
+	//     peerStreams[newUser] = stream;
+	// })
+
+	peer.on("error", (err) => {
+		console.log(err);
+	});
 
     return {...peers, [newUser]: {peer: peer, hasstream: false}};
 }
