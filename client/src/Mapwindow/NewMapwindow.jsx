@@ -1,25 +1,35 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useMemo } from "react";
-import styled, { keyframes } from "styled-components";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import point1 from "../Styles/source/point1.png";
 import Stack from "@mui/material/Stack";
-import {Gesture, Search, EmojiEmotions, PanTool, MyLocation, ImageSearch, } from "@mui/icons-material";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import {
+	faHand,
+	faVectorSquare,
+	faPencil,
+	faFaceSmile,
+	faLocationDot,
+	faMagnifyingGlass,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { readFromFirebase, searchOnYoutube } from "../functions/firebase";
+import { readFromFirebase, searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas/Canvas";
 import ShareVideo from "./ShareVideo/ShareVideo";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
-import { useCallback } from "react";
+import EmojiReaction from "./EmojiReaction/EmojiReaction";
+
+const MapWrapper = styled.div`
+	z-index: -1000;
+`;
 
 const ResultList = styled.div`
 	background-color: white;
@@ -86,6 +96,13 @@ const BoardWrapper = styled.div`
 			}
 		}
 	}
+`;
+
+const CurrentLoactionWrapper = styled.div`
+	position: absolute;
+	bottom: 0;
+	z-index: 222;
+	margin: 0 0 20px 20px;
 `;
 
 const ButtonWrapper = styled.button`
@@ -155,9 +172,10 @@ ResultList.Item = styled.div`
 	}
 `;
 
-export default function NewMapwindow() {
+export default function NewMapwindow(props) {
 	//map
 	const [map, setMap] = useState(null);
+	const { userName, keepPlace, loading } = props;
 
 	//root-tracking
 	const [start, setStart] = useState(null);
@@ -179,7 +197,6 @@ export default function NewMapwindow() {
 
 	//video-list
 	const [recvideo, setrecvideo] = useState([]);
-	const [keepPlace, setKeepPlace] = useState([]);
 	const [recvideoLoc, setrecvideoLoc] = useState([]);
 
 	//board
@@ -188,6 +205,7 @@ export default function NewMapwindow() {
 	const [emojiResult, setEmojiResult] = useState(true);
 	const [searching, setSearching] = useState(false);
 	const [drawObject, setDrawObject] = useState(null);
+	const [aniemoji, setAniEmoji] = useState(false);
 
 	const [searchPoint, setSearchPoint] = useState({
 		nelat: "",
@@ -225,10 +243,9 @@ export default function NewMapwindow() {
 	};
 
 	useEffect(() => {
-		if (socket &&  connected ) {
+		if (socket && connected) {
 			initMap();
 		}
-		
 	}, [connected, socket]);
 
 	//current point
@@ -261,7 +278,6 @@ export default function NewMapwindow() {
 			navigator.geolocation.getCurrentPosition(function (position) {
 				const lat = position.coords.latitude;
 				const lng = position.coords.longitude;
-
 				if (markerC !== null) {
 					markerC.setMap(null);
 				}
@@ -275,9 +291,8 @@ export default function NewMapwindow() {
 					}),
 				);
 			});
+			console.log("I am moving...");
 		}, 5000);
-
-		loadKeepList();
 
 		return () => {
 			clearInterval(interval);
@@ -693,15 +708,13 @@ export default function NewMapwindow() {
 				swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
 			});
 		}
+		drawObject.clear();
+
+		setDrawObject(null);
 	};
 
 	const existSearch = () => {
 		setOpenResult(false);
-	};
-
-	const loadKeepList = async () => {
-		const keeplist = await readFromFirebase("photos");
-		setKeepPlace(keeplist);
 	};
 
 	const loadpointInfo = async (lat, lng) => {
@@ -760,10 +773,6 @@ export default function NewMapwindow() {
 			setSearching(false);
 		}
 	};
-	const onEmojiClick = (event, emojiObject) => {
-		setChosenEmoji(emojiObject);
-		setEmojiResult(false);
-	};
 
 	const onHandleClick = (props) => {
 		switch (props) {
@@ -800,38 +809,56 @@ export default function NewMapwindow() {
 		}
 	};
 
+	const onEmojiClick = (event, emojiObject) => {
+		const { emoji } = emojiObject;
+		setChosenEmoji(emoji);
+		setEmojiResult(false);
+	};
+
+	//emoji
+	useEffect(() => {
+		if (chosenEmoji == null) {
+			return;
+		}
+
+		setAniEmoji(true);
+
+		setTimeout(() => {
+			setAniEmoji(false);
+			setChosenEmoji(null);
+		}, 3000);
+	}, [chosenEmoji]);
+
 	return (
 		<React.Fragment>
-			{chosenEmoji ? (
-				<EmojiDisplayWrapper className="active">
-					{chosenEmoji.emoji}
-				</EmojiDisplayWrapper>
-			) : null}
-			{drawObject && drawObject._data.shapeArray.length > 0 ? (
+			{chosenEmoji && (
+				<EmojiReaction
+					state={aniemoji}
+					emoji={chosenEmoji}
+					userName={userName}
+				></EmojiReaction>
+			)}
+			{drawObject && drawObject._data.shapeArray.length > 0 && (
 				<ButtonWrapper onClick={() => onSearchedPoint(drawObject)}>
 					정보 찾기
 				</ButtonWrapper>
-			) : null}
-			{sharing ? (
+			)}
+			{sharing && (
 				<VideoWrapper>
-					<button onClick={() => setSharing(false)}>
-						<FontAwesomeIcon icon={faXmark} />
-					</button>
-					<ShareVideo></ShareVideo>
+					<ShareVideo stateChanger={setSharing}></ShareVideo>
 				</VideoWrapper>
-			) : null}
-			{individual ? (
+			)}
+			{individual && (
 				<IndividualWrapper>
-					<Individual data={recvideo}></Individual>{" "}
+					<Individual stateChanger={setIndividual} data={recvideo}></Individual>
 				</IndividualWrapper>
-			) : null}
-
+			)}
 			<MapButtonWrapper>
 				<div id="searchResult">
 					<InputWrapper onSubmit={handleSubmit}>
 						<input type="text" value={searchKey} onChange={handleChange} />
 						<IconButton variant="contained" type="submit">
-							<Search></Search>
+							<FontAwesomeIcon icon={faMagnifyingGlass} />
 						</IconButton>
 					</InputWrapper>
 					{searchResult.length > 0 && openResult && (
@@ -851,13 +878,17 @@ export default function NewMapwindow() {
 						</ResultList>
 					)}
 				</div>
-				<InfoMenu
-					map={map}
-					totalDaytime={totalDaytime}
-					start={start}
-					end={end}
-					keepPlace={keepPlace}
-				></InfoMenu>
+				{loading ? (
+					<div></div>
+				) : (
+					<InfoMenu
+						map={map}
+						totalDaytime={totalDaytime}
+						start={start}
+						end={end}
+						keepPlace={keepPlace}
+					></InfoMenu>
+				)}
 
 				<BoardWrapper>
 					<Stack direction="row" alignItems="center" justifyContent="center">
@@ -865,35 +896,38 @@ export default function NewMapwindow() {
 							className={active === "hand" ? "active" : ""}
 							onClick={() => onHandleClick("hand")}
 						>
-							<PanTool style={{ fontSize: "3vw" }}></PanTool>
+							<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faHand} />
 						</IconButton>
 						<IconButton
 							className={active === "draw" ? "active" : ""}
 							onClick={() => onHandleClick("draw")}
 						>
-							<Gesture style={{ fontSize: "3vw" }}></Gesture>
+							<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faPencil} />
 						</IconButton>
 
 						<IconButton
 							className={active === "search" ? "active" : ""}
 							onClick={() => onHandleClick("search")}
 						>
-							<ImageSearch style={{ fontSize: "3vw" }}></ImageSearch>
-				</IconButton>
+							<FontAwesomeIcon
+								style={{ fontSize: "3vw" }}
+								icon={faVectorSquare}
+							/>
+						</IconButton>
 						<IconButton
 							className={active === "emoji" ? "active" : ""}
 							onClick={() => onHandleClick("emoji")}
 						>
-							<EmojiEmotions
-								style={{ fontSize: "3vw" }}
-							></EmojiEmotions>
+							<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faFaceSmile} />
 						</IconButton>
 					</Stack>
 				</BoardWrapper>
-				<IconButton onClick={onLoadCurrent}>
-					<MyLocation style={{ fontSize: "3vw" }}></MyLocation>
-				</IconButton>
 			</MapButtonWrapper>
+			<CurrentLoactionWrapper>
+				<IconButton onClick={onLoadCurrent}>
+					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
+				</IconButton>
+			</CurrentLoactionWrapper>
 			{active === "emoji" && emojiResult ? (
 				<EmojiWrapper>
 					<Picker
@@ -906,7 +940,7 @@ export default function NewMapwindow() {
 			) : null}
 
 			{active === "draw" ? <Canvas width={2000} height={1000}></Canvas> : null}
-			<div id="map_div"></div>
+			<MapWrapper id="map_div"></MapWrapper>
 		</React.Fragment>
 	);
 }

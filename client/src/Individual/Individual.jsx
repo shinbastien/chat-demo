@@ -2,7 +2,7 @@
 // Do not delete above comment
 
 import React, { useState, useEffect } from "react";
-import Search from "../Search/Search";
+import Search from "./Search/Search";
 import Keep from "../Keep/Keep";
 import Box from "@mui/material/Box";
 
@@ -12,17 +12,25 @@ import { useLocation, Link } from "react-router-dom";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import styled from "styled-components";
 
-const ImgWrapper = styled.img`
-	display: block;
-	width: 10%;
+const Wrapper = styled.div`
+	display: flex;
+	flex-direction: column;
 `;
 
-const TextWrapper = styled.span`
+const BarWrapper = styled.div`
 	display: flex;
-	justify-content: center; /* align horizontal */
-	align-items: center; /* align vertical */
+
+	> div {
+		flex-grow: 10;
+	}
+	> button {
+		padding-right: 2%;
+		font-size: 3vw;
+	}
 `;
 
 function TabPanel(props) {
@@ -45,11 +53,10 @@ function TabPanel(props) {
 	);
 }
 
-export default function Individual(props) {
+export default function Individual({ stateChanger, ...props }) {
 	const { data } = props;
 
 	const location = useLocation();
-	const types = ["Search", "Keep"];
 
 	const [recvideo, setrecvideo] = useState([]);
 
@@ -93,19 +100,17 @@ export default function Individual(props) {
 	};
 
 	return (
-		<>
-			<Box sx={{ padding: "2%" }}>
-				<Tabs style={{ marginTop: 30 }} value={value} onChange={handleChange}>
-					<Tab label="Search"></Tab>
-					{/* <Tab label="Keep"></Tab> */}
-				</Tabs>
-				<TabPanel value={value} index={0}>
-					<Search value={recvideo}></Search>
-				</TabPanel>
-				{/* <TabPanel value={value} index={1}>
-					<Keep></Keep>
-				</TabPanel> */}
-			</Box>
-		</>
+		<Wrapper>
+			<BarWrapper>
+				<div></div>
+				<button onClick={() => stateChanger(false)}>
+					<FontAwesomeIcon icon={faXmark} />
+				</button>
+			</BarWrapper>
+			Search
+			<TabPanel value={value} index={0}>
+				<Search value={recvideo}></Search>
+			</TabPanel>
+		</Wrapper>
 	);
 }

@@ -1,9 +1,9 @@
 //search YouTube video
 import React, { useState, useRef } from "react";
-import useInput from "../functions/useInput";
+import useInput from "../../lib/functions/useInput";
 import { SearchResult } from "./SearchResult";
 import axios from "axios";
-import { Item } from "../Styles/themeSytles";
+import { Item } from "../../Styles/themeSytles";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Grid";
@@ -13,6 +13,7 @@ const Search = (props) => {
 	const [submit, setSubmit] = useState(false);
 	const [videos, setVideos] = useState([]);
 	const [share, setShare] = useState(false);
+	const [keyword, setKeyword] = useState();
 	const inputRef = useRef();
 
 	const filterWords = props.value.filter(
@@ -20,7 +21,10 @@ const Search = (props) => {
 	);
 
 	const onClickFocus = (event) => {
-		console.log(event.target.value);
+		event.preventDefault();
+		inputRef.current.value = event.target.innerText;
+		setKeyword(event.target.innerText);
+		inputRef.current.focus();
 	};
 
 	async function searchOnYoutube() {
@@ -33,7 +37,7 @@ const Search = (props) => {
 				params: {
 					key: process.env.REACT_APP_YOUTUBE_API_KEY,
 					part: "snippet",
-					q: `-집 맛집 |가볼만한 곳 ` + termInput.value,
+					q: `-집 맛집 |가볼만한 곳 ` + keyword,
 				},
 			});
 			if (videos.length > 0) {
@@ -50,24 +54,22 @@ const Search = (props) => {
 			<Grid container spacing={2}>
 				<Grid item xs={6} md={4}>
 					<Stack direction="row">
-						<Item
+						<input
 							ref={inputRef}
-							value={termInput.value}
-							onChange={termInput.onChange}
 							placeholder="검색"
 							onKeyDown={(evt) => {
 								if (evt.code === "Enter") {
 									searchOnYoutube();
 								}
 							}}
-						></Item>
+						></input>
 						<Button variant="contained" onClick={searchOnYoutube}>
 							검색
 						</Button>
 					</Stack>
 					추천 키워드
 					{filterWords.map((prop, inx) => (
-						<div>{prop.name}</div>
+						<button onClick={onClickFocus}>{prop.name}</button>
 					))}
 				</Grid>
 				<Grid item xs={6} md={8}>
