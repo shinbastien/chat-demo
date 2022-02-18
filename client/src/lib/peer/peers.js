@@ -80,6 +80,7 @@ function disconnectPeer(peers, userName) {
     Object.keys(peers).filter((peerName) => peerName != userName).forEach((peerName) => {
         newPeers[peerName] = peers[peerName];
     })
+    console.log(newPeers);
     return newPeers;
 }
 

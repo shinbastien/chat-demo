@@ -133,6 +133,10 @@ io.on("connection", (socket) => {
 			  users[socket.roomName].participants,
 			  socket.userName
 			);
+			io.in(socket.roomName).emit(
+				"disconnectPeer",
+				socket.userName
+			)
 		  }
 		}
 		console.log("current users: ", users[socket.roomName]);

@@ -80,7 +80,10 @@ function VideoCall(props) {
 			socket.on("joinResponse", handleJoinParticipants);
 		}
 		return () => {
-			socket.off("joinResponse", handleJoinParticipants);
+			if(socket && connected) {
+				socket.off("joinResponse", handleJoinParticipants);
+			}
+			
 		};
 	}, [isNew, socket, connected]);
 
@@ -99,26 +102,37 @@ function VideoCall(props) {
 	},[participants])
 	
 	useEffect(() => {
-		if (socket && connected) {
-			socket.on("RTC_answer", async(offerer, receiver, data) => {
-				try {
-					if (receiver === userName) {
-						while(!Object.keys(peers).includes(offerer)) {
-							await delay(100);
-						}
-						console.log("signal offerer is: ", offerer);
-						peers[offerer].peer.signal(data);
+		const handleRTCAnswer = async (offerer, receiver, data) => {
+			try {
+				if (receiver === userName) {
+					while(!Object.keys(peers).includes(offerer)) {
+						await delay(100);
 					}
-				} catch (error) {
-					console.log(error);
+					console.log("signal offerer is: ", offerer);
+					peers[offerer].peer.signal(data);
 				}
-			})
-
-			socket.on("disconnectPeer", async userName => {
-				console.log("disconnect Peer of :", userName);
-				disconnectPeer(peers, userName);
+			} catch (error) {
+				console.log(error);
+			}
+		}
+		const handleDisconnectResponse = (participants, userName) => {
+			setParticipants(participants);
+			console.log("disconnect Peer of :", userName);
+			setPeers((peers) => {
+				return disconnectPeer(peers, userName);
 			})
 		}
+		if (socket && connected) {
+			socket.on("RTC_answer", handleRTCAnswer);		
+			socket.on("disconnectResponse", handleDisconnectResponse );
+		}
+
+		return () => {
+				if (socket && connected) {
+					socket.off("RTC_answer", handleRTCAnswer);
+					socket.off("disconnectResponse", handleDisconnectResponse);
+				}
+			}
 	}, [participants, socket, connected])
 
 	function handleGetUserMediaError(e) {
@@ -184,7 +198,7 @@ function VideoCall(props) {
 	);
 }
 
-export default React.memo(VideoCall);
+export default VideoCall;
 
 // Get Chat from Server
 //   socket.current.on(NEW_CHAT_MESSAGE_EVENT, ({messageId, body, senderId, senderName, ownedByCurrentUser}) => {
