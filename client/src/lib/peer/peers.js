@@ -1,11 +1,10 @@
-import React from "react";
 import Peer from "simple-peer";
 
 function createPeer(roomName, userName, participants, socket) {
 	const newPeers = {};
 
 	Object.keys(participants)
-		.filter((participantName) => participantName != userName)
+		.filter((participantName) => participantName !== userName)
 		.forEach((participantName) => {
 			console.log("gained user name: ", participantName);
 
@@ -46,7 +45,7 @@ function addPeer(roomName, userName, participants, peers, socket) {
 	let newPeers = Object.keys(participants);
 
 	let newUser = newPeers.filter(
-		(x) => !oldPeers.includes(x) && x != userName,
+		(x) => !oldPeers.includes(x) && x !== userName,
 	)[0];
 
 	const peer = new Peer({
@@ -77,7 +76,7 @@ function addPeer(roomName, userName, participants, peers, socket) {
 
 function disconnectPeer(peers, userName) {
     const newPeers = {};
-    Object.keys(peers).filter((peerName) => peerName != userName).forEach((peerName) => {
+    Object.keys(peers).filter((peerName) => peerName !== userName).forEach((peerName) => {
         newPeers[peerName] = peers[peerName];
     })
     console.log(newPeers);

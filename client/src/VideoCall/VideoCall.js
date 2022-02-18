@@ -103,28 +103,6 @@ function VideoCall(props) {
 			.catch(handleGetUserMediaError);
 	}, [participants]);
 
-	useEffect(() => {
-		if (socket && connected) {
-			socket.on("RTC_answer", async (offerer, receiver, data) => {
-				try {
-					if (receiver === userName) {
-						while (!Object.keys(peers).includes(offerer)) {
-							await delay(100);
-						}
-						console.log("signal offerer is: ", offerer);
-						peers[offerer].peer.signal(data);
-					}
-				} catch (error) {
-					console.log(error);
-				}
-			});
-
-			socket.on("disconnectPeer", async (userName) => {
-				console.log("disconnect Peer of :", userName);
-				disconnectPeer(peers, userName);
-			});
-		}
-	}, [participants, socket, connected]);
 
 	function handleGetUserMediaError(e) {
 		switch (e.name) {
@@ -143,16 +121,6 @@ function VideoCall(props) {
 				break;
 		}
 	}
-
-	useEffect(() => {
-		navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true }).then(stream => {
-			userVideo.current.srcObject = stream;
-			setPeers((peers) => {
-				return PeeraddStream(peers, stream);
-			})
-		}).catch(handleGetUserMediaError);
-		
-	},[participants])
 	
 	useEffect(() => {
 		const handleRTCAnswer = async (offerer, receiver, data) => {
