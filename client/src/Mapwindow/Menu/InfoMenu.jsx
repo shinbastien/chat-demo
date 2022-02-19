@@ -228,4 +228,4 @@ const InfoMenu = (props) => {
 	);
 };
 
-export default InfoMenu;
+export default React.memo(InfoMenu);

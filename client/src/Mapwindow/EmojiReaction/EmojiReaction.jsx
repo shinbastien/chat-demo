@@ -1,7 +1,6 @@
 import { internal_resolveProps } from "@mui/utils";
 import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
-import "./EmojiReaction.css";
 
 const bounceAnimation = keyframes`
   0% {

@@ -50,8 +50,6 @@ function TabPanel(props) {
 }
 
 export default function Individual({ stateChanger, ...props }) {
-	const { data } = props;
-
 	const location = useLocation();
 
 	const [recvideo, setrecvideo] = useState([]);

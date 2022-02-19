@@ -4,14 +4,9 @@ import { initializeApp } from "firebase/app";
 import "firebase/auth";
 import { getFirestore, getDocs, collection } from "firebase/firestore";
 import { getDatabase, ref, set } from "firebase/database";
+import data from "../../data";
 
 import axios from "axios";
-
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
 function firebaseInstance() {
 	const firebaseConfig = {
@@ -74,6 +69,7 @@ async function searchOnYoutube(props) {
 		return items;
 	} catch (err) {
 		console.log(err);
+		return data;
 	}
 }
 

@@ -18,7 +18,7 @@ import {
 	faMapLocationDot,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
+import VideoCard from "./VideoCard/VideoCard";
 import { readFromFirebase, searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas/Canvas";
@@ -210,6 +210,7 @@ export default function NewMapwindow(props) {
 
 	const [aniemoji, setAniEmoji] = useState(false);
 	const [emojiResult, setEmojiResult] = useState(true);
+	const [showInfo, setShowInfo] = useState(false);
 
 	const [searchPoint, setSearchPoint] = useState({
 		nelat: "",
@@ -252,9 +253,9 @@ export default function NewMapwindow(props) {
 
 	//current point
 	useEffect(() => {
-		if (map !== null) {
-			map.addListener("click", onClickMarker);
-		}
+		// if (map !== null) {
+		// 	map.addListener("click", onClickMarker);
+		// }
 
 		if (navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(function (position) {
@@ -279,30 +280,30 @@ export default function NewMapwindow(props) {
 	}, [map]);
 
 	//이동시
-	useEffect(() => {
-		const interval = setInterval(() => {
-			navigator.geolocation.getCurrentPosition(function (position) {
-				const lat = position.coords.latitude;
-				const lng = position.coords.longitude;
-				if (markerC !== null) {
-					markerC.setMap(null);
-				}
-				setMarkerC(
-					new Tmapv2.Marker({
-						position: new Tmapv2.LatLng(lat, lng),
-						icon: point1,
-						iconSize: new Tmapv2.Size(24, 24),
-						title: "현재위치",
-						map: map,
-					}),
-				);
-			});
-			console.log("I am moving...");
-		}, 5000);
-		return () => {
-			clearInterval(interval);
-		};
-	}, []);
+	// useEffect(() => {
+	// 	const interval = setInterval(() => {
+	// 		navigator.geolocation.getCurrentPosition(function (position) {
+	// 			const lat = position.coords.latitude;
+	// 			const lng = position.coords.longitude;
+	// 			if (markerC !== null) {
+	// 				markerC.setMap(null);
+	// 			}
+	// 			setMarkerC(
+	// 				new Tmapv2.Marker({
+	// 					position: new Tmapv2.LatLng(lat, lng),
+	// 					icon: point1,
+	// 					iconSize: new Tmapv2.Size(24, 24),
+	// 					title: "현재위치",
+	// 					map: map,
+	// 				}),
+	// 			);
+	// 		});
+	// 		console.log("I am moving...");
+	// 	}, 5000);
+	// 	return () => {
+	// 		clearInterval(interval);
+	// 	};
+	// }, []);
 
 	const onClickMarker = (e) => {
 		const latlng = e.latLng;
@@ -339,6 +340,7 @@ export default function NewMapwindow(props) {
 		if (recvideo.length > 0) {
 			for (let i = 0; i < recvideo.length; i++) {
 				const video = await searchOnYoutube(recvideo[i].name);
+
 				setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
 			}
 		}
@@ -715,28 +717,32 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		if (searching === true && drawObject !== null) {
 			drawObject.drawRectangle();
+			map.addListener("click", onTouchDrawing);
 		}
 	}, [searching, drawObject]);
 
-	useEffect(() => {
-		loadpointInfo(searchPoint);
-	}, [searchPoint]);
-
-	const onSearchedPoint = (drawObject) => {
+	const onTouchDrawing = (e) => {
 		const { _data } = drawObject;
+		if (map && searching === true && drawObject !== null) {
+			if (drawObject._data.shapeArray.length > 0) {
+				setSearchPoint({
+					nelat: _data.shapeArray[0]._shape_data.bounds._ne._lat,
+					nelng: _data.shapeArray[0]._shape_data.bounds._ne._lng,
+					swlat: _data.shapeArray[0]._shape_data.bounds._sw._lat,
+					swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
+				});
 
-		console.log(drawObject);
-		if (drawObject._data.shapeArray.length > 0) {
-			setSearchPoint({
-				nelat: _data.shapeArray[0]._shape_data.bounds._ne._lat,
-				nelng: _data.shapeArray[0]._shape_data.bounds._ne._lng,
-				swlat: _data.shapeArray[0]._shape_data.bounds._sw._lat,
-				swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
-			});
+				setShowInfo(true);
+			}
 		}
+	};
+
+	const onSearchedPoint = () => {
 		drawObject.clear();
+		loadpointInfo(searchPoint);
 
 		setDrawObject(null);
+		setShowInfo(false);
 	};
 
 	const existSearch = () => {
@@ -863,9 +869,13 @@ export default function NewMapwindow(props) {
 			setChosenEmoji(null);
 		}, 3000);
 	}, [chosenEmoji]);
-
 	return (
 		<React.Fragment>
+			{recvideoLoc.length > 0 &&
+				recvideoLoc.map((list, idx) => (
+					<VideoCard key={idx} info={list}></VideoCard>
+				))}
+
 			{chosenEmoji && (
 				<EmojiReaction
 					state={aniemoji}
@@ -875,8 +885,8 @@ export default function NewMapwindow(props) {
 			)}
 			{drawObject ? (
 				[
-					drawObject._data.shapeArray.length > 0 ? (
-						<ButtonWrapper onClick={() => onSearchedPoint(drawObject)}>
+					showInfo ? (
+						<ButtonWrapper onClick={() => onSearchedPoint()}>
 							정보 찾기
 						</ButtonWrapper>
 					) : (
@@ -889,7 +899,7 @@ export default function NewMapwindow(props) {
 
 			{individual && (
 				<IndividualWrapper>
-					<Individual stateChanger={setIndividual} data={recvideo}></Individual>
+					<Individual stateChanger={setIndividual}></Individual>
 				</IndividualWrapper>
 			)}
 			<MapButtonWrapper>
@@ -986,22 +996,8 @@ export default function NewMapwindow(props) {
 					/>
 				</EmojiWrapper>
 			) : null}
-
 			{active === "draw" ? <Canvas width={2000} height={1000}></Canvas> : null}
 			<MapWrapper id="map_div"></MapWrapper>
 		</React.Fragment>
 	);
 }
-
-// {
-// 	/* {recvideoLoc.length > 0
-// 							? recvideoLoc.map((list, idx) => (
-// 									<img
-// 										key={idx}
-// 										src={list.snippet.thumbnails.medium.url}
-// 										width={list.snippet.thumbnails.medium.width}
-// 										height={list.snippet.thumbnails.medium.height}
-// 									></img>
-// 							  ))
-// 							: "아직 관련된 영상이 없습니다"} */
-// }
