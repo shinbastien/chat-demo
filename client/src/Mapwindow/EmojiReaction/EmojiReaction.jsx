@@ -23,12 +23,20 @@ const EmojiDisplayWrapper = styled.div`
 	font-size: 5vw;
 	position: absolute;
 	z-index: 300;
-`;
 
-const BouncyDiv = styled.div`
-	animation: ${bounceAnimation} 2s;
-	animation-delay: 1s;
-	animation-fill-mode: both;
+	> div {
+		animation: ${bounceAnimation} 2s;
+		animation-delay: 1s;
+		animation-fill-mode: both;
+
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+
+		font-size: 2vw;
+		margin-top: -20%;
+	}
 `;
 
 const EmojiReaction = (props) => {
@@ -37,10 +45,8 @@ const EmojiReaction = (props) => {
 	return (
 		state && (
 			<EmojiDisplayWrapper>
-				<BouncyDiv className="emoji-username">
-					<div className="part-emoji">{emoji}</div>
-					<div className="part-username">{userName}</div>
-				</BouncyDiv>
+				<div>{emoji}</div>
+				<div>{userName}</div>
 			</EmojiDisplayWrapper>
 		)
 	);

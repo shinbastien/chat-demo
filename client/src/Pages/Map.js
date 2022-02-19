@@ -65,17 +65,14 @@ function Map() {
 	}, [connected, socket]);
 
 	const loadKeepList = async () => {
-		setLoading(true);
 		readFromFirebase("photos")
 			.then((data) => {
 				setKeepPlace(data);
-				setLoading(false);
+				setLoading(true);
 			})
 			.catch((error) => {
 				setLoading(false);
 			});
-
-		console.log("i am loaded");
 	};
 
 	const handleClick = (newState) => () => {

@@ -91,8 +91,8 @@ function ShareVideo({ stateChanger, ...rest }) {
 
 	function loadVideoPlayer() {
 		const player = new YT.Player("player", {
-			height: "400",
-			width: "700",
+			height: "300",
+			width: "400",
 			videoId: "dWZznGbsLbE",
 			playerVars: {
 				playsinline: 1,
@@ -122,18 +122,13 @@ function ShareVideo({ stateChanger, ...rest }) {
 			console.log("load video: ", data);
 			socket.emit("load", [GroupID, videoID]);
 			youtubePlayer.current.loadVideoById(data.split("=")[1]);
+			setPlaying(false);
 		}
 	}
 
 	return (
 		<>
 			<Container>
-				{/* <BarWrapper>
-					<div></div>
-					<button onClick={() => stateChanger(false)}>
-						<FontAwesomeIcon icon={faXmark} />
-					</button>
-				</BarWrapper> */}
 				<VideoWrapper>
 					<div id="player" ref={youtubePlayer} />
 				</VideoWrapper>

@@ -139,7 +139,7 @@ const IndividualWrapper = styled.div`
 	left: 50%;
 	background-color: white;
 	height: 600px;
-	// width: 800px;
+	width: 50%;
 	border-radius: 12px;
 	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
 	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
@@ -204,10 +204,12 @@ export default function NewMapwindow(props) {
 	//board
 	const [active, setActive] = useState("hand");
 	const [chosenEmoji, setChosenEmoji] = useState(null);
-	const [emojiResult, setEmojiResult] = useState(true);
+
 	const [searching, setSearching] = useState(false);
 	const [drawObject, setDrawObject] = useState(null);
+
 	const [aniemoji, setAniEmoji] = useState(false);
+	const [emojiResult, setEmojiResult] = useState(true);
 
 	const [searchPoint, setSearchPoint] = useState({
 		nelat: "",
@@ -250,6 +252,10 @@ export default function NewMapwindow(props) {
 
 	//current point
 	useEffect(() => {
+		if (map !== null) {
+			map.addListener("click", onClickMarker);
+		}
+
 		if (navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(function (position) {
 				const lat = position.coords.latitude;
@@ -274,29 +280,50 @@ export default function NewMapwindow(props) {
 
 	//이동시
 	useEffect(() => {
-		// const interval = setInterval(() => {
-		// 	navigator.geolocation.getCurrentPosition(function (position) {
-		// 		const lat = position.coords.latitude;
-		// 		const lng = position.coords.longitude;
-		// 		if (markerC !== null) {
-		// 			markerC.setMap(null);
-		// 		}
-		// 		setMarkerC(
-		// 			new Tmapv2.Marker({
-		// 				position: new Tmapv2.LatLng(lat, lng),
-		// 				icon: point1,
-		// 				iconSize: new Tmapv2.Size(24, 24),
-		// 				title: "현재위치",
-		// 				map: map,
-		// 			}),
-		// 		);
-		// 	});
-		// 	console.log("I am moving...");
-		// }, 5000);
-		// return () => {
-		// 	clearInterval(interval);
-		// };
+		const interval = setInterval(() => {
+			navigator.geolocation.getCurrentPosition(function (position) {
+				const lat = position.coords.latitude;
+				const lng = position.coords.longitude;
+				if (markerC !== null) {
+					markerC.setMap(null);
+				}
+				setMarkerC(
+					new Tmapv2.Marker({
+						position: new Tmapv2.LatLng(lat, lng),
+						icon: point1,
+						iconSize: new Tmapv2.Size(24, 24),
+						title: "현재위치",
+						map: map,
+					}),
+				);
+			});
+			console.log("I am moving...");
+		}, 5000);
+		return () => {
+			clearInterval(interval);
+		};
 	}, []);
+
+	const onClickMarker = (e) => {
+		const latlng = e.latLng;
+		const marker = new Tmapv2.Marker({
+			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
+			map: map,
+		});
+
+		const buttonWindow = `
+				<div>
+				<input type="text"/>
+					<button onClick={}>Keep 등록</button>
+				</div>
+			`;
+		const infoWindow = new Tmapv2.InfoWindow({
+			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
+			content: `${buttonWindow}`,
+			map: map,
+			type: 2,
+		});
+	};
 
 	useMemo(() => {
 		if (markerC) {
@@ -785,7 +812,6 @@ export default function NewMapwindow(props) {
 				onHandleSearchObject();
 				break;
 			case "search":
-				console.log(drawObject);
 				setActive("search");
 				setSearching(true);
 				onHandleSearchObject();
@@ -847,10 +873,18 @@ export default function NewMapwindow(props) {
 					userName={userName}
 				></EmojiReaction>
 			)}
-			{drawObject && drawObject._data.shapeArray.length > 0 && (
-				<ButtonWrapper onClick={() => onSearchedPoint(drawObject)}>
-					정보 찾기
-				</ButtonWrapper>
+			{drawObject ? (
+				[
+					drawObject._data.shapeArray.length > 0 ? (
+						<ButtonWrapper onClick={() => onSearchedPoint(drawObject)}>
+							정보 찾기
+						</ButtonWrapper>
+					) : (
+						<></>
+					),
+				]
+			) : (
+				<></>
 			)}
 
 			{individual && (
@@ -883,9 +917,7 @@ export default function NewMapwindow(props) {
 						</ResultList>
 					)}
 				</div>
-				{loading ? (
-					<div></div>
-				) : (
+				{keepPlace ? (
 					<InfoMenu
 						map={map}
 						totalDaytime={totalDaytime}
@@ -893,6 +925,8 @@ export default function NewMapwindow(props) {
 						end={end}
 						keepPlace={keepPlace}
 					></InfoMenu>
+				) : (
+					<div></div>
 				)}
 
 				<BoardWrapper>

@@ -1,5 +1,5 @@
 //search YouTube video
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import useInput from "../../lib/functions/useInput";
 import SearchResult from "./SearchResult";
 import axios from "axios";
@@ -7,6 +7,8 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Grid";
 import styled from "styled-components";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 const KeyWordWrapper = styled.div`
 	display: block;
@@ -26,6 +28,8 @@ const Search = (props) => {
 	const filterWords = props.value.filter(
 		(prop) => prop.name.includes("주차장") === false,
 	);
+
+	useMemo(() => filterWords, [props.value]);
 
 	const onClickFocus = (event) => {
 		event.preventDefault();
@@ -79,9 +83,15 @@ const Search = (props) => {
 					</Stack>
 					추천 키워드
 					<KeyWordWrapper>
-						{filterWords.map((prop, inx) => (
-							<button onClick={onClickFocus}>{prop.name}</button>
-						))}
+						{filterWords.length > 0 ? (
+							filterWords.map((prop, inx) => (
+								<button onClick={onClickFocus}>{prop.name}</button>
+							))
+						) : (
+							<div className="fa-3x">
+								<FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
+							</div>
+						)}
 					</KeyWordWrapper>
 				</Grid>
 				<Grid item xs={6} md={8}>

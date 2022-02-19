@@ -1,13 +1,10 @@
-/*global Tmapv2*/
-// Do not delete above comment
-
 import React, { useState, useEffect } from "react";
 import Search from "./Search/Search";
 import Box from "@mui/material/Box";
 
 import Typography from "@mui/material/Typography";
 
-import { useLocation, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -17,6 +14,7 @@ import styled from "styled-components";
 const Wrapper = styled.div`
 	display: flex;
 	flex-direction: column;
+	width: 100%;
 `;
 
 const BarWrapper = styled.div`

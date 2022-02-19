@@ -1,8 +1,8 @@
 // Import the functions you need from the SDKs you need
-import * as firebase from "firebase/app";
+// import * as firebase from "firebase/app";
 import { initializeApp } from "firebase/app";
 import "firebase/auth";
-import { getFirestore, addDoc, getDocs, collection } from "firebase/firestore";
+import { getFirestore, getDocs, collection } from "firebase/firestore";
 import { getDatabase, ref, set } from "firebase/database";
 
 import axios from "axios";
