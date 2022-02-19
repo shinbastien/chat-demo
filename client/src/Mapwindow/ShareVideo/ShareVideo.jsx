@@ -19,9 +19,9 @@ const Container = styled.div`
 	width: fit-content;
 
 	flex-direction: column;
-	border-radius: 12px;
-	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
-	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	// border-radius: 12px;
+	// -webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	// box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
 `;
 
 const BarWrapper = styled.div`
@@ -35,7 +35,10 @@ const BarWrapper = styled.div`
 		font-size: 3vw;
 	}
 `;
-const VideoWrapper = styled.div``;
+const VideoWrapper = styled.div`
+	aspect-ratio: 16 / 9;
+	width: 100%;
+`;
 
 const VideoBarWrapper = styled.div`
 	display: flex;
@@ -125,12 +128,12 @@ function ShareVideo({ stateChanger, ...rest }) {
 	return (
 		<>
 			<Container>
-				<BarWrapper>
+				{/* <BarWrapper>
 					<div></div>
 					<button onClick={() => stateChanger(false)}>
 						<FontAwesomeIcon icon={faXmark} />
 					</button>
-				</BarWrapper>
+				</BarWrapper> */}
 				<VideoWrapper>
 					<div id="player" ref={youtubePlayer} />
 				</VideoWrapper>
@@ -155,4 +158,4 @@ function ShareVideo({ stateChanger, ...rest }) {
 		</>
 	);
 }
-export default ShareVideo;
+export default React.memo(ShareVideo);

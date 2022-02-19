@@ -3,14 +3,12 @@
 
 import React, { useState, useEffect } from "react";
 import Search from "./Search/Search";
-import Keep from "../Keep/Keep";
 import Box from "@mui/material/Box";
 
 import Typography from "@mui/material/Typography";
 
 import { useLocation, Link } from "react-router-dom";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
+
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -29,7 +27,7 @@ const BarWrapper = styled.div`
 	}
 	> button {
 		padding-right: 2%;
-		font-size: 3vw;
+		font-size: 2vw;
 	}
 `;
 
@@ -107,8 +105,9 @@ export default function Individual({ stateChanger, ...props }) {
 					<FontAwesomeIcon icon={faXmark} />
 				</button>
 			</BarWrapper>
-			Search
+
 			<TabPanel value={value} index={0}>
+				Search
 				<Search value={recvideo}></Search>
 			</TabPanel>
 		</Wrapper>

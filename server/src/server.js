@@ -51,16 +51,16 @@ io.on("connection", (socket) => {
 
 	// --------------------PEERCONNECTION-------------------
 	// when a peer is created from newbie, the created peer sends a signal by socket and socket sends the signal to existing peers
-	socket.on("sending signal", (payload) => {
-		io.to(payload.userIDToSignal).emit("user joined", {
-			signal: payload.signal,
-			callerID: payload.callerID,
-			callerName: payload.callerName,
-		});
-		console.log("signal sended from newbie: ", payload.callerName);
-		console.log("to: ", payload.userNameToSignal);
-		console.log("to ID: ", payload.userIDToSignal);
-	});
+	socket.on("RTC_offer", (signal, caller, receiver, roomName) => {
+		try {
+		  io.to(roomName).emit("RTC_answer", caller, receiver, signal);
+		  console.log("signal sended from newbie: ", caller);
+		  console.log("to: ", receiver);
+  
+		} catch(error) {
+		  console.log(error);
+		}  
+	  })
 
 	socket.on("returning signal", (payload) => {
 		io.to(payload.callerID).emit("receiving returned signal", {

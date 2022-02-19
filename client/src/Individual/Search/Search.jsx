@@ -1,18 +1,25 @@
 //search YouTube video
 import React, { useState, useRef } from "react";
 import useInput from "../../lib/functions/useInput";
-import { SearchResult } from "./SearchResult";
+import SearchResult from "./SearchResult";
 import axios from "axios";
-import { Item } from "../../Styles/themeSytles";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Grid";
+import styled from "styled-components";
+
+const KeyWordWrapper = styled.div`
+	display: block;
+	font-size: 2vw;
+	&: active {
+		color: blue;
+	}
+`;
 
 const Search = (props) => {
 	const termInput = useInput("");
 	const [submit, setSubmit] = useState(false);
 	const [videos, setVideos] = useState([]);
-	const [share, setShare] = useState(false);
 	const [keyword, setKeyword] = useState();
 	const inputRef = useRef();
 
@@ -37,7 +44,10 @@ const Search = (props) => {
 				params: {
 					key: process.env.REACT_APP_YOUTUBE_API_KEY,
 					part: "snippet",
-					q: `-집 맛집 |가볼만한 곳 ` + keyword,
+					q:
+						`-집 맛집 |가볼만한 곳 ` + termInput.value
+							? termInput.value
+							: keyword,
 				},
 			});
 			if (videos.length > 0) {
@@ -68,16 +78,15 @@ const Search = (props) => {
 						</Button>
 					</Stack>
 					추천 키워드
-					{filterWords.map((prop, inx) => (
-						<button onClick={onClickFocus}>{prop.name}</button>
-					))}
+					<KeyWordWrapper>
+						{filterWords.map((prop, inx) => (
+							<button onClick={onClickFocus}>{prop.name}</button>
+						))}
+					</KeyWordWrapper>
 				</Grid>
 				<Grid item xs={6} md={8}>
 					<Stack direction={"column"} spacing={2} alignItems={"baseline"}>
-						<Button onClick={() => setShare(!share)}>
-							{share ? "공유 중지" : "공유하기"}
-						</Button>
-						{submit ? `검색 결과: ` + termInput.value : null}
+						{submit ? `검색 결과: ` + keyword : null}
 						{videos.length > 0 ? (
 							<SearchResult videos={videos}></SearchResult>
 						) : (

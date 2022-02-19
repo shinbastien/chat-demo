@@ -4,6 +4,8 @@ import NewMapwindow from "../Mapwindow/NewMapwindow";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
 import AppBar from "@mui/material/AppBar";
+import Snackbar from "@mui/material/Snackbar";
+
 import Typography from "@mui/material/Typography";
 import logoWhite from "../Styles/source/logo_w.png";
 import IconButton from "@mui/material/IconButton";
@@ -32,6 +34,13 @@ function Map() {
 	const location = useLocation();
 	const [keepPlace, setKeepPlace] = useState([]);
 	const [loading, setLoading] = useState(false);
+	const [state, setState] = useState({
+		open: false,
+		vertical: "top",
+		horizontal: "center",
+	});
+
+	const { vertical, horizontal, open } = state;
 
 	const { groupID, userName } = location.state;
 	console.log("groupID obtained from Home is: ", groupID);
@@ -69,6 +78,14 @@ function Map() {
 		console.log("i am loaded");
 	};
 
+	const handleClick = (newState) => () => {
+		setState({ open: true, ...newState });
+	};
+
+	const handleClose = () => {
+		setState({ ...state, open: false });
+	};
+
 	return (
 		<>
 			<AppBar postiion="static" style={{ backgroundColor: "#151ca2" }}>
@@ -87,6 +104,13 @@ function Map() {
 					<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
 				</Typography>
 			</AppBar>
+			<Snackbar
+				anchorOrigin={{ vertical, horizontal }}
+				open={open}
+				onClose={handleClose}
+				message="I love snacks"
+				key={vertical + horizontal}
+			/>
 			<Grid container spacing={2} style={{ marginTop: 40 }}>
 				<Grid item xs={6} md={9}>
 					<NewMapwindow

@@ -15,13 +15,13 @@ import {
 	faFaceSmile,
 	faLocationDot,
 	faMagnifyingGlass,
+	faMapLocationDot,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { readFromFirebase, searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas/Canvas";
-import ShareVideo from "./ShareVideo/ShareVideo";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
@@ -130,12 +130,20 @@ const ButtonWrapper = styled.button`
 `;
 
 const IndividualWrapper = styled.div`
-	position: fixed;
+	position: absolute;
 	bottom: 7%;
-	display: flex;
+	transform: translate(-50%, -50%);
 	z-index: 222;
-	left: 43%;
+	margin: -25px 0 0 -25px;
+	top: 50%;
+	left: 50%;
 	background-color: white;
+	height: 600px;
+	// width: 800px;
+	border-radius: 12px;
+	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	overflow-y: scroll;
 `;
 
 const EmojiWrapper = styled.div`
@@ -144,12 +152,6 @@ const EmojiWrapper = styled.div`
 	display: flex;
 	z-index: 222;
 	left: 43%;
-`;
-
-const EmojiDisplayWrapper = styled.div`
-	font-size: 7vw;
-	position: absolute;
-	z-index: 300;
 `;
 
 const VideoWrapper = styled.div`
@@ -216,8 +218,6 @@ export default function NewMapwindow(props) {
 
 	const [individual, setIndividual] = useState(false);
 
-	const [sharing, setSharing] = useState(false);
-
 	const { socket, connected } = useSocket();
 
 	const initMap = () => {
@@ -274,36 +274,35 @@ export default function NewMapwindow(props) {
 
 	//이동시
 	useEffect(() => {
-		const interval = setInterval(() => {
-			navigator.geolocation.getCurrentPosition(function (position) {
-				const lat = position.coords.latitude;
-				const lng = position.coords.longitude;
-				if (markerC !== null) {
-					markerC.setMap(null);
-				}
-				setMarkerC(
-					new Tmapv2.Marker({
-						position: new Tmapv2.LatLng(lat, lng),
-						icon: point1,
-						iconSize: new Tmapv2.Size(24, 24),
-						title: "현재위치",
-						map: map,
-					}),
-				);
-			});
-			console.log("I am moving...");
-		}, 5000);
-
-		return () => {
-			clearInterval(interval);
-		};
+		// const interval = setInterval(() => {
+		// 	navigator.geolocation.getCurrentPosition(function (position) {
+		// 		const lat = position.coords.latitude;
+		// 		const lng = position.coords.longitude;
+		// 		if (markerC !== null) {
+		// 			markerC.setMap(null);
+		// 		}
+		// 		setMarkerC(
+		// 			new Tmapv2.Marker({
+		// 				position: new Tmapv2.LatLng(lat, lng),
+		// 				icon: point1,
+		// 				iconSize: new Tmapv2.Size(24, 24),
+		// 				title: "현재위치",
+		// 				map: map,
+		// 			}),
+		// 		);
+		// 	});
+		// 	console.log("I am moving...");
+		// }, 5000);
+		// return () => {
+		// 	clearInterval(interval);
+		// };
 	}, []);
 
 	useMemo(() => {
 		if (markerC) {
 			markerC.addListener("click", (e) => {
 				const { _lat, _lng } = markerC.getPosition();
-				setSharing(true);
+				// setSharing(true);
 				// loadpointInfo(_lat, _lng);
 			});
 		}
@@ -468,14 +467,14 @@ export default function NewMapwindow(props) {
 	const drawLine = (arrPoint, traffic) => {
 		const resultDrawArr_ = [];
 
-		if (chktraffic.length != 0) {
+		if (chktraffic.length !== 0) {
 			// 교통정보 혼잡도를 체크
 			// strokeColor는 교통 정보상황에 다라서 변화
 			// traffic :  0-정보없음, 1-원활, 2-서행, 3-지체, 4-정체  (black, green, yellow, orange, red)
 			let lineColor = "";
 
 			if (traffic != "0") {
-				if (traffic.length == 0) {
+				if (traffic.length === 0) {
 					//length가 0인것은 교통정보가 없으므로 검은색으로 표시
 					resultDrawArr_.push(
 						new Tmapv2.Polyline({
@@ -735,8 +734,6 @@ export default function NewMapwindow(props) {
 				},
 			});
 			setrecvideo(items.searchPoiInfo.pois.poi);
-
-			setIndividual(true);
 		} catch (err) {
 			console.log(err);
 		}
@@ -772,6 +769,9 @@ export default function NewMapwindow(props) {
 		if (searching) {
 			setSearching(false);
 		}
+		if (individual) {
+			setIndividual(false);
+		}
 	};
 
 	const onHandleClick = (props) => {
@@ -785,23 +785,32 @@ export default function NewMapwindow(props) {
 				onHandleSearchObject();
 				break;
 			case "search":
+				console.log(drawObject);
 				setActive("search");
 				setSearching(true);
-				setDrawObject(
-					new Tmapv2.extension.Drawing({
-						map: map, // 지도 객체
-						strokeWeight: 4, // 테두리 두께
-						strokeColor: "blue", // 테두리 색상
-						strokeOpacity: 1, // 테두리 투명도
-						fillColor: "red", // 도형 내부 색상
-						fillOpacity: 0.2,
-					}),
-				);
+				onHandleSearchObject();
+				if (drawObject === null) {
+					setDrawObject(
+						new Tmapv2.extension.Drawing({
+							map: map, // 지도 객체
+							strokeWeight: 4, // 테두리 두께
+							strokeColor: "blue", // 테두리 색상
+							strokeOpacity: 1, // 테두리 투명도
+							fillColor: "blue", // 도형 내부 색상
+							fillOpacity: 0.1,
+						}),
+					);
+				}
 
 				break;
 			case "emoji":
 				setActive("emoji");
 				setEmojiResult(true);
+				onHandleSearchObject();
+				break;
+			case "individualSearch":
+				setActive("individualSearch");
+				setIndividual(true);
 				onHandleSearchObject();
 				break;
 			default:
@@ -843,11 +852,7 @@ export default function NewMapwindow(props) {
 					정보 찾기
 				</ButtonWrapper>
 			)}
-			{sharing && (
-				<VideoWrapper>
-					<ShareVideo stateChanger={setSharing}></ShareVideo>
-				</VideoWrapper>
-			)}
+
 			{individual && (
 				<IndividualWrapper>
 					<Individual stateChanger={setIndividual} data={recvideo}></Individual>
@@ -919,6 +924,15 @@ export default function NewMapwindow(props) {
 							onClick={() => onHandleClick("emoji")}
 						>
 							<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faFaceSmile} />
+						</IconButton>
+						<IconButton
+							className={active === "individualSearch" ? "active" : ""}
+							onClick={() => onHandleClick("individualSearch")}
+						>
+							<FontAwesomeIcon
+								style={{ fontSize: "3vw" }}
+								icon={faMapLocationDot}
+							/>
 						</IconButton>
 					</Stack>
 				</BoardWrapper>
