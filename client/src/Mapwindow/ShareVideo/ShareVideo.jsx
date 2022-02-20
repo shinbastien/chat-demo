@@ -67,30 +67,68 @@ const ProgressBar = styled.span`
 	}
 `;
 
-function ShareVideo({ stateChanger, ...rest }) {
+function ShareVideo({ stateChanger, userName, videoName }) {
 	const { socket, connected } = useSocket();
 	const youtubePlayer = useRef();
+	
 	const userVideo = useRef();
-	const [videoID, setVideoID] = useState("");
+	// console.log("videoName is: ", videoName);
+	const [videoID, setVideoID] = useState(videoName);
 	const [peers, setPeers] = useState([]);
 	const location = useLocation();
-	const { GroupID, userName } = location.state;
 	const [playing, setPlaying] = useState(false);
 
 	useEffect(() => {
-		const tag = document.createElement("script");
-		tag.src = "https://www.youtube.com/iframe_api";
-		var firstScriptTag = document.getElementsByTagName("script")[0];
-		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-		window.onYouTubeIframeAPIReady = loadVideoPlayer;
-		console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
+		if (!window.YT) {
+			const tag = document.createElement("script");
+			tag.src = "https://www.youtube.com/iframe_api";
+			var firstScriptTag = document.getElementsByTagName("script")[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+			window.onYouTubeIframeAPIReady = loadVideoPlayer;
+			console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
+
+		}
+		else {
+			loadVideoPlayer();
+			console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
+		}
+
+		
 	}, []);
+
+	useEffect(() => {
+		const handleVideoSocket = (data) => {
+			if (data === "play") {
+				console.log("play video");
+				youtubePlayer.current.playVideo();
+				setPlaying(true);
+			}
+			else if (data === "pause") {
+				console.log("pause video");
+				youtubePlayer.current.pauseVideo();
+				setPlaying(false);
+			} else {
+				console.log("load video: ", data);
+				youtubePlayer.current.loadVideoById(data.split("=")[1]);
+			}
+		}
+
+		if (socket && connected) {
+			socket.on("ShareVideoAction", handleVideoSocket);
+		}
+		return () => {
+			if (socket && connected) {
+				socket.off("ShareVideoAction", handleVideoSocket);
+			}	
+		}
+	}, [socket, connected])
 
 	function loadVideoPlayer() {
 		const player = new YT.Player("player", {
 			height: "400",
 			width: "700",
-			videoId: "dWZznGbsLbE",
+			videoId: videoID,
 			playerVars: {
 				playsinline: 1,
 				autoplay: 0,
@@ -107,17 +145,17 @@ function ShareVideo({ stateChanger, ...rest }) {
 	function handleVideo(data) {
 		if (data === "play") {
 			console.log("play video");
-			socket.emit("play", GroupID);
+			socket.emit("play", userName);
 			youtubePlayer.current.playVideo();
 			setPlaying(true);
 		} else if (data === "pause") {
 			console.log("pause video");
-			socket.emit("pause", GroupID);
+			socket.emit("pause", userName);
 			youtubePlayer.current.pauseVideo();
 			setPlaying(false);
 		} else {
 			console.log("load video: ", data);
-			socket.emit("load", [GroupID, videoID]);
+			socket.emit("load", (userName, videoID));
 			youtubePlayer.current.loadVideoById(data.split("=")[1]);
 		}
 	}

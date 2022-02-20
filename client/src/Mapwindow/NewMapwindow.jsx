@@ -198,6 +198,7 @@ export default function NewMapwindow(props) {
 	//video-list
 	const [recvideo, setrecvideo] = useState([]);
 	const [recvideoLoc, setrecvideoLoc] = useState([]);
+	const [videoID, setVideoID] = useState("dWZznGbsLbE");
 
 	//board
 	const [active, setActive] = useState("hand");
@@ -306,9 +307,21 @@ export default function NewMapwindow(props) {
 				const { _lat, _lng } = markerC.getPosition();
 				setSharing(true);
 				// loadpointInfo(_lat, _lng);
+				if (socket && connected) {
+					socket.emit("start shareVideo", videoID);
+				}
 			});
 		}
-	}, [markerC]);
+	}, [markerC, socket, connected]);
+
+	useEffect(() => {
+		if (socket && connected) {
+			socket.on("start videoplayer", (videoID) => {
+				setSharing(true);
+				setVideoID(videoID);
+			})
+		}
+	}, [socket, connected])
 
 	useMemo(async () => {
 		if (recvideo.length > 0) {
@@ -862,7 +875,7 @@ export default function NewMapwindow(props) {
 			)}
 			{sharing && (
 				<VideoWrapper>
-					<ShareVideo stateChanger={setSharing}></ShareVideo>
+					<ShareVideo stateChanger={setSharing} userName={userName} videoName={videoID}></ShareVideo>
 				</VideoWrapper>
 			)}
 			{individual && (
