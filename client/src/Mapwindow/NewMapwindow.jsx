@@ -796,6 +796,9 @@ export default function NewMapwindow(props) {
 				break;
 			case "draw":
 				setActive("draw");
+				if (socket && connected) {
+					socket.emit("start canvas");
+				}
 				onHandleSearchObject();
 				break;
 			case "search":
@@ -858,6 +861,16 @@ export default function NewMapwindow(props) {
 			}
 		}
 	}, [chosenEmoji, socket, connected]);
+
+	// Open Canvas
+	useEffect(() => {
+		if (socket && connected) {
+			socket.on("open canvas", setActive("draw"))
+		}
+		return (() => {
+			socket.off("open canvas", setActive("draw"));
+		})
+	}, [socket, connected])
 
 	return (
 		<React.Fragment>

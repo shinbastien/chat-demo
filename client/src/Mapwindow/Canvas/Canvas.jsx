@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import styled from "styled-components";
+import {useSocket} from "../../lib/socket";
 
 const CanvasWrapper = styled.canvas`
 	position: absolute;
@@ -9,15 +10,20 @@ const CanvasWrapper = styled.canvas`
 const Canvas = ({ width, height }) => {
 	const canvasRef = useRef(null);
 	const [isPainting, setIsPainting] = useState(false);
+	const [otherIsPainting, setOtherIsPainting] = useState(false);
 	const [mousePosition, setMousePosition] = useState(undefined);
+	const { socket, connected } = useSocket();
 
 	const startPoint = useCallback((event) => {
 		const coordinates = getCoordinate(event);
 		if (coordinates) {
 			setMousePosition(coordinates);
 			setIsPainting(true);
+			if (socket && connected) {
+				socket.emit("start drawing");
+			}
 		}
-	}, []);
+	}, [socket, connected]);
 
 	useEffect(() => {
 		if (!canvasRef.current) {
@@ -38,12 +44,53 @@ const Canvas = ({ width, height }) => {
 
 				if (mousePosition && newMousePosition) {
 					drawLine(mousePosition, newMousePosition);
+					if (socket && connected) {
+						socket.emit("send paint", mousePosition, newMousePosition);
+						console.log("send paint from:", mousePosition);
+						console.log("send paint to: ", newMousePosition);
+
+					}
 					setMousePosition(newMousePosition);
 				}
 			}
-		},
-		[isPainting, mousePosition],
-	);
+		},[isPainting, mousePosition, socket, connected]);
+
+	useEffect(() => {
+		if (socket && connected) {
+			socket.on("other start drawing", () => {
+				setOtherIsPainting(true);
+			})
+			socket.on("other stopped drawing", () => {
+				setOtherIsPainting(false);
+			})
+		}
+		return () => {
+			if (socket && connected) {
+				socket.off("other start drawing", () => {
+					setOtherIsPainting(true);
+				})
+				socket.off("other stopped drawing", () => {
+					setOtherIsPainting(false);
+				})
+			}
+		}
+	}, [otherIsPainting,socket, connected])	
+	useEffect(() => {
+		const handlePainting = async (mousePosition, newMousePosition) => {
+				drawLine(mousePosition, newMousePosition);
+				console.log("drawing line");
+		}
+		if (socket && connected) {
+			socket.on("receive paint", handlePainting);
+			console.log("received socket of paint");
+		}
+		return () => {
+			if (socket && connected) {
+				socket.off("receive paint", handlePainting);
+			}
+		}
+	},[otherIsPainting, socket, connected])
+
 
 	useEffect(() => {
 		if (!canvasRef.current) {
@@ -60,7 +107,11 @@ const Canvas = ({ width, height }) => {
 	const exitPaint = useCallback(() => {
 		setIsPainting(false);
 		setMousePosition(undefined);
-	}, []);
+		if (socket && connected) {
+			socket.emit("stop drawing");
+			console.log("stop drawing");
+		}
+	}, [socket, connected]);
 
 	const getCoordinate = (event) => {
 		if (!canvasRef.current) {
