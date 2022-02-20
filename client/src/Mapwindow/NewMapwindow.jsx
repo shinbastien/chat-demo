@@ -1,7 +1,7 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo} from "react";
 import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
@@ -146,11 +146,11 @@ const EmojiWrapper = styled.div`
 	left: 43%;
 `;
 
-const EmojiDisplayWrapper = styled.div`
-	font-size: 7vw;
-	position: absolute;
-	z-index: 300;
-`;
+// const EmojiDisplayWrapper = styled.div`
+// 	font-size: 7vw;
+// 	position: absolute;
+// 	z-index: 300;
+// `;
 
 const VideoWrapper = styled.div`
 	position: absolute;
@@ -206,6 +206,7 @@ export default function NewMapwindow(props) {
 	const [searching, setSearching] = useState(false);
 	const [drawObject, setDrawObject] = useState(null);
 	const [aniemoji, setAniEmoji] = useState(false);
+	const [emojisender, setEmojiSender] = useState(userName);
 
 	const [searchPoint, setSearchPoint] = useState({
 		nelat: "",
@@ -385,12 +386,12 @@ export default function NewMapwindow(props) {
 				const { pointType } = properties;
 				let markerImg = "";
 				let pType = "";
-				if (pointType == "S") {
+				if (pointType === "S") {
 					//출발지 마커
 					markerImg =
 						"http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png";
 					pType = "S";
-				} else if (pointType == "E") {
+				} else if (pointType === "E") {
 					//도착지 마커
 					markerImg =
 						"http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_e.png";
@@ -468,7 +469,7 @@ export default function NewMapwindow(props) {
 	const drawLine = (arrPoint, traffic) => {
 		const resultDrawArr_ = [];
 
-		if (chktraffic.length != 0) {
+		if (chktraffic.length !== 0) {
 			// 교통정보 혼잡도를 체크
 			// strokeColor는 교통 정보상황에 다라서 변화
 			// traffic :  0-정보없음, 1-원활, 2-서행, 3-지체, 4-정체  (black, green, yellow, orange, red)
@@ -813,21 +814,37 @@ export default function NewMapwindow(props) {
 		const { emoji } = emojiObject;
 		setChosenEmoji(emoji);
 		setEmojiResult(false);
+		setEmojiSender(userName)
+		console.log("emoji is: ", emoji);
+		if (socket && connected) {
+			socket.emit("send emoji", emoji, userName);
+		}
 	};
 
 	//emoji
 	useEffect(() => {
-		if (chosenEmoji == null) {
-			return;
+		const handleGetEmoji = (emoji, userName) => {
+			setChosenEmoji(emoji)
+			setEmojiSender(userName);
+		}
+		if (socket && connected) {
+			socket.on("get emoji", handleGetEmoji)
+		}
+		if (chosenEmoji != null) {
+			setAniEmoji(true);
+
+			setTimeout(() => {
+				setAniEmoji(false);
+				setChosenEmoji(null);
+			}, 3000);
 		}
 
-		setAniEmoji(true);
-
-		setTimeout(() => {
-			setAniEmoji(false);
-			setChosenEmoji(null);
-		}, 3000);
-	}, [chosenEmoji]);
+		return () => {
+			if (socket && connected) {
+				socket.off ("get emoji", handleGetEmoji);
+			}
+		}
+	}, [chosenEmoji, socket, connected]);
 
 	return (
 		<React.Fragment>
@@ -835,7 +852,7 @@ export default function NewMapwindow(props) {
 				<EmojiReaction
 					state={aniemoji}
 					emoji={chosenEmoji}
-					userName={userName}
+					userName={emojisender}
 				></EmojiReaction>
 			)}
 			{drawObject && drawObject._data.shapeArray.length > 0 && (
