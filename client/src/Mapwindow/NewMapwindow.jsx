@@ -338,6 +338,8 @@ export default function NewMapwindow() {
 
 				setTrackSimulationTicker(prevTicker => {
 					const currTick = prevTicker + duration
+					const lastAccTime = pathMetaData[pathMetaData.length-1].accTime
+					const finishTime = lastAccTime[lastAccTime.length-1]
 
 					console.log(`I am moving...: ${currTick}`);
 					
@@ -365,7 +367,7 @@ export default function NewMapwindow() {
 											lat: lat,
 											lng: lng,
 											markerImage: point1,
-											title: "현재위치",
+											title: `현재위치 ${finishTime - currTick}초 남음`,
 										})
 									}
 								);
