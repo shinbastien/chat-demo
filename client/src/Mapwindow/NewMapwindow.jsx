@@ -58,6 +58,16 @@ const ResultList = styled.div`
 	padding: 24px;
 	margin-left: 20px;
 	box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.1);
+	z-index: 400;
+	font-size: 15px;
+`;
+
+ResultList.Item = styled.div`
+	display: flex;
+	align-items: center;
+	&:hover {
+		background: #f1f1f5;
+	}
 `;
 
 const MapButtonWrapper = styled.div`
@@ -173,14 +183,6 @@ const VideoWrapper = styled.div`
 
 	text-align: center;
 	margin: 0 auto;
-`;
-
-ResultList.Item = styled.div`
-	display: flex;
-	align-items: center;
-	&:hover {
-		background: #f1f1f5;
-	}
 `;
 
 

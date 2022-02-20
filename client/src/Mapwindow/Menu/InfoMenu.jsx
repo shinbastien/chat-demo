@@ -94,9 +94,12 @@ const InfoMenu = (props) => {
 			>
 				Information
 			</Box>
-			<Divider></Divider>
+			{/* <Divider></Divider> */}
 			<SubmenuWrapper>
 				<Box component="div">
+					<li>출발: {start && start.name}</li>
+					<li>도착: {end && end.name}</li>
+					<Divider></Divider>
 					<li>
 						총 거리:{" "}
 						{totalDaytime.totalD < 1
@@ -104,8 +107,7 @@ const InfoMenu = (props) => {
 							: totalDaytime.totalD + "km"}
 					</li>
 					<li>총 시간: {totalDaytime.totalTime} 분</li>
-					<li>출발: {start && start.name}</li>
-					<li>도착: {end && end.name}</li>
+
 				</Box>
 				<Divider></Divider>
 				<Box
