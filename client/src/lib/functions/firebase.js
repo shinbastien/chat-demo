@@ -26,14 +26,21 @@ function firebaseInstance() {
 
 async function writeToPlaceData(element) {
 	const { coords, groupId, userId, placeId } = element;
-	const db = getDatabase(firebaseInstance);
-	set(ref(db, "keeps/" + placeId), {
-		groupId: groupId,
-		coords: coords,
-		userId: userId,
-		placeId: placeId,
-		visited: false,
-	});
+	const app = firebaseInstance();
+	console.log(app);
+	const db = getDatabase(app);
+	try {
+		set(ref(db, "keeps/" + placeId), {
+			groupId: groupId,
+			coords: coords,
+			userId: userId,
+			placeId: placeId,
+			visited: false,
+		});
+		console.log("uploaded");
+	} catch (error) {
+		console.log(error);
+	}
 }
 
 async function readFromFirebase(element) {
@@ -51,22 +58,33 @@ async function readFromFirebase(element) {
 	}
 }
 
+var num = 0;
+
 async function searchOnYoutube(props) {
 	const API_URL = "https://www.googleapis.com/youtube/v3/search";
 
 	try {
-		const {
-			data: { items },
-		} = await axios(API_URL, {
-			method: "GET",
-			params: {
-				key: process.env.REACT_APP_YOUTUBE_API_KEY,
-				part: "snippet",
-				q: `대전 유성구` + props,
-				maxResults: 1,
-			},
-		});
-		return items;
+		// const {
+		// 	data: { items },
+		// } = await axios(API_URL, {
+		// 	method: "GET",
+		// 	params: {
+		// 		key: process.env.REACT_APP_YOUTUBE_API_KEY,
+		// 		part: "snippet",
+		// 		q: `대전 유성구` + props,
+		// 		maxResults: 1,
+		// 	},
+		// });
+		// return items;
+
+		//add dummy data
+		const s = data[num];
+
+		num += 1;
+		if (num == 5) {
+			num = 0;
+		}
+		return s;
 	} catch (err) {
 		console.log(err);
 		return data;

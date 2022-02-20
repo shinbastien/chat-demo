@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import PropTypes from "prop-types";
 import { Rnd } from "react-rnd";
@@ -102,43 +102,39 @@ const DeleteTagButton = styled.div`
 `;
 
 const VideoCard = (props) => {
-	const { url, width, height } = props.info;
-	console.log(url);
+	// const { url, width, height } = props.info;
+	const [loading, setLoading] = useState(true);
+	const { url, width, height } = Object.values(props.info)[0];
 	const [info, setInfo] = useState({
-		x: 200 + Math.floor(Math.random() * 30) * 10,
-		y: 200 + Math.floor(Math.random() * 30) * 10,
+		x: window.innerWidth / 6 + Math.floor(Math.random() * 70) * 8,
+		y: window.innerHeight / 6 + Math.floor(Math.random() * 70) * 8,
 		width: 320,
 		height: 180,
 	});
 	const [hover, setHover] = useState(false);
 
-	// useEffect(() => {
-	// 	if (video) {
-	// 		info
-	// 	}
-	// }, [video]);
-
 	return (
-		<Rnd
-			style={{ zIndex: 9 }}
-			default={info}
-			lockAspectRatio={16 / 9}
-			enableResizing={{
-				top: false,
-				right: false,
-				bottom: false,
-				left: false,
-				topRight: false,
-				bottomRight: true,
-				bottomLeft: false,
-				topLeft: false,
-			}}
-		>
-			<VideoWrapper
-				onMouseEnter={() => setHover(true)}
-				onMouseLeave={() => setHover(false)}
+		loading && (
+			<Rnd
+				style={{ zIndex: 9 }}
+				default={info}
+				lockAspectRatio={16 / 9}
+				enableResizing={{
+					top: false,
+					right: false,
+					bottom: false,
+					left: false,
+					topRight: false,
+					bottomRight: true,
+					bottomLeft: false,
+					topLeft: false,
+				}}
 			>
-				{/* <iframe
+				<VideoWrapper
+					onMouseEnter={() => setHover(true)}
+					onMouseLeave={() => setHover(false)}
+				>
+					{/* <iframe
 				title="youtubeTrailer"
 				width="100%"
 				height="100%"
@@ -147,28 +143,30 @@ const VideoCard = (props) => {
 				allow="accelerometer; autoplay;"
 				allowFullScreen
 			/> */}
-				<img
-					src={process.env.PUBLIC_URL + url}
-					width="100%"
-					height="100%"
-				></img>
-				{hover && (
-					<DeleteVideoButton>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="8"
-							height="8"
-							viewBox="0 0 24 24"
-						>
-							<path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z" />
-						</svg>
-					</DeleteVideoButton>
-				)}
-			</VideoWrapper>
-		</Rnd>
+					<Cover />
+					<img
+						src={process.env.PUBLIC_URL + url}
+						width="100%"
+						height="100%"
+					></img>
+					{hover && (
+						<DeleteVideoButton onClick={() => setLoading(false)}>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="8"
+								height="8"
+								viewBox="0 0 24 24"
+							>
+								<path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z" />
+							</svg>
+						</DeleteVideoButton>
+					)}
+				</VideoWrapper>
+			</Rnd>
+		)
 	);
 };
-export default VideoCard;
+export default React.memo(VideoCard);
 
 VideoCard.propTypes = {
 	video: PropTypes.object.isRequired,

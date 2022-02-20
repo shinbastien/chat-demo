@@ -33,8 +33,14 @@ const EmojiDisplayWrapper = styled.div`
 		justify-content: center;
 		align-items: center;
 
-		font-size: 2vw;
-		margin-top: -20%;
+		> div {
+			padding: 0.4vw;
+			font-size: 1.8vw;
+			color: white;
+			background-color: ${(props) => (props.color ? props.color : "#FF4E6C")};
+			border-radius: 4px;
+			margin-top: -20%;
+		}
 	}
 `;
 
@@ -44,8 +50,10 @@ const EmojiReaction = (props) => {
 	return (
 		state && (
 			<EmojiDisplayWrapper>
-				<div>{emoji}</div>
-				<div>{userName}</div>
+				<div>
+					{emoji}
+					<div>{userName}</div>
+				</div>
 			</EmojiDisplayWrapper>
 		)
 	);

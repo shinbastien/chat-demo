@@ -51,14 +51,15 @@ const SubsubmenuWrapper = styled.div`
 				width: 75px;
 				height: 75px;
 			}
-			> div {
-				width: 10px;
-				height: 10px;
-				border-radius: 50px;
-				background-color: ${(props) => (props.color == true ? "red" : "blue")};
-			}
 		}
 	}
+`;
+
+const VisitedWrapper = styled.div`
+	width: 10px;
+	height: 10px;
+	border-radius: 50px;
+	background-color: ${(props) => (props.visited === true ? "red" : "blue")};
 `;
 
 const KeepPlaceCard = (props) => {
@@ -91,7 +92,7 @@ const KeepPlaceCard = (props) => {
 	return (
 		<button variant="outlined" onClick={() => onClickKeep(props.info)}>
 			<img src={url} width="100%" height="auto"></img>
-			<div color={visited == true ? false : true}></div>
+			<VisitedWrapper visited={visited}></VisitedWrapper>
 		</button>
 	);
 };
@@ -125,7 +126,7 @@ const SharedPlaceCard = (props) => {
 	return (
 		<button variant="outlined" onClick={() => onClickKeep(props.info)}>
 			<img src={url} width="100%" height="auto"></img>
-			<div color={visited}></div>
+			<VisitedWrapper visited={visited}></VisitedWrapper>
 		</button>
 	);
 };

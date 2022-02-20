@@ -218,7 +218,7 @@ function VideoCall(props) {
 								</Stack>
 							</Grid>
 							<Grid item>
-								<IconButton onClick={() => console.log("test")}></IconButton>
+								{/* <IconButton onClick={() => console.log("test")}></IconButton> */}
 							</Grid>
 						</Grid>
 					);

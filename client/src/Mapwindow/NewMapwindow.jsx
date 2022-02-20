@@ -280,30 +280,30 @@ export default function NewMapwindow(props) {
 	}, [map]);
 
 	//이동시
-	// useEffect(() => {
-	// 	const interval = setInterval(() => {
-	// 		navigator.geolocation.getCurrentPosition(function (position) {
-	// 			const lat = position.coords.latitude;
-	// 			const lng = position.coords.longitude;
-	// 			if (markerC !== null) {
-	// 				markerC.setMap(null);
-	// 			}
-	// 			setMarkerC(
-	// 				new Tmapv2.Marker({
-	// 					position: new Tmapv2.LatLng(lat, lng),
-	// 					icon: point1,
-	// 					iconSize: new Tmapv2.Size(24, 24),
-	// 					title: "현재위치",
-	// 					map: map,
-	// 				}),
-	// 			);
-	// 		});
-	// 		console.log("I am moving...");
-	// 	}, 5000);
-	// 	return () => {
-	// 		clearInterval(interval);
-	// 	};
-	// }, []);
+	useEffect(() => {
+		const interval = setInterval(() => {
+			navigator.geolocation.getCurrentPosition(function (position) {
+				const lat = position.coords.latitude;
+				const lng = position.coords.longitude;
+				if (markerC !== null) {
+					markerC.setMap(null);
+				}
+				setMarkerC(
+					new Tmapv2.Marker({
+						position: new Tmapv2.LatLng(lat, lng),
+						icon: point1,
+						iconSize: new Tmapv2.Size(24, 24),
+						title: "이동중",
+						map: map,
+					}),
+				);
+			});
+			console.log("I am moving...");
+		}, 5000);
+		return () => {
+			clearInterval(interval);
+		};
+	}, []);
 
 	const onClickMarker = (e) => {
 		const latlng = e.latLng;
@@ -340,8 +340,12 @@ export default function NewMapwindow(props) {
 		if (recvideo.length > 0) {
 			for (let i = 0; i < recvideo.length; i++) {
 				const video = await searchOnYoutube(recvideo[i].name);
-
-				setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
+				// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
+				setrecvideoLoc((recvideoLoc) => [
+					...recvideoLoc,
+					{ [recvideo[i].name]: video },
+					// { [recvideo[i].name]: video[0] },
+				]);
 			}
 		}
 	}, [recvideo]);
@@ -801,6 +805,7 @@ export default function NewMapwindow(props) {
 		}
 		if (searching) {
 			setSearching(false);
+			setrecvideoLoc([]);
 		}
 		if (individual) {
 			setIndividual(false);
@@ -871,7 +876,8 @@ export default function NewMapwindow(props) {
 	}, [chosenEmoji]);
 	return (
 		<React.Fragment>
-			{recvideoLoc.length > 0 &&
+			{searching &&
+				recvideoLoc.length > 0 &&
 				recvideoLoc.map((list, idx) => (
 					<VideoCard key={idx} info={list}></VideoCard>
 				))}

@@ -3,25 +3,27 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSocket } from "../../lib/socket";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
 	faPause,
 	faPlay,
-	faXmark,
 	faVolumeHigh,
+	faEllipsisVertical,
 } from "@fortawesome/free-solid-svg-icons";
+import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Emoji from "./Emoji";
 
 import styled from "styled-components";
+import { writeToPlaceData } from "../../lib/functions/firebase";
 
 const Container = styled.div`
 	display: flex;
-	width: fit-content;
+	width: 100%;
 
 	flex-direction: column;
-	// border-radius: 12px;
-	// -webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
-	// box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
 `;
 
 const BarWrapper = styled.div`
@@ -54,6 +56,13 @@ const VideoBarWrapper = styled.div`
 	}
 `;
 
+const EmojiWrapper = styled.div`
+	display: flex;
+	justify-content: space-between;
+	font-size: 4vw;
+	align-items: center;
+`;
+
 const ProgressBar = styled.span`
 	position: relative;
 	flex-grow: 10;
@@ -71,6 +80,7 @@ const ProgressBar = styled.span`
 `;
 
 function ShareVideo({ stateChanger, ...rest }) {
+	const { url } = rest;
 	const { socket, connected } = useSocket();
 	const youtubePlayer = useRef();
 	const userVideo = useRef();
@@ -79,6 +89,27 @@ function ShareVideo({ stateChanger, ...rest }) {
 	const location = useLocation();
 	const { GroupID, userName } = location.state;
 	const [playing, setPlaying] = useState(false);
+	const [nextPlaying, setNextPlaying] = useState(false);
+
+	const [anchorEl, setAnchorEl] = useState(null);
+	const open = Boolean(anchorEl);
+
+	const [data, setData] = useState({
+		groupId: "a",
+		coords: "a",
+		userId: "a",
+		placeId: "a",
+		visited: false,
+	});
+
+	const handleClick = (event) => {
+		setAnchorEl(event.currentTarget);
+	};
+	const handleClose = async () => {
+		setAnchorEl(null);
+		console.log(data);
+		await writeToPlaceData(data);
+	};
 
 	useEffect(() => {
 		const tag = document.createElement("script");
@@ -89,11 +120,19 @@ function ShareVideo({ stateChanger, ...rest }) {
 		console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
 	}, []);
 
+	useEffect(() => {
+		if (nextPlaying) {
+			youtubePlayer.current.cueVideoByUrl(
+				`http://www.youtube.com/v/${url}?version=3`,
+			);
+		}
+	}, [url]);
+
 	function loadVideoPlayer() {
 		const player = new YT.Player("player", {
-			height: "300",
-			width: "400",
-			videoId: "dWZznGbsLbE",
+			height: "100%",
+			width: "100%",
+			videoId: url,
 			playerVars: {
 				playsinline: 1,
 				autoplay: 0,
@@ -103,6 +142,8 @@ function ShareVideo({ stateChanger, ...rest }) {
 				origin: "https://www.youtube.com",
 			},
 		});
+		setNextPlaying(true);
+
 		console.log("player is: ", player);
 		youtubePlayer.current = player;
 	}
@@ -129,6 +170,7 @@ function ShareVideo({ stateChanger, ...rest }) {
 	return (
 		<>
 			<Container>
+				공유중
 				<VideoWrapper>
 					<div id="player" ref={youtubePlayer} />
 				</VideoWrapper>
@@ -148,7 +190,33 @@ function ShareVideo({ stateChanger, ...rest }) {
 					<button>
 						<FontAwesomeIcon icon={faVolumeHigh} />
 					</button>
+
+					<IconButton
+						aria-controls={open ? "basic-menu" : undefined}
+						aria-haspopup="true"
+						aria-expanded={open ? "true" : undefined}
+						onClick={handleClick}
+					>
+						<FontAwesomeIcon icon={faEllipsisVertical} />
+					</IconButton>
+					<Menu
+						id="basic-menu"
+						anchorEl={anchorEl}
+						open={open}
+						onClose={handleClose}
+						MenuListProps={{
+							"aria-labelledby": "basic-button",
+						}}
+					>
+						<MenuItem onClick={handleClose}>🏃🏻‍♀️ Save to Keep</MenuItem>
+					</Menu>
 				</VideoBarWrapper>
+				{/* <EmojiWrapper>
+					<Emoji symbol="😍" label="love" />
+					<Emoji symbol="🤔" label="hmm" />
+					<Emoji symbol="😱" label="euo" />
+					<Emoji symbol="🤗" label="yes" />
+				</EmojiWrapper> */}
 			</Container>
 		</>
 	);

@@ -28,11 +28,11 @@ const SearchResult = (props) => {
 	const [share, setShare] = useState({});
 	const [sharing, setSharing] = useState(false);
 
-	const onClickShare = (element) => {
+	function onClickShare(element) {
 		const { etag, id, snippet } = element;
 		setShare((share) => ({ [id.videoId]: true }));
 		setSharing(true);
-	};
+	}
 
 	return (
 		<>
@@ -40,7 +40,7 @@ const SearchResult = (props) => {
 				{sharing && (
 					<ShareVideo
 						url={Object.keys(share)[0]}
-						stateChanger={setSharing}
+						// stateChanger={setSharing}
 					></ShareVideo>
 				)}
 

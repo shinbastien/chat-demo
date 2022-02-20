@@ -36,6 +36,7 @@ const Search = (props) => {
 		inputRef.current.value = event.target.innerText;
 		setKeyword(event.target.innerText);
 		inputRef.current.focus();
+		setSubmit(true);
 	};
 
 	async function searchOnYoutube() {
@@ -58,7 +59,7 @@ const Search = (props) => {
 				setVideos([]);
 			}
 			setVideos(items);
-			setSubmit(!submit);
+			setSubmit(true);
 		} catch (err) {
 			console.log(err);
 		}
