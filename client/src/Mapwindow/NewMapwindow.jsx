@@ -24,11 +24,6 @@ import ShareVideo from "./ShareVideo/ShareVideo";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
-import { merge } from "react-animations";
-
-import bounceInUp from "react-animations/lib/bounce-in-up";
-import fadeOut from "react-animations/lib/fade-out";
-
 // const bounceAnimation = keyframes`${merge(bounceInUp, fadeOut)}`;
 
 // const BouncyDiv = styled.div`
@@ -57,16 +52,29 @@ const BouncyDiv = styled.div`
 `;
 
 const ResultList = styled.div`
+  	position: absolute;
+	top: 100%;
+	transform: translateY(10px);
+	left: 0;
 	background-color: white;
-	width: calc(100% - 20px);
-	top: calc(-20px);
-
 	overflow: scroll;
 	height: 100px;
 	border-radius: 10px;
 	padding: 24px;
-	margin-left: 20px;
+  	width: 100%;
 	box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.1);
+	z-index: 400;
+	font-size: 15px;
+	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+`;
+
+ResultList.Item = styled.div`
+	display: flex;
+	align-items: center;
+	&:hover {
+		background: #f1f1f5;
+	}
 `;
 
 const MapButtonWrapper = styled.div`
@@ -74,8 +82,12 @@ const MapButtonWrapper = styled.div`
 	z-index: 100;
 `;
 
+const SearchForm = styled.div`
+	position: relative;
+	margin: 20px 0 0 20px;
+`
+
 const InputWrapper = styled.form`
-	margin: 0 0 0 20px;
 	width: 30vw;
 	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
 	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
@@ -202,6 +214,8 @@ export default function NewMapwindow() {
 	const [searchKey, setSearchKey] = useState("월평역");
 	const [searchResult, setSearchResult] = useState([]);
 	const [resultDrawArr, setResultDrawArr] = useState([]);
+	const [pathMetaData, setPathMetaData] = useState([]);
+	const [trackSimulationTicker, setTrackSimulationTicker] = useState(0)
 	const [chktraffic, setChktraffic] = useState([]);
 	const [resultMarkerArr, setResultMarkerArr] = useState([]);
 	const [markerS, setMarkerS] = useState(null);
@@ -289,31 +303,88 @@ export default function NewMapwindow() {
 		}
 	}, [map]);
 
-	//이동시
+	// 이동시
+	// useEffect(() => {
+	// 	const interval = setInterval(() => {
+	// 		navigator.geolocation.getCurrentPosition(function (position) {
+	// 			const lat = position.coords.latitude;
+	// 			const lng = position.coords.longitude;
+
+	// 			setMarkerC(
+	// 				getMarkers({
+	// 					lat: lat,
+	// 					lng: lng,
+	// 					markerImage: point1,
+	// 					title: "이동중",
+	// 				}),
+	// 			);
+	// 		});
+	// 		console.log("I am moving...");
+	// 	}, 5000);
+		
+	// 	loadKeepList();
+
+	// 	return () => {
+	// 		clearInterval(interval);
+	// 	};
+	// }, [markerC]);
+
+
+	// 출발 -- 도착 자동 이동
 	useEffect(() => {
-		const interval = setInterval(() => {
-			navigator.geolocation.getCurrentPosition(function (position) {
-				const lat = position.coords.latitude;
-				const lng = position.coords.longitude;
+		if (pathMetaData.length > 0) {
+			const duration = 1
+			const interval = setInterval(() => {
 
-				setMarkerC(
-					getMarkers({
-						lat: lat,
-						lng: lng,
-						markerImage: point1,
-						title: "이동중",
-					}),
-				);
-			});
-			console.log("I am moving...");
-		}, 5000);
+				setTrackSimulationTicker(prevTicker => {
+					const currTick = prevTicker + duration
 
-		loadKeepList();
-
-		return () => {
-			clearInterval(interval);
-		};
-	}, [markerC]);
+					console.log(`I am moving...: ${currTick}`);
+					
+					for(let i=0; i<pathMetaData.length; i++){
+						const {accTime, coordinates} = pathMetaData[i]
+						for (let j=0; j-1<accTime.length; j++){
+							if (accTime[j]<=currTick && currTick<accTime[j+1]){
+								console.log(pathMetaData[i])
+								const timediff = accTime[j+1] - accTime[j]
+								const ratio = (currTick - accTime[j]) / timediff
+								const coord = coordinates[j]
+								const coord2 = coordinates[j+1]
+								const latlng = new Tmapv2.Point((coord2[0] - coord[0]) * ratio + coord[0], (coord2[1] - coord[1]) * ratio + coord[1])
+								const projection = new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(latlng)
+								const lat = projection._lat
+								const lng = projection._lng;
+								
+								// console.log(currTick, accTime[j], accTime[j+1], lat, lng)
+								setMarkerC(
+									prevMarker => {
+										console.log(prevMarker)
+										prevMarker.setMap(null)
+										prevMarker.setVisible(false)
+										return getMarkers({
+											lat: lat,
+											lng: lng,
+											markerImage: point1,
+											title: "현재위치",
+										})
+									}
+								);
+							}
+						}
+					}
+					return currTick
+				})
+				
+			}, duration*1000);
+			
+			// loadKeepList();
+	
+			return () => {
+				clearInterval(interval);
+				setTrackSimulationTicker(0)
+			};	
+		}
+	}, [pathMetaData]);
 
 	// useMemo(async () => {
 	// 	if (recvideo.length > 0) {
@@ -365,7 +436,8 @@ export default function NewMapwindow() {
 		).toFixed(1);
 
 		const totalTime = (resultData[0].properties.totalTime / 60).toFixed(0);
-		console.log(totalTime);
+		console.log(totalTime, resultData.filter(({geometry}) => geometry.type === "LineString").reduce((acc, curr) => {return acc + curr.properties.time}, 0));
+
 		setTotalDaytime({ totalD: totalDistance, totalTime: totalTime });
 
 		setChktraffic(
@@ -377,6 +449,56 @@ export default function NewMapwindow() {
 		const positionBounds = new Tmapv2.LatLngBounds();
 		const resultMarkerArr_ = [];
 		const resultDrawArr_ = [];
+		
+		const trackPathTime = resultData
+			.filter(({geometry}) => geometry.type === "LineString")
+			.map(({
+				geometry, 
+				properties
+			}) => {
+				const { coordinates, traffic } = geometry;
+				const { time } = properties
+
+				const intervalDistance = coordinates.reduce((acc, curr, idx) => {
+					if (idx === 0) {
+						return [0]
+					} else {
+						const [c1, c2] = coordinates[idx-1]
+						const dist = Math.sqrt( Math.pow(curr[0] - c1, 2) + Math.pow(curr[1] - c2, 2) )
+						return [...acc, dist]
+					}
+				}, [])
+				const distSum = intervalDistance.reduce((acc, curr) => acc + curr, 0)
+				const intervalTime = intervalDistance.map((dist, idx) => dist / distSum * time)
+				const accTime = intervalTime.reduce((acc, curr, idx) => {
+					if (idx === 0) {
+						return [0]
+					}
+					return [...acc, acc[acc.length-1] + curr]
+				}, [])
+				accTime[accTime.length-1] = time // force sanity check
+
+				return {
+					coordinates,
+					accTime
+				}
+			})
+			.reduce((acc, curr, idx) => {
+				if (idx === 1) {
+					return [curr]
+				}
+				const {accTime} = acc[acc.length - 1]
+				const lastTime = accTime[accTime.length - 1]
+				return [...acc, {
+					coordinates: curr.coordinates,
+					accTime: curr.accTime.map(time => time + lastTime)
+				}]
+			})
+
+		setPathMetaData(trackPathTime)
+		setTrackSimulationTicker(0)
+
+
 		resultData.map((item, i) => {
 			const { geometry, properties } = item;
 			// path information
@@ -882,26 +1004,29 @@ export default function NewMapwindow() {
 			)}
 
 			<MapButtonWrapper>
-				<InputWrapper onSubmit={handleSubmit}>
-					<input type="text" value={searchKey} onChange={handleChange} />
-					<IconButton variant="contained" type="submit">
-						<SearchIcon></SearchIcon>
-					</IconButton>
-				</InputWrapper>
-				{searchResult.length > 0 && openResult && (
-					<ResultList>
-						{searchResult.map((result, idx) => (
-							<ResultList.Item key={idx}>
-								<img
-									src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
-								/>
-								{result.name}
-								<Button onClick={() => handleStartSetting(result)}>출발</Button>
-								<Button onClick={() => handleEndSetting(result)}>도착</Button>
-							</ResultList.Item>
-						))}
-					</ResultList>
-				)}
+
+				<SearchForm>
+					<InputWrapper onSubmit={handleSubmit}>
+						<input type="text" value={searchKey} onChange={handleChange} />
+						<IconButton variant="contained" type="submit">
+							<SearchIcon></SearchIcon>
+						</IconButton>
+					</InputWrapper>
+					{searchResult.length > 0 && openResult && (
+						<ResultList>
+							{searchResult.map((result, idx) => (
+								<ResultList.Item key={idx}>
+									<img
+										src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
+									/>
+									{result.name}
+									<Button onClick={() => handleStartSetting(result)}>출발</Button>
+									<Button onClick={() => handleEndSetting(result)}>도착</Button>
+								</ResultList.Item>
+							))}
+						</ResultList>
+					)}
+				</SearchForm>
 
 				<InfoMenu
 					map={map}

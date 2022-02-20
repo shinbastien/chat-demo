@@ -11,7 +11,7 @@ const MenuWrapper = styled.div`
 	width: 300px;
 	height: 100%;
 	overflow-y: scroll;
-	margin: 0 0 0 20px;
+	margin: 20px 0 0 20px;
 	background-color: white;
 	border-radius: 12px;
 	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
@@ -85,6 +85,7 @@ const InfoMenu = (props) => {
 	};
 
 	return (
+		<>
 		<MenuWrapper>
 			<Box
 				component="div"
@@ -107,7 +108,10 @@ const InfoMenu = (props) => {
 					<li>출발: {start && start.name}</li>
 					<li>도착: {end && end.name}</li>
 				</Box>
-				<Divider></Divider>
+				</SubmenuWrapper>
+		</MenuWrapper>
+		<MenuWrapper>
+			<SubmenuWrapper>
 				<Box
 					component="span"
 					style={{ fontWeight: 300, marginLeft: 20, fontSize: "1.3vw" }}
@@ -146,6 +150,7 @@ const InfoMenu = (props) => {
 				<Box></Box>
 			</SubmenuWrapper>
 		</MenuWrapper>
+		</>
 	);
 };
 

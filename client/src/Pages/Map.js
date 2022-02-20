@@ -4,6 +4,7 @@ import NewMapwindow from "../Mapwindow/NewMapwindow";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
 import AppBar from "@mui/material/AppBar";
+import Toolbar from '@mui/material/Toolbar';
 import Typography from "@mui/material/Typography";
 import logoWhite from "../Styles/source/logo_w.png";
 import ShareIcon from "@material-ui/icons/Share";
@@ -61,6 +62,7 @@ function Map() {
 	return (
 		<>
 			<AppBar postiion="static" style={{ backgroundColor: "#151ca2" }}>
+				<Toolbar>
 				<Typography
 					variant="h5"
 					noWrap
@@ -116,8 +118,10 @@ function Map() {
 						</MenuItem>
 					</Menu>
 				</Typography>
+				</Toolbar>
 			</AppBar>
-			<Grid container spacing={2} style={{ marginTop: 40 }}>
+			<Toolbar/>
+			<Grid container>
 				<Grid item xs={6} md={9}>
 					<NewMapwindow></NewMapwindow>
 				</Grid>
