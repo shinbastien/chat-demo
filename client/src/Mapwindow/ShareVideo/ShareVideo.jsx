@@ -82,7 +82,6 @@ const ProgressBar = styled.span`
 function ShareVideo({ stateChanger, userName, videoName }) {
 	const { socket, connected } = useSocket();
 	const youtubePlayer = useRef();
-
 	const userVideo = useRef();
 	// console.log("videoName is: ", videoName);
 	const [videoID, setVideoID] = useState(videoName);
@@ -127,17 +126,13 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 	}, []);
 
 	useEffect(() => {
-		// if (nextPlaying) {
-		// 	youtubePlayer.current.cueVideoByUrl(
-		// 		`http://www.youtube.com/v/${url}?version=3`,
-		// 	);
-		// }
 		const handleVideoSocket = (data) => {
 			if (data === "play") {
 				console.log("play video");
 				youtubePlayer.current.playVideo();
 				setPlaying(true);
 			} else if (data === "pause") {
+
 				console.log("pause video");
 				youtubePlayer.current.pauseVideo();
 				setPlaying(false);
@@ -146,6 +141,7 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 				youtubePlayer.current.loadVideoById(data.split("=")[1]);
 			}
 		};
+
 
 		if (socket && connected) {
 			socket.on("ShareVideoAction", handleVideoSocket);

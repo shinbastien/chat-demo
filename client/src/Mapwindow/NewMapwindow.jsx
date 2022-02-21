@@ -154,6 +154,11 @@ const EmojiWrapper = styled.div`
 	left: 43%;
 `;
 
+// const EmojiDisplayWrapper = styled.div`
+// 	font-size: 7vw;
+// 	position: absolute;
+// 	z-index: 300;
+// `;
 const VideoWrapper = styled.div`
 	position: absolute;
 	z-index: 300;
@@ -211,8 +216,10 @@ export default function NewMapwindow(props) {
 	const [drawObject, setDrawObject] = useState(null);
 
 	const [aniemoji, setAniEmoji] = useState(false);
+
 	const [emojiResult, setEmojiResult] = useState(true);
 	const [showInfo, setShowInfo] = useState(false);
+
 	const [emojisender, setEmojiSender] = useState(userName);
 
 	const [searchPoint, setSearchPoint] = useState({
