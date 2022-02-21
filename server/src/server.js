@@ -9,7 +9,7 @@ const io = require("socket.io")(server, {
 	},
 });
 
-const PORT = 4000;
+const port = process.env.PORT || 3000;
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 const REMOVE_CHAT = "removeChat";
 
@@ -28,12 +28,18 @@ io.on("connection", (socket) => {
 	socket.on("join", (roomName, userName) => {
 		socket.join(roomName);
 		if (!users[roomName]) {
-		users[roomName] = {participants: {}, youtubeLink: ""};
-	  	}
+			users[roomName] = { participants: {}, youtubeLink: "" };
+		}
 		socket.roomName = roomName;
 		socket.userName = userName;
-		users[roomName].participants[userName] = {socket: socket.id, location: [0, 0]}
-		console.log("current users after join: ", Object.keys(users[roomName].participants));
+		users[roomName].participants[userName] = {
+			socket: socket.id,
+			location: [0, 0],
+		};
+		console.log(
+			"current users after join: ",
+			Object.keys(users[roomName].participants),
+		);
 		console.log(users[roomName].participants);
 		io.to(roomName).emit("joinResponse", users[roomName].participants);
 		console.log("server sends joinResponse");
@@ -53,14 +59,13 @@ io.on("connection", (socket) => {
 	// when a peer is created from newbie, the created peer sends a signal by socket and socket sends the signal to existing peers
 	socket.on("RTC_offer", (signal, caller, receiver, roomName) => {
 		try {
-		  io.to(roomName).emit("RTC_answer", caller, receiver, signal);
-		  console.log("signal sended from newbie: ", caller);
-		  console.log("to: ", receiver);
-  
-		} catch(error) {
-		  console.log(error);
-		}  
-	  })
+			io.to(roomName).emit("RTC_answer", caller, receiver, signal);
+			console.log("signal sended from newbie: ", caller);
+			console.log("to: ", receiver);
+		} catch (error) {
+			console.log(error);
+		}
+	});
 
 	socket.on("returning signal", (payload) => {
 		io.to(payload.callerID).emit("receiving returned signal", {
@@ -117,21 +122,23 @@ io.on("connection", (socket) => {
 	socket.on("start canvas", () => {
 		socket.broadcast.to(socket.roomName).emit("open canvas");
 		console.log("open canvas");
-	})
+	});
 
 	socket.on("start drawing", () => {
 		console.log("Current user who is drawing: ", socket.userName);
 		socket.broadcast.to(socket.roomName).emit("other start drawing");
-	})
+	});
 	socket.on("send paint", (mousePosition, newMousePosition) => {
 		console.log("send paint of: ", socket.userName);
-		socket.broadcast.to(socket.roomName).emit("receive paint", mousePosition, newMousePosition);
-	})
+		socket.broadcast
+			.to(socket.roomName)
+			.emit("receive paint", mousePosition, newMousePosition);
+	});
 
 	socket.on("stop drawing", () => {
 		console.log("user stopped drawing: ", socket.userName);
 		socket.broadcast.to(socket.roomName).emit("other stopped drawing");
-	})
+	});
 
 	// Leave the room if the user closes the socket
 	socket.on("disconnect", () => {
@@ -140,21 +147,21 @@ io.on("connection", (socket) => {
 		console.log("current socket room is: ", socket.roomName);
 		console.log("current socket userName is: ", socket.userName);
 		if (socket.roomName && socket.userName) {
-		  delete users[socket.roomName].participants[socket.userName];
-		  if (Object.keys(users[socket.roomName].participants).length === 0) {
-			delete users[socket.roomName];
-		  } else {
-			io.in(socket.roomName).emit(
-			  "disconnectResponse",
-			  users[socket.roomName].participants,
-			  socket.userName
-			);
-		  }
+			delete users[socket.roomName].participants[socket.userName];
+			if (Object.keys(users[socket.roomName].participants).length === 0) {
+				delete users[socket.roomName];
+			} else {
+				io.in(socket.roomName).emit(
+					"disconnectResponse",
+					users[socket.roomName].participants,
+					socket.userName,
+				);
+			}
 		}
 		console.log("current users: ", users[socket.roomName]);
-	  });
+	});
 });
 
-server.listen(PORT, () => {
-	console.log(`Listening on port ${PORT}`);
+server.listen(port, () => {
+	console.log(`Listening on port ${port}`);
 });
