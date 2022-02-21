@@ -8,6 +8,8 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import point1 from "../Styles/source/point1.png";
 import Stack from "@mui/material/Stack";
+import Draggable from "react-draggable"; // The default
+
 import {
 	faHand,
 	faVectorSquare,
@@ -49,6 +51,11 @@ const MapButtonWrapper = styled.div`
 	z-index: 100;
 `;
 
+const SearchForm = styled.div`
+	position: relative;
+	margin: 20px 0 0 20px;
+`;
+
 const InputWrapper = styled.form`
 	margin: 0 0 0 20px;
 	width: 30vw;
@@ -80,6 +87,7 @@ const BoardWrapper = styled.div`
 	z-index: 11;
 
 	> div {
+		padding: 1.7%;
 		margin: 0 0 20px 20px;
 		width: fit-content;
 		background-color: white;
@@ -190,6 +198,8 @@ export default function NewMapwindow(props) {
 	const [searchKey, setSearchKey] = useState("월평역");
 	const [searchResult, setSearchResult] = useState([]);
 	const [resultDrawArr, setResultDrawArr] = useState([]);
+	const [pathMetaData, setPathMetaData] = useState([]);
+	const [trackSimulationTicker, setTrackSimulationTicker] = useState(0);
 	const [chktraffic, setChktraffic] = useState([]);
 	const [resultMarkerArr, setResultMarkerArr] = useState([]);
 	const [markerS, setMarkerS] = useState(null);
@@ -292,30 +302,88 @@ export default function NewMapwindow(props) {
 	}, [map]);
 
 	//이동시
+	// useEffect(() => {
+	// 	const interval = setInterval(() => {
+	// 		navigator.geolocation.getCurrentPosition(function (position) {
+	// 			const lat = position.coords.latitude;
+	// 			const lng = position.coords.longitude;
+	// 			if (markerC !== null) {
+	// 				markerC.setMap(null);
+	// 			}
+	// 			setMarkerC(
+	// 				new Tmapv2.Marker({
+	// 					position: new Tmapv2.LatLng(lat, lng),
+	// 					icon: point1,
+	// 					iconSize: new Tmapv2.Size(24, 24),
+	// 					title: "이동중",
+	// 					map: map,
+	// 				}),
+	// 			);
+	// 		});
+	// 		console.log("I am moving...");
+	// 	}, 5000);
+	// 	return () => {
+	// 		clearInterval(interval);
+	// 	};
+	// }, [markerC]);
+
+	// 출발 -- 도착 자동 이동
 	useEffect(() => {
-		const interval = setInterval(() => {
-			navigator.geolocation.getCurrentPosition(function (position) {
-				const lat = position.coords.latitude;
-				const lng = position.coords.longitude;
-				if (markerC !== null) {
-					markerC.setMap(null);
-				}
-				setMarkerC(
-					new Tmapv2.Marker({
-						position: new Tmapv2.LatLng(lat, lng),
-						icon: point1,
-						iconSize: new Tmapv2.Size(24, 24),
-						title: "이동중",
-						map: map,
-					}),
-				);
-			});
-			console.log("I am moving...");
-		}, 5000);
-		return () => {
-			clearInterval(interval);
-		};
-	}, []);
+		if (pathMetaData.length > 0) {
+			const duration = 1;
+			const interval = setInterval(() => {
+				setTrackSimulationTicker((prevTicker) => {
+					const currTick = prevTicker + duration;
+					const lastAccTime = pathMetaData[pathMetaData.length - 1].accTime;
+					const finishTime = lastAccTime[lastAccTime.length - 1];
+
+					console.log(`I am moving...: ${currTick}`);
+
+					for (let i = 0; i < pathMetaData.length; i++) {
+						const { accTime, coordinates } = pathMetaData[i];
+						for (let j = 0; j - 1 < accTime.length; j++) {
+							if (accTime[j] <= currTick && currTick < accTime[j + 1]) {
+								console.log(pathMetaData[i]);
+								const timediff = accTime[j + 1] - accTime[j];
+								const ratio = (currTick - accTime[j]) / timediff;
+								const coord = coordinates[j];
+								const coord2 = coordinates[j + 1];
+								const latlng = new Tmapv2.Point(
+									(coord2[0] - coord[0]) * ratio + coord[0],
+									(coord2[1] - coord[1]) * ratio + coord[1],
+								);
+								const projection =
+									new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(latlng);
+								const lat = projection._lat;
+								const lng = projection._lng;
+
+								// console.log(currTick, accTime[j], accTime[j+1], lat, lng)
+								setMarkerC((prevMarker) => {
+									console.log(prevMarker);
+									prevMarker.setMap(null);
+									prevMarker.setVisible(false);
+									return getMarkers({
+										lat: lat,
+										lng: lng,
+										markerImage: point1,
+										title: `현재위치 ${finishTime - currTick}초 남음`,
+									});
+								});
+							}
+						}
+					}
+					return currTick;
+				});
+			}, duration * 1000);
+
+			// loadKeepList();
+
+			return () => {
+				clearInterval(interval);
+				setTrackSimulationTicker(0);
+			};
+		}
+	}, [pathMetaData]);
 
 	const onClickMarker = (e) => {
 		const latlng = e.latLng;
@@ -406,7 +474,16 @@ export default function NewMapwindow(props) {
 		).toFixed(1);
 
 		const totalTime = (resultData[0].properties.totalTime / 60).toFixed(0);
-		console.log(totalTime);
+
+		console.log(
+			totalTime,
+			resultData
+				.filter(({ geometry }) => geometry.type === "LineString")
+				.reduce((acc, curr) => {
+					return acc + curr.properties.time;
+				}, 0),
+		);
+
 		setTotalDaytime({ totalD: totalDistance, totalTime: totalTime });
 
 		setChktraffic(
@@ -418,6 +495,58 @@ export default function NewMapwindow(props) {
 		const positionBounds = new Tmapv2.LatLngBounds();
 		const resultMarkerArr_ = [];
 		const resultDrawArr_ = [];
+		const trackPathTime = resultData
+			.filter(({ geometry }) => geometry.type === "LineString")
+			.map(({ geometry, properties }) => {
+				const { coordinates, traffic } = geometry;
+				const { time } = properties;
+
+				const intervalDistance = coordinates.reduce((acc, curr, idx) => {
+					if (idx === 0) {
+						return [0];
+					} else {
+						const [c1, c2] = coordinates[idx - 1];
+						const dist = Math.sqrt(
+							Math.pow(curr[0] - c1, 2) + Math.pow(curr[1] - c2, 2),
+						);
+						return [...acc, dist];
+					}
+				}, []);
+				const distSum = intervalDistance.reduce((acc, curr) => acc + curr, 0);
+				const intervalTime = intervalDistance.map(
+					(dist, idx) => (dist / distSum) * time,
+				);
+				const accTime = intervalTime.reduce((acc, curr, idx) => {
+					if (idx === 0) {
+						return [0];
+					}
+					return [...acc, acc[acc.length - 1] + curr];
+				}, []);
+				accTime[accTime.length - 1] = time; // force sanity check
+
+				return {
+					coordinates,
+					accTime,
+				};
+			})
+			.reduce((acc, curr, idx) => {
+				if (idx === 1) {
+					return [curr];
+				}
+				const { accTime } = acc[acc.length - 1];
+				const lastTime = accTime[accTime.length - 1];
+				return [
+					...acc,
+					{
+						coordinates: curr.coordinates,
+						accTime: curr.accTime.map((time) => time + lastTime),
+					},
+				];
+			});
+
+		setPathMetaData(trackPathTime);
+		setTrackSimulationTicker(0);
+
 		resultData.map((item, i) => {
 			const { geometry, properties } = item;
 			// path information
@@ -974,13 +1103,15 @@ export default function NewMapwindow(props) {
 				</IndividualWrapper>
 			)}
 			<MapButtonWrapper>
-				<div id="searchResult">
-					<InputWrapper onSubmit={handleSubmit}>
-						<input type="text" value={searchKey} onChange={handleChange} />
-						<IconButton variant="contained" type="submit">
-							<FontAwesomeIcon icon={faMagnifyingGlass} />
-						</IconButton>
-					</InputWrapper>
+				<SearchForm>
+					<Draggable>
+						<InputWrapper onSubmit={handleSubmit}>
+							<input type="text" value={searchKey} onChange={handleChange} />
+							<IconButton variant="contained" type="submit">
+								<FontAwesomeIcon icon={faMagnifyingGlass} />
+							</IconButton>
+						</InputWrapper>
+					</Draggable>
 					{searchResult.length > 0 && openResult && (
 						<ResultList>
 							{searchResult.map((result, idx) => (
@@ -997,7 +1128,7 @@ export default function NewMapwindow(props) {
 							))}
 						</ResultList>
 					)}
-				</div>
+				</SearchForm>
 				{keepPlace ? (
 					<InfoMenu
 						map={map}
@@ -1009,48 +1140,52 @@ export default function NewMapwindow(props) {
 				) : (
 					<div></div>
 				)}
+				<Draggable>
+					<BoardWrapper>
+						<Stack direction="row" alignItems="center" justifyContent="center">
+							<IconButton
+								className={active === "hand" ? "active" : ""}
+								onClick={() => onHandleClick("hand")}
+							>
+								<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faHand} />
+							</IconButton>
+							<IconButton
+								className={active === "draw" ? "active" : ""}
+								onClick={() => onHandleClick("draw")}
+							>
+								<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faPencil} />
+							</IconButton>
 
-				<BoardWrapper>
-					<Stack direction="row" alignItems="center" justifyContent="center">
-						<IconButton
-							className={active === "hand" ? "active" : ""}
-							onClick={() => onHandleClick("hand")}
-						>
-							<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faHand} />
-						</IconButton>
-						<IconButton
-							className={active === "draw" ? "active" : ""}
-							onClick={() => onHandleClick("draw")}
-						>
-							<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faPencil} />
-						</IconButton>
-
-						<IconButton
-							className={active === "search" ? "active" : ""}
-							onClick={() => onHandleClick("search")}
-						>
-							<FontAwesomeIcon
-								style={{ fontSize: "3vw" }}
-								icon={faVectorSquare}
-							/>
-						</IconButton>
-						<IconButton
-							className={active === "emoji" ? "active" : ""}
-							onClick={() => onHandleClick("emoji")}
-						>
-							<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faFaceSmile} />
-						</IconButton>
-						<IconButton
-							className={active === "individualSearch" ? "active" : ""}
-							onClick={() => onHandleClick("individualSearch")}
-						>
-							<FontAwesomeIcon
-								style={{ fontSize: "3vw" }}
-								icon={faMapLocationDot}
-							/>
-						</IconButton>
-					</Stack>
-				</BoardWrapper>
+							<IconButton
+								className={active === "search" ? "active" : ""}
+								onClick={() => onHandleClick("search")}
+							>
+								<FontAwesomeIcon
+									style={{ fontSize: "3vw" }}
+									icon={faVectorSquare}
+								/>
+							</IconButton>
+							<IconButton
+								className={active === "emoji" ? "active" : ""}
+								onClick={() => onHandleClick("emoji")}
+							>
+								<FontAwesomeIcon
+									style={{ fontSize: "3vw" }}
+									icon={faFaceSmile}
+								/>
+							</IconButton>
+							<IconButton
+								className={active === "individualSearch" ? "active" : ""}
+								onClick={() => onHandleClick("individualSearch")}
+							>
+								<FontAwesomeIcon
+									style={{ fontSize: "3vw" }}
+									icon={faMapLocationDot}
+								/>
+							</IconButton>
+						</Stack>
+					</BoardWrapper>
+				</Draggable>
 			</MapButtonWrapper>
 			<CurrentLoactionWrapper>
 				<IconButton onClick={onLoadCurrent}>

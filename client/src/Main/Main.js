@@ -14,7 +14,7 @@ import Box from "@mui/material/Box";
 import styled from "styled-components";
 
 // Main handles connection between users and sends those to other pages
-const SOCKET_SERVER_URL = "http://localhost:4000";
+const SOCKET_SERVER_URL = "https://social-moving.herokuapp.com/";
 
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 

@@ -9,6 +9,7 @@ const GlobalStyles = createGlobalStyle`
 		@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap");
 
         font-size: 20px;
+		
         width: 100%;
 		height: 101%;
 		overflow: -moz-scrollbars-vertical; 
@@ -21,7 +22,9 @@ const GlobalStyles = createGlobalStyle`
         }
     }
     body{
+		margin: 0;
 		font-family: "Noto Sans KR", sans-serif;
+		
 
         width: 100%;
 		overflow: scroll; /* Show scrollbars */

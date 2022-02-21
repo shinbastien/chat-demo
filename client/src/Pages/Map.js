@@ -4,7 +4,8 @@ import NewMapwindow from "../Mapwindow/NewMapwindow";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
 import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
+import Snackbar from "@mui/material/Snackbar";
+
 import Typography from "@mui/material/Typography";
 import logoWhite from "../Styles/source/logo_w.png";
 import IconButton from "@mui/material/IconButton";
@@ -39,8 +40,6 @@ function Map() {
 		horizontal: "center",
 	});
 
-	const { vertical, horizontal, open } = state;
-
 	const { groupID, userName } = location.state;
 	console.log("groupID obtained from Home is: ", groupID);
 	console.log("userName obtained from Home is: ", userName);
@@ -64,14 +63,17 @@ function Map() {
 	}, [connected, socket]);
 
 	const loadKeepList = async () => {
+		setLoading(true);
 		readFromFirebase("photos")
 			.then((data) => {
 				setKeepPlace(data);
-				setLoading(true);
+				setLoading(false);
 			})
 			.catch((error) => {
 				setLoading(false);
 			});
+
+		console.log("i am loaded");
 	};
 
 	const handleClick = (newState) => () => {
@@ -85,32 +87,22 @@ function Map() {
 	return (
 		<>
 			<AppBar postiion="static" style={{ backgroundColor: "#151ca2" }}>
-				<Toolbar>
-					<Typography
-						variant="h5"
-						noWrap
-						component="div"
-						sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
-					>
-						<ImgWrapper src={logoWhite}></ImgWrapper>
-						<IconButton style={{ color: "white" }} onClick={onHandleCopy}>
-							<FontAwesomeIcon icon={faArrowUpRightFromSquare} />
-						</IconButton>
-						<Box sx={{ flexGrow: 1 }}></Box>
+				<Typography
+					variant="h5"
+					noWrap
+					component="div"
+					sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
+				>
+					<ImgWrapper src={logoWhite}></ImgWrapper>
+					<IconButton style={{ color: "white" }} onClick={onHandleCopy}>
+						<FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+					</IconButton>
+					<Box sx={{ flexGrow: 1 }}></Box>
 
-						<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
-					</Typography>
-				</Toolbar>
+					<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
+				</Typography>
 			</AppBar>
-			<Toolbar />
-			{/* <Snackbar
-				anchorOrigin={{ vertical, horizontal }}
-				open={open}
-				onClose={handleClose}
-				message="I love snacks"
-				key={vertical + horizontal}
-			/> */}
-			<Grid container>
+			<Grid container spacing={2} style={{ marginTop: 40 }}>
 				<Grid item xs={6} md={9}>
 					<NewMapwindow
 						userName={userName}
