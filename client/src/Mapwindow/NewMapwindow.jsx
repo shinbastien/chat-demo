@@ -271,6 +271,8 @@ export default function NewMapwindow(props) {
 			navigator.geolocation.getCurrentPosition(function (position) {
 				const lat = position.coords.latitude;
 				const lng = position.coords.longitude;
+				console.log("lat is: ", lat);
+				console.log("lng is: ", lng);
 
 				setMarkerC(
 					new Tmapv2.Marker({
