@@ -3,25 +3,27 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSocket } from "../../lib/socket";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
 	faPause,
 	faPlay,
-	faXmark,
 	faVolumeHigh,
+	faEllipsisVertical,
 } from "@fortawesome/free-solid-svg-icons";
+import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Emoji from "./Emoji";
 
 import styled from "styled-components";
+import { writeToPlaceData } from "../../lib/functions/firebase";
 
 const Container = styled.div`
 	display: flex;
-	width: fit-content;
+	width: 100%;
 
 	flex-direction: column;
-	border-radius: 12px;
-	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
-	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
 `;
 
 const BarWrapper = styled.div`
@@ -35,7 +37,10 @@ const BarWrapper = styled.div`
 		font-size: 3vw;
 	}
 `;
-const VideoWrapper = styled.div``;
+const VideoWrapper = styled.div`
+	aspect-ratio: 16 / 9;
+	width: 100%;
+`;
 
 const VideoBarWrapper = styled.div`
 	display: flex;
@@ -49,6 +54,13 @@ const VideoBarWrapper = styled.div`
 		cursor: pointer;
 		padding: 3%;
 	}
+`;
+
+const EmojiWrapper = styled.div`
+	display: flex;
+	justify-content: space-between;
+	font-size: 4vw;
+	align-items: center;
 `;
 
 const ProgressBar = styled.span`
@@ -70,13 +82,33 @@ const ProgressBar = styled.span`
 function ShareVideo({ stateChanger, userName, videoName }) {
 	const { socket, connected } = useSocket();
 	const youtubePlayer = useRef();
-	
 	const userVideo = useRef();
 	// console.log("videoName is: ", videoName);
 	const [videoID, setVideoID] = useState(videoName);
 	const [peers, setPeers] = useState([]);
 	const location = useLocation();
 	const [playing, setPlaying] = useState(false);
+	const [nextPlaying, setNextPlaying] = useState(false);
+
+	const [anchorEl, setAnchorEl] = useState(null);
+	const open = Boolean(anchorEl);
+
+	const [data, setData] = useState({
+		groupId: "a",
+		coords: "a",
+		userId: "a",
+		placeId: "a",
+		visited: false,
+	});
+
+	const handleClick = (event) => {
+		setAnchorEl(event.currentTarget);
+	};
+	const handleClose = async () => {
+		setAnchorEl(null);
+		console.log(data);
+		await writeToPlaceData(data);
+	};
 
 	useEffect(() => {
 		if (!window.YT) {
@@ -87,14 +119,10 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 
 			window.onYouTubeIframeAPIReady = loadVideoPlayer;
 			console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
-
-		}
-		else {
+		} else {
 			loadVideoPlayer();
 			console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
 		}
-
-		
 	}, []);
 
 	useEffect(() => {
@@ -103,8 +131,8 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 				console.log("play video");
 				youtubePlayer.current.playVideo();
 				setPlaying(true);
-			}
-			else if (data === "pause") {
+			} else if (data === "pause") {
+
 				console.log("pause video");
 				youtubePlayer.current.pauseVideo();
 				setPlaying(false);
@@ -112,7 +140,8 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 				console.log("load video: ", data);
 				youtubePlayer.current.loadVideoById(data.split("=")[1]);
 			}
-		}
+		};
+
 
 		if (socket && connected) {
 			socket.on("ShareVideoAction", handleVideoSocket);
@@ -120,14 +149,14 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 		return () => {
 			if (socket && connected) {
 				socket.off("ShareVideoAction", handleVideoSocket);
-			}	
-		}
-	}, [socket, connected])
+			}
+		};
+	}, [socket, connected]);
 
 	function loadVideoPlayer() {
 		const player = new YT.Player("player", {
-			height: "400",
-			width: "700",
+			height: "100%",
+			width: "100%",
 			videoId: videoID,
 			playerVars: {
 				playsinline: 1,
@@ -138,6 +167,8 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 				origin: "https://www.youtube.com",
 			},
 		});
+		setNextPlaying(true);
+
 		console.log("player is: ", player);
 		youtubePlayer.current = player;
 	}
@@ -157,18 +188,14 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 			console.log("load video: ", data);
 			socket.emit("load", (userName, videoID));
 			youtubePlayer.current.loadVideoById(data.split("=")[1]);
+			setPlaying(false);
 		}
 	}
 
 	return (
 		<>
 			<Container>
-				<BarWrapper>
-					<div></div>
-					<button onClick={() => stateChanger(false)}>
-						<FontAwesomeIcon icon={faXmark} />
-					</button>
-				</BarWrapper>
+				공유중
 				<VideoWrapper>
 					<div id="player" ref={youtubePlayer} />
 				</VideoWrapper>
@@ -188,9 +215,35 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 					<button>
 						<FontAwesomeIcon icon={faVolumeHigh} />
 					</button>
+
+					<IconButton
+						aria-controls={open ? "basic-menu" : undefined}
+						aria-haspopup="true"
+						aria-expanded={open ? "true" : undefined}
+						onClick={handleClick}
+					>
+						<FontAwesomeIcon icon={faEllipsisVertical} />
+					</IconButton>
+					<Menu
+						id="basic-menu"
+						anchorEl={anchorEl}
+						open={open}
+						onClose={handleClose}
+						MenuListProps={{
+							"aria-labelledby": "basic-button",
+						}}
+					>
+						<MenuItem onClick={handleClose}>🏃🏻‍♀️ Save to Keep</MenuItem>
+					</Menu>
 				</VideoBarWrapper>
+				{/* <EmojiWrapper>
+					<Emoji symbol="😍" label="love" />
+					<Emoji symbol="🤔" label="hmm" />
+					<Emoji symbol="😱" label="euo" />
+					<Emoji symbol="🤗" label="yes" />
+				</EmojiWrapper> */}
 			</Container>
 		</>
 	);
 }
-export default ShareVideo;
+export default React.memo(ShareVideo);

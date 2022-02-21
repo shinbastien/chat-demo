@@ -201,7 +201,7 @@ function Main(props) {
 						</Grid>
 						<Grid item>
 							<IconButton onClick={() => console.log("test")}>
-								<MoreVertIcon></MoreVertIcon>
+								{/* <MoreVertIcon></MoreVertIcon> */}
 							</IconButton>
 						</Grid>
 					</Grid>

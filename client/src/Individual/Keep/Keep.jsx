@@ -1,6 +1,6 @@
 //search YouTube video
 import React, { useState, useEffect, useCallback } from "react";
-import { readFromFirebase } from "../lib/functions/firebase";
+import { readFromFirebase } from "../../lib/functions/firebase";
 import KeepCard from "./KeepCard";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";

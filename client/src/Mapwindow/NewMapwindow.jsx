@@ -1,7 +1,7 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useMemo} from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
@@ -15,13 +15,13 @@ import {
 	faFaceSmile,
 	faLocationDot,
 	faMagnifyingGlass,
+	faMapLocationDot,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
+import VideoCard from "./VideoCard/VideoCard";
 import { readFromFirebase, searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas/Canvas";
-import ShareVideo from "./ShareVideo/ShareVideo";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
@@ -130,12 +130,20 @@ const ButtonWrapper = styled.button`
 `;
 
 const IndividualWrapper = styled.div`
-	position: fixed;
+	position: absolute;
 	bottom: 7%;
-	display: flex;
+	transform: translate(-50%, -50%);
 	z-index: 222;
-	left: 43%;
+	margin: -25px 0 0 -25px;
+	top: 50%;
+	left: 50%;
 	background-color: white;
+	height: 600px;
+	width: 50%;
+	border-radius: 12px;
+	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	overflow-y: scroll;
 `;
 
 const EmojiWrapper = styled.div`
@@ -151,7 +159,6 @@ const EmojiWrapper = styled.div`
 // 	position: absolute;
 // 	z-index: 300;
 // `;
-
 const VideoWrapper = styled.div`
 	position: absolute;
 	z-index: 300;
@@ -194,6 +201,7 @@ export default function NewMapwindow(props) {
 		totalTime: "",
 	});
 	const [openResult, setOpenResult] = useState(true);
+	const [sharing, setSharing] = useState(false);
 
 	//video-list
 	const [recvideo, setrecvideo] = useState([]);
@@ -203,10 +211,15 @@ export default function NewMapwindow(props) {
 	//board
 	const [active, setActive] = useState("hand");
 	const [chosenEmoji, setChosenEmoji] = useState(null);
-	const [emojiResult, setEmojiResult] = useState(true);
+
 	const [searching, setSearching] = useState(false);
 	const [drawObject, setDrawObject] = useState(null);
+
 	const [aniemoji, setAniEmoji] = useState(false);
+
+	const [emojiResult, setEmojiResult] = useState(true);
+	const [showInfo, setShowInfo] = useState(false);
+
 	const [emojisender, setEmojiSender] = useState(userName);
 
 	const [searchPoint, setSearchPoint] = useState({
@@ -217,8 +230,6 @@ export default function NewMapwindow(props) {
 	});
 
 	const [individual, setIndividual] = useState(false);
-
-	const [sharing, setSharing] = useState(false);
 
 	const { socket, connected } = useSocket();
 
@@ -252,6 +263,10 @@ export default function NewMapwindow(props) {
 
 	//current point
 	useEffect(() => {
+		// if (map !== null) {
+		// 	map.addListener("click", onClickMarker);
+		// }
+
 		if (navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(function (position) {
 				const lat = position.coords.latitude;
@@ -288,24 +303,44 @@ export default function NewMapwindow(props) {
 						position: new Tmapv2.LatLng(lat, lng),
 						icon: point1,
 						iconSize: new Tmapv2.Size(24, 24),
-						title: "현재위치",
+						title: "이동중",
 						map: map,
 					}),
 				);
 			});
 			console.log("I am moving...");
 		}, 5000);
-
 		return () => {
 			clearInterval(interval);
 		};
 	}, []);
 
+	const onClickMarker = (e) => {
+		const latlng = e.latLng;
+		const marker = new Tmapv2.Marker({
+			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
+			map: map,
+		});
+
+		const buttonWindow = `
+				<div>
+				<input type="text"/>
+					<button onClick={}>Keep 등록</button>
+				</div>
+			`;
+		const infoWindow = new Tmapv2.InfoWindow({
+			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
+			content: `${buttonWindow}`,
+			map: map,
+			type: 2,
+		});
+	};
+
 	useMemo(() => {
 		if (markerC) {
 			markerC.addListener("click", (e) => {
 				const { _lat, _lng } = markerC.getPosition();
-				setSharing(true);
+				// setSharing(true);
 				// loadpointInfo(_lat, _lng);
 				if (socket && connected) {
 					socket.emit("start shareVideo", videoID);
@@ -319,15 +354,20 @@ export default function NewMapwindow(props) {
 			socket.on("start videoplayer", (videoID) => {
 				setSharing(true);
 				setVideoID(videoID);
-			})
+			});
 		}
-	}, [socket, connected])
+	}, [socket, connected]);
 
 	useMemo(async () => {
 		if (recvideo.length > 0) {
 			for (let i = 0; i < recvideo.length; i++) {
 				const video = await searchOnYoutube(recvideo[i].name);
-				setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
+				// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
+				setrecvideoLoc((recvideoLoc) => [
+					...recvideoLoc,
+					{ [recvideo[i].name]: video },
+					// { [recvideo[i].name]: video[0] },
+				]);
 			}
 		}
 	}, [recvideo]);
@@ -489,7 +529,7 @@ export default function NewMapwindow(props) {
 			let lineColor = "";
 
 			if (traffic != "0") {
-				if (traffic.length == 0) {
+				if (traffic.length === 0) {
 					//length가 0인것은 교통정보가 없으므로 검은색으로 표시
 					resultDrawArr_.push(
 						new Tmapv2.Polyline({
@@ -703,28 +743,32 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		if (searching === true && drawObject !== null) {
 			drawObject.drawRectangle();
+			map.addListener("click", onTouchDrawing);
 		}
 	}, [searching, drawObject]);
 
-	useEffect(() => {
-		loadpointInfo(searchPoint);
-	}, [searchPoint]);
-
-	const onSearchedPoint = (drawObject) => {
+	const onTouchDrawing = (e) => {
 		const { _data } = drawObject;
+		if (map && searching === true && drawObject !== null) {
+			if (drawObject._data.shapeArray.length > 0) {
+				setSearchPoint({
+					nelat: _data.shapeArray[0]._shape_data.bounds._ne._lat,
+					nelng: _data.shapeArray[0]._shape_data.bounds._ne._lng,
+					swlat: _data.shapeArray[0]._shape_data.bounds._sw._lat,
+					swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
+				});
 
-		console.log(drawObject);
-		if (drawObject._data.shapeArray.length > 0) {
-			setSearchPoint({
-				nelat: _data.shapeArray[0]._shape_data.bounds._ne._lat,
-				nelng: _data.shapeArray[0]._shape_data.bounds._ne._lng,
-				swlat: _data.shapeArray[0]._shape_data.bounds._sw._lat,
-				swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
-			});
+				setShowInfo(true);
+			}
 		}
+	};
+
+	const onSearchedPoint = () => {
 		drawObject.clear();
+		loadpointInfo(searchPoint);
 
 		setDrawObject(null);
+		setShowInfo(false);
 	};
 
 	const existSearch = () => {
@@ -749,8 +793,6 @@ export default function NewMapwindow(props) {
 				},
 			});
 			setrecvideo(items.searchPoiInfo.pois.poi);
-
-			setIndividual(true);
 		} catch (err) {
 			console.log(err);
 		}
@@ -785,6 +827,10 @@ export default function NewMapwindow(props) {
 		}
 		if (searching) {
 			setSearching(false);
+			setrecvideoLoc([]);
+		}
+		if (individual) {
+			setIndividual(false);
 		}
 	};
 
@@ -804,21 +850,29 @@ export default function NewMapwindow(props) {
 			case "search":
 				setActive("search");
 				setSearching(true);
-				setDrawObject(
-					new Tmapv2.extension.Drawing({
-						map: map, // 지도 객체
-						strokeWeight: 4, // 테두리 두께
-						strokeColor: "blue", // 테두리 색상
-						strokeOpacity: 1, // 테두리 투명도
-						fillColor: "red", // 도형 내부 색상
-						fillOpacity: 0.2,
-					}),
-				);
+				onHandleSearchObject();
+				if (drawObject === null) {
+					setDrawObject(
+						new Tmapv2.extension.Drawing({
+							map: map, // 지도 객체
+							strokeWeight: 4, // 테두리 두께
+							strokeColor: "blue", // 테두리 색상
+							strokeOpacity: 1, // 테두리 투명도
+							fillColor: "blue", // 도형 내부 색상
+							fillOpacity: 0.1,
+						}),
+					);
+				}
 
 				break;
 			case "emoji":
 				setActive("emoji");
 				setEmojiResult(true);
+				onHandleSearchObject();
+				break;
+			case "individualSearch":
+				setActive("individualSearch");
+				setIndividual(true);
 				onHandleSearchObject();
 				break;
 			default:
@@ -830,7 +884,7 @@ export default function NewMapwindow(props) {
 		const { emoji } = emojiObject;
 		setChosenEmoji(emoji);
 		setEmojiResult(false);
-		setEmojiSender(userName)
+		setEmojiSender(userName);
 		console.log("emoji is: ", emoji);
 		if (socket && connected) {
 			socket.emit("send emoji", emoji, userName);
@@ -840,11 +894,11 @@ export default function NewMapwindow(props) {
 	//emoji
 	useEffect(() => {
 		const handleGetEmoji = (emoji, userName) => {
-			setChosenEmoji(emoji)
+			setChosenEmoji(emoji);
 			setEmojiSender(userName);
-		}
+		};
 		if (socket && connected) {
-			socket.on("get emoji", handleGetEmoji)
+			socket.on("get emoji", handleGetEmoji);
 		}
 		if (chosenEmoji != null) {
 			setAniEmoji(true);
@@ -854,18 +908,17 @@ export default function NewMapwindow(props) {
 				setChosenEmoji(null);
 			}, 3000);
 		}
-
 		return () => {
 			if (socket && connected) {
-				socket.off ("get emoji", handleGetEmoji);
+				socket.off("get emoji", handleGetEmoji);
 			}
-		}
+		};
 	}, [chosenEmoji, socket, connected]);
 
 	// Open Canvas
 	useEffect(() => {
 		if (socket && connected) {
-			socket.on("open canvas", setActive("draw"))
+			socket.on("open canvas", setActive("draw"));
 		}
 		return (() => {
 			if (socket && connected) {
@@ -874,8 +927,15 @@ export default function NewMapwindow(props) {
 		})
 	}, [socket, connected])
 
+
 	return (
 		<React.Fragment>
+			{searching &&
+				recvideoLoc.length > 0 &&
+				recvideoLoc.map((list, idx) => (
+					<VideoCard key={idx} info={list}></VideoCard>
+				))}
+
 			{chosenEmoji && (
 				<EmojiReaction
 					state={aniemoji}
@@ -883,19 +943,32 @@ export default function NewMapwindow(props) {
 					userName={emojisender}
 				></EmojiReaction>
 			)}
-			{drawObject && drawObject._data.shapeArray.length > 0 && (
-				<ButtonWrapper onClick={() => onSearchedPoint(drawObject)}>
-					정보 찾기
-				</ButtonWrapper>
+			{drawObject ? (
+				[
+					showInfo ? (
+						<ButtonWrapper onClick={() => onSearchedPoint()}>
+							정보 찾기
+						</ButtonWrapper>
+					) : (
+						<></>
+					),
+				]
+			) : (
+				<></>
 			)}
-			{sharing && (
+			{/* {sharing && (
 				<VideoWrapper>
-					<ShareVideo stateChanger={setSharing} userName={userName} videoName={videoID}></ShareVideo>
+					<ShareVideo
+						stateChanger={setSharing}
+						userName={userName}
+						videoName={videoID}
+					></ShareVideo>
 				</VideoWrapper>
-			)}
+			)} */}
+
 			{individual && (
 				<IndividualWrapper>
-					<Individual stateChanger={setIndividual} data={recvideo}></Individual>
+					<Individual stateChanger={setIndividual}></Individual>
 				</IndividualWrapper>
 			)}
 			<MapButtonWrapper>
@@ -923,9 +996,7 @@ export default function NewMapwindow(props) {
 						</ResultList>
 					)}
 				</div>
-				{loading ? (
-					<div></div>
-				) : (
+				{keepPlace ? (
 					<InfoMenu
 						map={map}
 						totalDaytime={totalDaytime}
@@ -933,6 +1004,8 @@ export default function NewMapwindow(props) {
 						end={end}
 						keepPlace={keepPlace}
 					></InfoMenu>
+				) : (
+					<div></div>
 				)}
 
 				<BoardWrapper>
@@ -965,6 +1038,15 @@ export default function NewMapwindow(props) {
 						>
 							<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faFaceSmile} />
 						</IconButton>
+						<IconButton
+							className={active === "individualSearch" ? "active" : ""}
+							onClick={() => onHandleClick("individualSearch")}
+						>
+							<FontAwesomeIcon
+								style={{ fontSize: "3vw" }}
+								icon={faMapLocationDot}
+							/>
+						</IconButton>
 					</Stack>
 				</BoardWrapper>
 			</MapButtonWrapper>
@@ -983,22 +1065,8 @@ export default function NewMapwindow(props) {
 					/>
 				</EmojiWrapper>
 			) : null}
-
 			{active === "draw" ? <Canvas width={2000} height={1000}></Canvas> : null}
 			<MapWrapper id="map_div"></MapWrapper>
 		</React.Fragment>
 	);
 }
-
-// {
-// 	/* {recvideoLoc.length > 0
-// 							? recvideoLoc.map((list, idx) => (
-// 									<img
-// 										key={idx}
-// 										src={list.snippet.thumbnails.medium.url}
-// 										width={list.snippet.thumbnails.medium.width}
-// 										height={list.snippet.thumbnails.medium.height}
-// 									></img>
-// 							  ))
-// 							: "아직 관련된 영상이 없습니다"} */
-// }
