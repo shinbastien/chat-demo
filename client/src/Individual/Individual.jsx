@@ -1,16 +1,11 @@
-/*global Tmapv2*/
-// Do not delete above comment
-
 import React, { useState, useEffect } from "react";
 import Search from "./Search/Search";
-import Keep from "../Keep/Keep";
 import Box from "@mui/material/Box";
 
 import Typography from "@mui/material/Typography";
 
-import { useLocation, Link } from "react-router-dom";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
+import { useLocation } from "react-router-dom";
+
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -19,6 +14,7 @@ import styled from "styled-components";
 const Wrapper = styled.div`
 	display: flex;
 	flex-direction: column;
+	width: 100%;
 `;
 
 const BarWrapper = styled.div`
@@ -29,7 +25,7 @@ const BarWrapper = styled.div`
 	}
 	> button {
 		padding-right: 2%;
-		font-size: 3vw;
+		font-size: 2vw;
 	}
 `;
 
@@ -54,8 +50,6 @@ function TabPanel(props) {
 }
 
 export default function Individual({ stateChanger, ...props }) {
-	const { data } = props;
-
 	const location = useLocation();
 
 	const [recvideo, setrecvideo] = useState([]);
@@ -74,7 +68,11 @@ export default function Individual({ stateChanger, ...props }) {
 
 			loadpointInfo(lat, lng);
 		});
-	}, []);
+		console.log("load");
+		return () => {
+			stateChanger(false); // This worked for me
+		};
+	}, [stateChanger]);
 
 	const loadpointInfo = async (lat, lng) => {
 		try {
@@ -107,8 +105,9 @@ export default function Individual({ stateChanger, ...props }) {
 					<FontAwesomeIcon icon={faXmark} />
 				</button>
 			</BarWrapper>
-			Search
+
 			<TabPanel value={value} index={0}>
+				Search
 				<Search value={recvideo}></Search>
 			</TabPanel>
 		</Wrapper>

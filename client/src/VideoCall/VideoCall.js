@@ -6,8 +6,12 @@ import { useSocket } from "../lib/socket";
 import Grid from "@mui/material/Grid";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
-import {createPeer, addPeer, disconnectPeer, PeeraddStream} from "../lib/peer/peers";
-import {MoreVert} from "@mui/icons-material";
+import {
+	createPeer,
+	addPeer,
+	disconnectPeer,
+	PeeraddStream,
+} from "../lib/peer/peers";
 import IconButton from "@mui/material/IconButton";
 import styled from "styled-components";
 import { faStream } from "@fortawesome/free-solid-svg-icons";
@@ -50,10 +54,10 @@ function VideoCall(props) {
 	// 그걸 가지고 hook을 걸어가지고 하면 될 것 같다.
 	// 가장 간단한 방법은 카메라 요청을 유저에게 받고 비디오 승인을 받은 다음에 join 하자 useEffect 훅을 stream에 걸어놓고 stream 이 생기면, if 문으로 undefined가 아니면 socekt으로 emit을 해라 useEffect hook을 분리해도 돼
 	// 여러 hook으로 분리해서 stream이랑 socket 2개만 다루고, socket이 있고 join room하고 stream을 별도로 넣어서 peer connection을 만들면 될 것이다.
-	// 그걸 가지고 hook을 걸어가지고 하면 될 것 같다. 
+	// 그걸 가지고 hook을 걸어가지고 하면 될 것 같다.
 	// 가장 간단한 방법은 카메라 요청을 유저에게 받고 비디오 승인을 받은 다음에 join 하자 useEffect 훅을 stream에 걸어놓고 stream 이 생기면, if 문으로 undefined가 아니면 socekt으로 emit을 해라 useEffect hook을 분리해도 돼
-	// 여러 hook으로 분리해서 stream이랑 socket 2개만 다루고, socket이 있고 join room하고 stream을 별도로 넣어서 peer connection을 만들면 될 것이다. 
-	
+	// 여러 hook으로 분리해서 stream이랑 socket 2개만 다루고, socket이 있고 join room하고 stream을 별도로 넣어서 peer connection을 만들면 될 것이다.
+
 	// Set socket connection
 	useEffect(() => {
 		const handleJoinParticipants = async (members) => {
@@ -68,22 +72,20 @@ function VideoCall(props) {
 				setPeers((peers) => {
 					return addPeer(roomName, userName, members, peers, socket);
 				});
-				
+
 				console.log("add peer for: ", userName);
 			}
 
 			setParticipants([...participants, Object.keys(members)]);
-
 		};
 
 		if (socket && connected) {
 			socket.on("joinResponse", handleJoinParticipants);
 		}
 		return () => {
-			if(socket && connected) {
+			if (socket && connected) {
 				socket.off("joinResponse", handleJoinParticipants);
 			}
-			
 		};
 	}, [isNew, socket, connected]);
 
@@ -103,6 +105,57 @@ function VideoCall(props) {
 			.catch(handleGetUserMediaError);
 	}, [participants]);
 
+	function handleGetUserMediaError(e) {
+		switch (e.name) {
+			case "NotFoundError":
+				alert(
+					"Unable to open your call because no camera and/or microphone" +
+						"were found.",
+				);
+				break;
+			case "SecurityError":
+			case "PermissionDeniedError":
+				// Do nothing; this is the same as the user canceling the call.
+				break;
+			default:
+				alert("Error opening your camera and/or microphone: " + e.message);
+				break;
+		}
+	}
+
+	useEffect(() => {
+		const handleRTCAnswer = async (offerer, receiver, data) => {
+			try {
+				if (receiver === userName) {
+					while (!Object.keys(peers).includes(offerer)) {
+						await delay(100);
+					}
+					console.log("signal offerer is: ", offerer);
+					peers[offerer].peer.signal(data);
+				}
+			} catch (error) {
+				console.log(error);
+			}
+		};
+		const handleDisconnectResponse = (participants, userName) => {
+			setParticipants(participants);
+			console.log("disconnect Peer of :", userName);
+			setPeers((peers) => {
+				return disconnectPeer(peers, userName);
+			});
+		};
+		if (socket && connected) {
+			socket.on("RTC_answer", handleRTCAnswer);
+			socket.on("disconnectResponse", handleDisconnectResponse);
+		}
+
+		return () => {
+			if (socket && connected) {
+				socket.off("RTC_answer", handleRTCAnswer);
+				socket.off("disconnectResponse", handleDisconnectResponse);
+			}
+		};
+	}, [participants, socket, connected]);
 
 	function handleGetUserMediaError(e) {
 		switch (e.name) {
@@ -121,56 +174,6 @@ function VideoCall(props) {
 				break;
 		}
 	}
-	
-	useEffect(() => {
-		const handleRTCAnswer = async (offerer, receiver, data) => {
-			try {
-				if (receiver === userName) {
-					while(!Object.keys(peers).includes(offerer)) {
-						await delay(100);
-					}
-					console.log("signal offerer is: ", offerer);
-					peers[offerer].peer.signal(data);
-				}
-			} catch (error) {
-				console.log(error);
-			}
-		}
-		const handleDisconnectResponse = (participants, userName) => {
-			setParticipants(participants);
-			console.log("disconnect Peer of :", userName);
-			setPeers((peers) => {
-				return disconnectPeer(peers, userName);
-			})
-		}
-		if (socket && connected) {
-			socket.on("RTC_answer", handleRTCAnswer);		
-			socket.on("disconnectResponse", handleDisconnectResponse );
-		}
-
-		return () => {
-				if (socket && connected) {
-					socket.off("RTC_answer", handleRTCAnswer);
-					socket.off("disconnectResponse", handleDisconnectResponse);
-				}
-			}
-	}, [participants, socket, connected])
-
-	function handleGetUserMediaError(e) {
-		switch(e.name) {
-		  case "NotFoundError":
-			alert("Unable to open your call because no camera and/or microphone" +
-				  "were found.");
-			break;
-		  case "SecurityError":
-		  case "PermissionDeniedError":
-			// Do nothing; this is the same as the user canceling the call.
-			break;
-		  default:
-			alert("Error opening your camera and/or microphone: " + e.message);
-			break;
-		}
-	  }
 
 	return (
 		<div>
@@ -204,11 +207,19 @@ function VideoCall(props) {
 				</Grid>
 				{Object.keys(peers).map((key) => {
 					return (
-						<Grid item key={key}>
-							<Video
-								peer={peers[key].peer}
-								userName={key}
-							/>
+						<Grid item key={key} style={{ padding: "1.5rem" }}>
+							<Video peer={peers[key].peer} userName={key} />
+							<Grid item>
+								<Stack direction="row" spacing={2}>
+									<Avatar sx={{ bgcolor: "#ff4e6c" }}>
+										{key.slice(0, 1).toUpperCase()}
+									</Avatar>
+									<TextWrapper>{key} &nbsp; &nbsp;</TextWrapper>
+								</Stack>
+							</Grid>
+							<Grid item>
+								{/* <IconButton onClick={() => console.log("test")}></IconButton> */}
+							</Grid>
 						</Grid>
 					);
 				})}
