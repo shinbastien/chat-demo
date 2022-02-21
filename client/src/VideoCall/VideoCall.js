@@ -17,6 +17,7 @@ import styled from "styled-components";
 import { faStream } from "@fortawesome/free-solid-svg-icons";
 
 // Main handles connection between users and sends those to other pages
+
 const SOCKET_SERVER_URL = "https://social-moving.herokuapp.com/";
 
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";

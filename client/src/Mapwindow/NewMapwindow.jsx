@@ -162,6 +162,11 @@ const EmojiWrapper = styled.div`
 	left: 43%;
 `;
 
+// const EmojiDisplayWrapper = styled.div`
+// 	font-size: 7vw;
+// 	position: absolute;
+// 	z-index: 300;
+// `;
 const VideoWrapper = styled.div`
 	position: absolute;
 	z-index: 300;
@@ -221,8 +226,10 @@ export default function NewMapwindow(props) {
 	const [drawObject, setDrawObject] = useState(null);
 
 	const [aniemoji, setAniEmoji] = useState(false);
+
 	const [emojiResult, setEmojiResult] = useState(true);
 	const [showInfo, setShowInfo] = useState(false);
+
 	const [emojisender, setEmojiSender] = useState(userName);
 
 	const [searchPoint, setSearchPoint] = useState({
@@ -274,6 +281,8 @@ export default function NewMapwindow(props) {
 			navigator.geolocation.getCurrentPosition(function (position) {
 				const lat = position.coords.latitude;
 				const lng = position.coords.longitude;
+				console.log("lat is: ", lat);
+				console.log("lng is: ", lng);
 
 				setMarkerC(
 					new Tmapv2.Marker({
@@ -1042,12 +1051,13 @@ export default function NewMapwindow(props) {
 		if (socket && connected) {
 			socket.on("open canvas", setActive("draw"));
 		}
-		return () => {
+		return (() => {
 			if (socket && connected) {
 				socket.off("open canvas", setActive("draw"));
 			}
-		};
-	}, [socket, connected]);
+		})
+	}, [socket, connected])
+
 
 	return (
 		<React.Fragment>
