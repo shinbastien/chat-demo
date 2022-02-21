@@ -144,88 +144,94 @@ const InfoMenu = (props) => {
 	}, [keepPlace]);
 
 	return (
-		<MenuWrapper>
-			<Box
-				component="div"
-				style={{ fontWeight: 600, marginLeft: 20, fontSize: "1.7vw" }}
-				pt={3}
-				pb={3}
-			>
-				<FontAwesomeIcon icon={faCircleInfo} />
-				&nbsp;Information
-			</Box>
-			<Divider></Divider>
-			<SubmenuWrapper>
-				{start || end ? (
-					<div>
-						<li>출발: {start ? start.name : "출발지를 정해주세요"}</li>
-						<li>도착: {end ? end.name : "도착지를 정해주세요"}</li>
-						<Divider></Divider>
-					</div>
-				) : (
-					"목적지를 정해주세요"
-				)}
-				{totalDaytime.totalD ? (
-					<div>
-						<li>
-							총 거리:{" "}
-							{totalDaytime.totalD < 1
-								? totalDaytime.totalD * 1000 + "m"
-								: totalDaytime.totalD + "km"}
-						</li>
-						<li>총 시간: {totalDaytime.totalTime} 분</li>
-					</div>
-				) : null}
+		<>
+			<MenuWrapper>
+				<Box
+					component="div"
+					style={{ fontWeight: 600, marginLeft: 20, fontSize: "1.7vw" }}
+					pt={3}
+					pb={3}
+				>
+					<FontAwesomeIcon icon={faCircleInfo} />
+					&nbsp;Information
+				</Box>
 				<Divider></Divider>
-				<SubsubmenuWrapper>
-					<span
-						style={{ fontWeight: 300, marginLeft: 20, fontSize: "1.3vw" }}
-						pt={3}
-						pb={3}
-					>
-						<span role="img" aria-label="Woman Running">
-							🏃🏻‍♀️
-						</span>{" "}
-						Keep Places&nbsp; {savePlace && savePlace.length} 개
-						<button onClick={() => setKeepOpen(!keepOpen)}>
-							<FontAwesomeIcon icon={keepOpen ? faAngleUp : faAngleDown} />
-						</button>
-					</span>
-					<div style={{ display: keepOpen ? "none" : "inline-block" }}>
-						{savePlace &&
-							savePlace.map((list, idx) => (
-								<KeepPlaceCard key={idx} map={map} info={list}></KeepPlaceCard>
-							))}
-					</div>
-				</SubsubmenuWrapper>
-				<SubsubmenuWrapper>
-					<span
-						style={{ fontWeight: 300, marginLeft: 20, fontSize: "1.3vw" }}
-						pt={3}
-						pb={3}
-					>
-						<span role="img" aria-label="Beach with Umbrella">
-							🏖️
-						</span>{" "}
-						Shared Places&nbsp;{savePlace && savePlace.length}개
-						<button onClick={() => setShareOpen(!shareOpen)}>
-							<FontAwesomeIcon icon={shareOpen ? faAngleUp : faAngleDown} />
-						</button>
-					</span>
-					<div style={{ display: shareOpen ? "none" : "inline-block" }}>
-						{savePlace &&
-							savePlace.map((list, idx) => (
-								<SharedPlaceCard
-									key={idx}
-									map={map}
-									info={list}
-								></SharedPlaceCard>
-							))}
-					</div>
-					<Box></Box>
-				</SubsubmenuWrapper>
-			</SubmenuWrapper>
-		</MenuWrapper>
+				<SubmenuWrapper>
+					{start || end ? (
+						<div>
+							<li>출발: {start ? start.name : "출발지를 정해주세요"}</li>
+							<li>도착: {end ? end.name : "도착지를 정해주세요"}</li>
+							<Divider></Divider>
+						</div>
+					) : (
+						"목적지를 정해주세요"
+					)}
+					{totalDaytime.totalD ? (
+						<div>
+							<li>
+								총 거리:{" "}
+								{totalDaytime.totalD < 1
+									? totalDaytime.totalD * 1000 + "m"
+									: totalDaytime.totalD + "km"}
+							</li>
+							<li>총 시간: {totalDaytime.totalTime} 분</li>
+						</div>
+					) : null}
+					<Divider></Divider>
+					<SubsubmenuWrapper>
+						<span
+							style={{ fontWeight: 300, marginLeft: 20, fontSize: "1.3vw" }}
+							pt={3}
+							pb={3}
+						>
+							<span role="img" aria-label="Woman Running">
+								🏃🏻‍♀️
+							</span>{" "}
+							Keep Places&nbsp; {savePlace && savePlace.length} 개
+							<button onClick={() => setKeepOpen(!keepOpen)}>
+								<FontAwesomeIcon icon={keepOpen ? faAngleUp : faAngleDown} />
+							</button>
+						</span>
+						<div style={{ display: keepOpen ? "none" : "inline-block" }}>
+							{savePlace &&
+								savePlace.map((list, idx) => (
+									<KeepPlaceCard
+										key={idx}
+										map={map}
+										info={list}
+									></KeepPlaceCard>
+								))}
+						</div>
+					</SubsubmenuWrapper>
+					<SubsubmenuWrapper>
+						<span
+							style={{ fontWeight: 300, marginLeft: 20, fontSize: "1.3vw" }}
+							pt={3}
+							pb={3}
+						>
+							<span role="img" aria-label="Beach with Umbrella">
+								🏖️
+							</span>{" "}
+							Shared Places&nbsp;{savePlace && savePlace.length}개
+							<button onClick={() => setShareOpen(!shareOpen)}>
+								<FontAwesomeIcon icon={shareOpen ? faAngleUp : faAngleDown} />
+							</button>
+						</span>
+						<div style={{ display: shareOpen ? "none" : "inline-block" }}>
+							{savePlace &&
+								savePlace.map((list, idx) => (
+									<SharedPlaceCard
+										key={idx}
+										map={map}
+										info={list}
+									></SharedPlaceCard>
+								))}
+						</div>
+						<Box></Box>
+					</SubsubmenuWrapper>
+				</SubmenuWrapper>
+			</MenuWrapper>
+		</>
 	);
 };
 

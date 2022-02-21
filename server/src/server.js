@@ -72,26 +72,25 @@ io.on("connection", (socket) => {
 	});
 
 	//  ---------------------------SHAREVIDEO----------------------
-	socket.on("start sharevideo", (GroupID) => {
+	socket.on("start shareVideo", (videoID) => {
 		console.log("starting sharevideo for room");
-		socket.emit("bring all users in group for shareVideo", users[GroupID]);
+		socket.broadcast.to(socket.roomName).emit("start videoplayer", videoID);
 	});
 
-	socket.on("play", (GroupID) => {
-		console.log("play video of groupID: ", GroupID);
-		socket.broadcast.to(GroupID).emit("ShareVideoAction", "play");
+	socket.on("play", (userName) => {
+		console.log("play video act by: ", userName);
+		socket.broadcast.to(socket.roomName).emit("ShareVideoAction", "play");
 	});
 
-	socket.on("pause", (GroupID) => {
-		console.log("pause video of groupID: ", GroupID);
-		socket.broadcast.to(GroupID).emit("ShareVideoAction", "pause");
+	socket.on("pause", (userName) => {
+		console.log("pause video of groupID: ", userName);
+		socket.broadcast.to(socket.roomName).emit("ShareVideoAction", "pause");
 	});
 
-	socket.on("load", (data) => {
-		const { GroupID, videoID } = data;
-		console.log("load video of groupID: ", GroupID);
+	socket.on("load", (userName, videoID) => {
+		console.log("load video of: ", userName);
 		console.log("video Link is : ", videoID);
-		socket.broadcast.to(GroupID).emit("ShareVideoAction", videoID);
+		socket.broadcast.to(socket.roomName).emit("ShareVideoAction", videoID);
 	});
 
 	// ------------------------MAP----------------------
@@ -107,15 +106,32 @@ io.on("connection", (socket) => {
 		);
 	});
 
-	// // Listen for new messages
-	// socket.on(NEW_CHAT_MESSAGE_EVENT, ({body, senderId, senderName, ownedByCurrentUser}) => {
-	//   io.in(GroupID).emit(NEW_CHAT_MESSAGE_EVENT, {body, senderId, senderName, ownedByCurrentUser});
-	// });
+	// Listen for Emoji sending
+	socket.on("send emoji", (emoji, userName) => {
+		console.log("received emoji is: ", emoji);
+		console.log("emoji sneder is: ", userName);
+		io.to(socket.roomName).emit("get emoji", emoji, userName);
+	});
 
-	// // Listen for remove message
-	// socket.on(REMOVE_CHAT, (id) => {
-	//   io.in(GroupID).emit(REMOVE_CHAT, id);
-	// });
+	// CANVAS
+	socket.on("start canvas", () => {
+		socket.broadcast.to(socket.roomName).emit("open canvas");
+		console.log("open canvas");
+	})
+
+	socket.on("start drawing", () => {
+		console.log("Current user who is drawing: ", socket.userName);
+		socket.broadcast.to(socket.roomName).emit("other start drawing");
+	})
+	socket.on("send paint", (mousePosition, newMousePosition) => {
+		console.log("send paint of: ", socket.userName);
+		socket.broadcast.to(socket.roomName).emit("receive paint", mousePosition, newMousePosition);
+	})
+
+	socket.on("stop drawing", () => {
+		console.log("user stopped drawing: ", socket.userName);
+		socket.broadcast.to(socket.roomName).emit("other stopped drawing");
+	})
 
 	// Leave the room if the user closes the socket
 	socket.on("disconnect", () => {

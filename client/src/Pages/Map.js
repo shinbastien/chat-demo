@@ -4,8 +4,7 @@ import NewMapwindow from "../Mapwindow/NewMapwindow";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
 import AppBar from "@mui/material/AppBar";
-import Snackbar from "@mui/material/Snackbar";
-
+import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import logoWhite from "../Styles/source/logo_w.png";
 import IconButton from "@mui/material/IconButton";
@@ -86,29 +85,32 @@ function Map() {
 	return (
 		<>
 			<AppBar postiion="static" style={{ backgroundColor: "#151ca2" }}>
-				<Typography
-					variant="h5"
-					noWrap
-					component="div"
-					sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
-				>
-					<ImgWrapper src={logoWhite}></ImgWrapper>
-					<IconButton style={{ color: "white" }} onClick={onHandleCopy}>
-						<FontAwesomeIcon icon={faArrowUpRightFromSquare} />
-					</IconButton>
-					<Box sx={{ flexGrow: 1 }}></Box>
+				<Toolbar>
+					<Typography
+						variant="h5"
+						noWrap
+						component="div"
+						sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
+					>
+						<ImgWrapper src={logoWhite}></ImgWrapper>
+						<IconButton style={{ color: "white" }} onClick={onHandleCopy}>
+							<FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+						</IconButton>
+						<Box sx={{ flexGrow: 1 }}></Box>
 
-					<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
-				</Typography>
+						<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
+					</Typography>
+				</Toolbar>
 			</AppBar>
-			<Snackbar
+			<Toolbar />
+			{/* <Snackbar
 				anchorOrigin={{ vertical, horizontal }}
 				open={open}
 				onClose={handleClose}
 				message="I love snacks"
 				key={vertical + horizontal}
-			/>
-			<Grid container spacing={2} style={{ marginTop: 40 }}>
+			/> */}
+			<Grid container>
 				<Grid item xs={6} md={9}>
 					<NewMapwindow
 						userName={userName}

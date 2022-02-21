@@ -25,9 +25,13 @@ const Search = (props) => {
 	const [keyword, setKeyword] = useState();
 	const inputRef = useRef();
 
+	console.log(props);
+
 	const filterWords = props.value.filter(
 		(prop) => prop.name.includes("주차장") === false,
 	);
+
+	console.log(props);
 
 	useMemo(() => filterWords, [props.value]);
 

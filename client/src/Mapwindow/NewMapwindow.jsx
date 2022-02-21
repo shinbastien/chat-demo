@@ -1,7 +1,7 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
@@ -196,10 +196,12 @@ export default function NewMapwindow(props) {
 		totalTime: "",
 	});
 	const [openResult, setOpenResult] = useState(true);
+	const [sharing, setSharing] = useState(false);
 
 	//video-list
 	const [recvideo, setrecvideo] = useState([]);
 	const [recvideoLoc, setrecvideoLoc] = useState([]);
+	const [videoID, setVideoID] = useState("dWZznGbsLbE");
 
 	//board
 	const [active, setActive] = useState("hand");
@@ -211,6 +213,7 @@ export default function NewMapwindow(props) {
 	const [aniemoji, setAniEmoji] = useState(false);
 	const [emojiResult, setEmojiResult] = useState(true);
 	const [showInfo, setShowInfo] = useState(false);
+	const [emojisender, setEmojiSender] = useState(userName);
 
 	const [searchPoint, setSearchPoint] = useState({
 		nelat: "",
@@ -332,9 +335,21 @@ export default function NewMapwindow(props) {
 				const { _lat, _lng } = markerC.getPosition();
 				// setSharing(true);
 				// loadpointInfo(_lat, _lng);
+				if (socket && connected) {
+					socket.emit("start shareVideo", videoID);
+				}
 			});
 		}
-	}, [markerC]);
+	}, [markerC, socket, connected]);
+
+	useEffect(() => {
+		if (socket && connected) {
+			socket.on("start videoplayer", (videoID) => {
+				setSharing(true);
+				setVideoID(videoID);
+			});
+		}
+	}, [socket, connected]);
 
 	useMemo(async () => {
 		if (recvideo.length > 0) {
@@ -417,12 +432,12 @@ export default function NewMapwindow(props) {
 				const { pointType } = properties;
 				let markerImg = "";
 				let pType = "";
-				if (pointType == "S") {
+				if (pointType === "S") {
 					//출발지 마커
 					markerImg =
 						"http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png";
 					pType = "S";
-				} else if (pointType == "E") {
+				} else if (pointType === "E") {
 					//도착지 마커
 					markerImg =
 						"http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_e.png";
@@ -820,6 +835,9 @@ export default function NewMapwindow(props) {
 				break;
 			case "draw":
 				setActive("draw");
+				if (socket && connected) {
+					socket.emit("start canvas");
+				}
 				onHandleSearchObject();
 				break;
 			case "search":
@@ -859,21 +877,49 @@ export default function NewMapwindow(props) {
 		const { emoji } = emojiObject;
 		setChosenEmoji(emoji);
 		setEmojiResult(false);
+		setEmojiSender(userName);
+		console.log("emoji is: ", emoji);
+		if (socket && connected) {
+			socket.emit("send emoji", emoji, userName);
+		}
 	};
 
 	//emoji
 	useEffect(() => {
-		if (chosenEmoji == null) {
-			return;
+		const handleGetEmoji = (emoji, userName) => {
+			setChosenEmoji(emoji);
+			setEmojiSender(userName);
+		};
+		if (socket && connected) {
+			socket.on("get emoji", handleGetEmoji);
 		}
+		if (chosenEmoji != null) {
+			setAniEmoji(true);
 
-		setAniEmoji(true);
+			setTimeout(() => {
+				setAniEmoji(false);
+				setChosenEmoji(null);
+			}, 3000);
+		}
+		return () => {
+			if (socket && connected) {
+				socket.off("get emoji", handleGetEmoji);
+			}
+		};
+	}, [chosenEmoji, socket, connected]);
 
-		setTimeout(() => {
-			setAniEmoji(false);
-			setChosenEmoji(null);
-		}, 3000);
-	}, [chosenEmoji]);
+	// Open Canvas
+	useEffect(() => {
+		if (socket && connected) {
+			socket.on("open canvas", setActive("draw"));
+		}
+		return () => {
+			if (socket && connected) {
+				socket.off("open canvas", setActive("draw"));
+			}
+		};
+	}, [socket, connected]);
+
 	return (
 		<React.Fragment>
 			{searching &&
@@ -886,7 +932,7 @@ export default function NewMapwindow(props) {
 				<EmojiReaction
 					state={aniemoji}
 					emoji={chosenEmoji}
-					userName={userName}
+					userName={emojisender}
 				></EmojiReaction>
 			)}
 			{drawObject ? (
@@ -902,6 +948,15 @@ export default function NewMapwindow(props) {
 			) : (
 				<></>
 			)}
+			{/* {sharing && (
+				<VideoWrapper>
+					<ShareVideo
+						stateChanger={setSharing}
+						userName={userName}
+						videoName={videoID}
+					></ShareVideo>
+				</VideoWrapper>
+			)} */}
 
 			{individual && (
 				<IndividualWrapper>
