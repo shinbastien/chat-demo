@@ -868,7 +868,9 @@ export default function NewMapwindow(props) {
 			socket.on("open canvas", setActive("draw"))
 		}
 		return (() => {
-			socket.off("open canvas", setActive("draw"));
+			if (socket && connected) {
+				socket.off("open canvas", setActive("draw"));
+			}
 		})
 	}, [socket, connected])
 
