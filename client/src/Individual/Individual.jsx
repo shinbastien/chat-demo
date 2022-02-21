@@ -68,7 +68,6 @@ export default function Individual({ stateChanger, ...props }) {
 
 			loadpointInfo(lat, lng);
 		});
-		console.log("load");
 		return () => {
 			stateChanger(false); // This worked for me
 		};

@@ -32,6 +32,7 @@ const SearchResult = (props) => {
 		const { etag, id, snippet } = element;
 		setShare((share) => ({ [id.videoId]: true }));
 		setSharing(true);
+		console.log(element);
 	}
 
 	return (
@@ -39,7 +40,7 @@ const SearchResult = (props) => {
 			<Grid container direction={"column"}>
 				{sharing && (
 					<ShareVideo
-						url={Object.keys(share)[0]}
+						videoName={Object.keys(share)[0]}
 						// stateChanger={setSharing}
 					></ShareVideo>
 				)}

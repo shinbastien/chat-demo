@@ -9,19 +9,19 @@ import {
 	faPause,
 	faPlay,
 	faVolumeHigh,
-	faEllipsisVertical,
+	faBookmark,
 } from "@fortawesome/free-solid-svg-icons";
 import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Emoji from "./Emoji";
 
 import styled from "styled-components";
 import { writeToPlaceData } from "../../lib/functions/firebase";
+import { useMemo } from "react";
+import axios from "axios";
 
 const Container = styled.div`
 	display: flex;
 	width: 100%;
+	padding: 3% 0 3% 0;
 
 	flex-direction: column;
 `;
@@ -40,6 +40,7 @@ const BarWrapper = styled.div`
 const VideoWrapper = styled.div`
 	aspect-ratio: 16 / 9;
 	width: 100%;
+	pointer-events: none;
 `;
 
 const VideoBarWrapper = styled.div`
@@ -47,20 +48,17 @@ const VideoBarWrapper = styled.div`
 	justify-content: space-between;
 	align-items: center;
 	width: 100%;
-	padding: 2%;
+	padding: 2% 0 2% 0;
+
+	&:hover {
+		background-color: #f5f5f5;
+	}
 
 	> button {
-		font-size: 2vw;
+		font-size: 1vw;
 		cursor: pointer;
 		padding: 3%;
 	}
-`;
-
-const EmojiWrapper = styled.div`
-	display: flex;
-	justify-content: space-between;
-	font-size: 4vw;
-	align-items: center;
 `;
 
 const ProgressBar = styled.span`
@@ -84,32 +82,40 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 	const youtubePlayer = useRef();
 
 	const userVideo = useRef();
-	// console.log("videoName is: ", videoName);
 	const [videoID, setVideoID] = useState(videoName);
 	const [peers, setPeers] = useState([]);
 	const location = useLocation();
 	const [playing, setPlaying] = useState(false);
 	const [nextPlaying, setNextPlaying] = useState(false);
-
-	const [anchorEl, setAnchorEl] = useState(null);
-	const open = Boolean(anchorEl);
+	const [saveActive, setSaveActive] = useState(false);
+	const [videoContent, setVideoContent] = useState(null);
 
 	const [data, setData] = useState({
-		groupId: "a",
-		coords: "a",
-		userId: "a",
-		placeId: "a",
+		groupId: "abcde",
+		coords: {
+			lng: null,
+			lat: null,
+		},
+		userId: "abcde",
+		placeId: "abcde",
+		poiId: "abcde",
 		visited: false,
 	});
 
-	const handleClick = (event) => {
-		setAnchorEl(event.currentTarget);
+	const handleClick = async (event) => {
+		setSaveActive(!saveActive);
 	};
-	const handleClose = async () => {
-		setAnchorEl(null);
-		console.log(data);
-		await writeToPlaceData(data);
-	};
+	useEffect(async () => {
+		if (saveActive) {
+			await writeToPlaceData(data);
+		}
+	}, [saveActive]);
+
+	// console.log("videoName is: ", videoID);
+
+	useMemo(() => {
+		setVideoID(videoName);
+	}, [videoName]);
 
 	useEffect(() => {
 		if (!window.YT) {
@@ -119,19 +125,48 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 			window.onYouTubeIframeAPIReady = loadVideoPlayer;
-			console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
+			// console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
 		} else {
 			loadVideoPlayer();
-			console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
+			// console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
 		}
 	}, []);
 
 	useEffect(() => {
-		// if (nextPlaying) {
-		// 	youtubePlayer.current.cueVideoByUrl(
-		// 		`http://www.youtube.com/v/${url}?version=3`,
-		// 	);
-		// }
+		if (nextPlaying) {
+			youtubePlayer.current.cueVideoByUrl(
+				`http://www.youtube.com/v/${videoID}?version=3`,
+			);
+		}
+
+		async function loadVideoOnYouTube(videoID) {
+			const API_URL = "https://www.googleapis.com/youtube/v3/videos";
+			try {
+				const {
+					data: { items },
+				} = await axios(API_URL, {
+					method: "GET",
+					params: {
+						key: process.env.REACT_APP_YOUTUBE_API_KEY,
+						part: ["contentDetails"],
+						id: videoID,
+					},
+				});
+
+				return items;
+			} catch (err) {
+				console.log(err);
+			}
+		}
+
+		loadVideoOnYouTube(videoID).then((obj) => {
+			setVideoContent(obj[0]);
+		});
+	}, [videoID]);
+
+	console.log(videoContent);
+
+	useEffect(() => {
 		const handleVideoSocket = (data) => {
 			if (data === "play") {
 				console.log("play video");
@@ -167,15 +202,41 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 				autoplay: 0,
 				controls: 0,
 				autohide: 1,
+
 				wmode: "opaque",
 				origin: "https://www.youtube.com",
 			},
 		});
 		setNextPlaying(true);
 
-		console.log("player is: ", player);
+		// console.log("player is: ", player);
 		youtubePlayer.current = player;
 	}
+
+	// function moveProgressBar() {
+	// 	const totalTime = videoPlayer.duration;
+	// 	const rate = 100 / totalTime;
+	// 	console.log("totalTime: ", rate);
+
+	// 	if (i === 0) {
+	// 		i = 1;
+	// 		var width = 1;
+	// 		var id = setInterval(frame, 1000);
+
+	// 		function frame() {
+	// 			if (width * rate >= 100) {
+	// 				clearInterval(id);
+
+	// 				width = 0;
+	// 				progressBar.style.width = "0%";
+	// 				videoPlayer.autoplay = true;
+	// 			} else {
+	// 				width++;
+	// 				progressBar.style.width = width * rate + "%";
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	function handleVideo(data) {
 		if (data === "play") {
@@ -199,7 +260,6 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 	return (
 		<>
 			<Container>
-				공유중
 				<VideoWrapper>
 					<div id="player" ref={youtubePlayer} />
 				</VideoWrapper>
@@ -220,32 +280,13 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 						<FontAwesomeIcon icon={faVolumeHigh} />
 					</button>
 
-					<IconButton
-						aria-controls={open ? "basic-menu" : undefined}
-						aria-haspopup="true"
-						aria-expanded={open ? "true" : undefined}
-						onClick={handleClick}
-					>
-						<FontAwesomeIcon icon={faEllipsisVertical} />
+					<IconButton onClick={handleClick}>
+						<FontAwesomeIcon
+							style={{ color: saveActive ? "red" : "#7B7B7B" }}
+							icon={faBookmark}
+						/>
 					</IconButton>
-					<Menu
-						id="basic-menu"
-						anchorEl={anchorEl}
-						open={open}
-						onClose={handleClose}
-						MenuListProps={{
-							"aria-labelledby": "basic-button",
-						}}
-					>
-						<MenuItem onClick={handleClose}>🏃🏻‍♀️ Save to Keep</MenuItem>
-					</Menu>
 				</VideoBarWrapper>
-				{/* <EmojiWrapper>
-					<Emoji symbol="😍" label="love" />
-					<Emoji symbol="🤔" label="hmm" />
-					<Emoji symbol="😱" label="euo" />
-					<Emoji symbol="🤗" label="yes" />
-				</EmojiWrapper> */}
 			</Container>
 		</>
 	);
