@@ -20,6 +20,7 @@ import { faUserGroup } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // Main handles connection between users and sends those to other pages
+
 const SOCKET_SERVER_URL = "https://social-moving.herokuapp.com/";
 
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";

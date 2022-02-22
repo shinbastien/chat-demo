@@ -96,7 +96,6 @@ function YTDurationToSeconds(duration) {
 function ShareVideo({ stateChanger, userName, videoName, locInfo }) {
 	const { socket, connected } = useSocket();
 	const youtubePlayer = useRef();
-
 	const userVideo = useRef();
 
 	const [videoID, setVideoID] = useState(videoName);

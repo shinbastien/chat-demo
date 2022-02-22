@@ -8,7 +8,8 @@ import Home from "./Home/Home";
 import Map from "./Pages/Map";
 import reportWebVitals from "./reportWebVitals";
 import GlobalStyles from "./Styles/globalStyles";
-
+// "http://localhost:4000"
+// "https://social-moving.herokuapp.com/"
 ReactDOM.render(
 	<BrowserRouter>
 		<GlobalStyles />

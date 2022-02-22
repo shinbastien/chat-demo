@@ -9,7 +9,9 @@ const io = require("socket.io")(server, {
 	},
 });
 
-const port = process.env.PORT || 3000;
+
+// const port = process.env.PORT || 3000;
+const PORT = 4000;
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 const REMOVE_CHAT = "removeChat";
 
@@ -28,10 +30,11 @@ io.on("connection", (socket) => {
 	socket.on("join", (roomName, userName) => {
 		socket.join(roomName);
 		if (!users[roomName]) {
-			users[roomName] = { participants: {}, youtubeLink: "" };
+			users[roomName] = { participants: {}, youtubeLink: "", sharingHost: ""};
 		}
 		socket.roomName = roomName;
 		socket.userName = userName;
+		socket.share = false;
 		users[roomName].participants[userName] = {
 			socket: socket.id,
 			location: [0, 0],
@@ -129,7 +132,8 @@ io.on("connection", (socket) => {
 		socket.broadcast.to(socket.roomName).emit("other start drawing");
 	});
 	socket.on("send paint", (mousePosition, newMousePosition) => {
-		console.log("send paint of: ", socket.userName);
+		console.log("send paint of: ", socket.
+		userName);
 		socket.broadcast
 			.to(socket.roomName)
 			.emit("receive paint", mousePosition, newMousePosition);
@@ -138,6 +142,28 @@ io.on("connection", (socket) => {
 	socket.on("stop drawing", () => {
 		console.log("user stopped drawing: ", socket.userName);
 		socket.broadcast.to(socket.roomName).emit("other stopped drawing");
+	});
+
+	// -----------------------SHARE CONTENTS----------------------------
+	socket.on("start sendShare request", () => {
+		if (users[socket.roomName].sharingHost==="") {
+			users[socket.roomName].sharingHost = socket.userName;
+			socket.share = true;
+			socket.broadcast.to(socket.roomName).emit("start sharemode", socket.userName)
+		}
+		socket.emit("sendshare response", users[socket.roomName].sharingHost, socket.userName);
+	}) 
+	
+	socket.on("finish sendShare request", () => {
+		socket.broadcast.to(socket.roomName).emit("finish sharemode", users[socket.roomName].sharingHost);
+		users[socket.roomName].sharingHost = "";
+		if (socket.share == true) {
+			socket.share = false;
+		}
+	})
+	socket.on("sendshare videoLoc", (videoLoc) => {
+		console.log("got emit of share videoLoc", users[socket.roomName].sharingHost)
+		socket.broadcast.to(socket.roomName).emit("receive sharedvideoLoc", videoLoc);
 	});
 
 	// Leave the room if the user closes the socket
@@ -162,6 +188,10 @@ io.on("connection", (socket) => {
 	});
 });
 
-server.listen(port, () => {
-	console.log(`Listening on port ${port}`);
+// server.listen(port, () => {
+// 	console.log(`Listening on port ${port}`);
+// });
+
+server.listen(PORT, () => {
+	console.log(`Listening on port ${PORT}`);
 });

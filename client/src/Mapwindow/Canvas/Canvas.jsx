@@ -74,7 +74,7 @@ const Canvas = ({ width, height }) => {
 				})
 			}
 		}
-	}, [otherIsPainting,socket, connected])	
+	}, [otherIsPainting, socket, connected])	
 	useEffect(() => {
 		const handlePainting = async (mousePosition, newMousePosition) => {
 				drawLine(mousePosition, newMousePosition);
@@ -82,7 +82,6 @@ const Canvas = ({ width, height }) => {
 		}
 		if (socket && connected) {
 			socket.on("receive paint", handlePainting);
-			console.log("received socket of paint");
 		}
 		return () => {
 			if (socket && connected) {
@@ -105,12 +104,15 @@ const Canvas = ({ width, height }) => {
 	}, [paint]);
 
 	const exitPaint = useCallback(() => {
+		if (socket && connected) {
+			if (isPainting) {
+				socket.emit("stop drawing");
+				console.log("stop drawing");
+			}
+		}
 		setIsPainting(false);
 		setMousePosition(undefined);
-		if (socket && connected) {
-			socket.emit("stop drawing");
-			console.log("stop drawing");
-		}
+
 	}, [socket, connected]);
 
 	const getCoordinate = (event) => {
@@ -153,9 +155,9 @@ const Canvas = ({ width, height }) => {
 		canvas.addEventListener("mouseup", exitPaint);
 		canvas.addEventListener("mouseleave", exitPaint);
 
+
 		return () => {
 			canvas.removeEventListener("mouseup", exitPaint);
-
 			canvas.removeEventListener("mouseleave", exitPaint);
 		};
 	}, [exitPaint]);
