@@ -950,7 +950,7 @@ export default function NewMapwindow(props) {
 	};
 
 	const onShareCurrent = (e) => {
-		// Searched Video after drawing
+		// clicked share button
 		if (socket && connected) {
 			if (!sendShare) {
 				socket.emit("start sendShare request");
@@ -1075,15 +1075,21 @@ export default function NewMapwindow(props) {
 
 	// Open Canvas
 	useEffect(() => {
+		const handleCanvas = () => {
+			setActive("draw");
+			console.log("handleCanvas");
+		}
 		if (socket && connected) {
-			socket.on("open canvas", setActive("draw"));
+			socket.on("open canvas", handleCanvas);
+			console.log("start canvas", active);
 		}
 		return (() => {
 			if (socket && connected) {
-				socket.off("open canvas", setActive("draw"));
+				socket.off("open canvas", handleCanvas);
+				console.log("active changed", active);
 			}
 		})
-	}, [socket, connected])
+	}, [active, socket, connected])
 
 	//
 	useEffect(() => {
@@ -1108,6 +1114,7 @@ export default function NewMapwindow(props) {
 					socket.emit("sendshare videoLoc", recvideoLoc);
 				}
 			}
+			
 		}
 		else {
 			return;
@@ -1134,18 +1141,9 @@ export default function NewMapwindow(props) {
 		}
 		return () => {
 			if (socket && connected) {
-				socket.off("receive sharedvideoLoc", (videoLoc) => {
-					setrecvideoLoc(videoLoc);
-					console.log("received sharevideoLoc")
-				})
-
-				socket.off("finish sharemode", () => {
-					setReceiveShare(false);
-				})
-	
-				socket.off("receive sharedvideoLoc", (videoLoc) => {
-					setrecvideoLoc(videoLoc);
-				})
+				socket.off("start sharemode");
+				socket.off("receive sharedvideoLoc");
+				socket.off("finish sharemode");
 			}
 		}
 	}, [receiveShare,socket, connected])
@@ -1198,7 +1196,7 @@ export default function NewMapwindow(props) {
 
 			{individual && (
 				<IndividualWrapper>
-					<Individual stateChanger={setIndividual}></Individual>
+					<Individual stateChanger={setIndividual} host={sendShare ? true : false} />
 				</IndividualWrapper>
 			)}
 			<MapButtonWrapper>
