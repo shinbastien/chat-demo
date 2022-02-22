@@ -50,11 +50,11 @@ function TabPanel(props) {
 	);
 }
 
-export default function Individual({ stateChanger, ...props }) {
+export default function Individual({ stateChanger, host, receiver }) {
 	const location = useLocation();
 
 	const [recvideo, setrecvideo] = useState([]);
-
+	const [share, setShare] = useState("");
 	const { groupID, userName } = location.state;
 	const [value, setValue] = React.useState(0);
 	const {socket, connected} = useSocket();
@@ -62,6 +62,7 @@ export default function Individual({ stateChanger, ...props }) {
 	const handleChange = (event, newValue) => {
 		setValue(newValue);
 	};
+
 
 	useEffect(() => {
 		navigator.geolocation.getCurrentPosition(function (position) {
@@ -77,16 +78,38 @@ export default function Individual({ stateChanger, ...props }) {
 	}, [stateChanger]);
 
 	useEffect(() => {
+		if (host) {
+			setShare("host");
+		}
+		else {
+			if (receiver) {
+				setShare("receiver");
+			}
+			
+			else {
+				setShare("");
+			}
+		}
+		console.log(host, receiver);
+	}, [share, host, receiver])
+
+	useEffect(() => {
 		if (socket && connected) {
-			socket.on("share individualsearch video", (recvideo) => {
-				setrecvideo(recvideo);
-			});
+			if (share =="host") {
+				if (recvideo.length > 0) {
+					socket.emit("share individual searchlist", recvideo);
+				}
+				
+			}
+			else if (share =="receiver") {
+				socket.on("receive individual searchlist", (recvideo) => {
+					setrecvideo(recvideo);
+				})
+			}
 		}
 		return () => {
 			if (socket && connected) {
-				socket.off("share individualsearch video", (recvideo) => {
-					setrecvideo(recvideo);
-				});
+				socket.off("receive individual searchlist");
 			}
 		}
 	}, [socket, connected])
@@ -125,7 +148,7 @@ export default function Individual({ stateChanger, ...props }) {
 
 			<TabPanel value={value} index={0}>
 				Search
-				<Search value={recvideo}></Search>
+				<Search value={recvideo} share={share}></Search>
 			</TabPanel>
 		</Wrapper>
 	);
