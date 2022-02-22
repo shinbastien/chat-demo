@@ -9,14 +9,12 @@ import {
 	faPause,
 	faPlay,
 	faVolumeHigh,
-	faBookmark,
 } from "@fortawesome/free-solid-svg-icons";
-import IconButton from "@mui/material/IconButton";
 
 import styled from "styled-components";
-import { writeToPlaceData } from "../../lib/functions/firebase";
 import { useMemo } from "react";
 import axios from "axios";
+import Bookmark from "./Bookmark";
 
 const Container = styled.div`
 	display: flex;
@@ -26,17 +24,18 @@ const Container = styled.div`
 	flex-direction: column;
 `;
 
-const BarWrapper = styled.div`
-	display: flex;
+// const BarWrapper = styled.div`
+// 	display: flex;
 
-	> div {
-		flex-grow: 10;
-	}
-	> button {
-		padding-right: 2%;
-		font-size: 3vw;
-	}
-`;
+// 	> div {
+// 		flex-grow: 10;
+// 	}
+// 	> button {
+// 		padding-right: 2%;
+// 		font-size: 3vw;
+// 	}
+// `;
+
 const VideoWrapper = styled.div`
 	aspect-ratio: 16 / 9;
 	width: 100%;
@@ -70,46 +69,47 @@ const ProgressBar = styled.span`
 
 	#progress {
 		position: absolute;
-		width: 1%;
+		width: ${(props) => (props.progress ? props.progress + "%" : "1%")}
 		height: 100%;
 		z-index: 999;
 		background-color: yellow;
+		
 	}
 `;
 
-function ShareVideo({ stateChanger, userName, videoName }) {
+function YTDurationToSeconds(duration) {
+	var match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+
+	match = match.slice(1).map(function (x) {
+		if (x != null) {
+			return x.replace(/\D/, "");
+		}
+	});
+
+	var hours = parseInt(match[0]) || 0;
+	var minutes = parseInt(match[1]) || 0;
+	var seconds = parseInt(match[2]) || 0;
+
+	return hours * 3600 + minutes * 60 + seconds;
+}
+
+function ShareVideo({ stateChanger, userName, videoName, locInfo }) {
 	const { socket, connected } = useSocket();
 	const youtubePlayer = useRef();
 
 	const userVideo = useRef();
+
 	const [videoID, setVideoID] = useState(videoName);
 	const [peers, setPeers] = useState([]);
 	const location = useLocation();
 	const [playing, setPlaying] = useState(false);
 	const [nextPlaying, setNextPlaying] = useState(false);
-	const [saveActive, setSaveActive] = useState(false);
 	const [videoContent, setVideoContent] = useState(null);
-
-	const [data, setData] = useState({
-		groupId: "abcde",
-		coords: {
-			lng: null,
-			lat: null,
-		},
-		userId: "abcde",
-		placeId: "abcde",
-		poiId: "abcde",
-		visited: false,
-	});
-
-	const handleClick = async (event) => {
-		setSaveActive(!saveActive);
-	};
-	useEffect(async () => {
-		if (saveActive) {
-			await writeToPlaceData(data);
-		}
-	}, [saveActive]);
+	const [progress, setProgress] = useState(1);
+	const [currentT, setCurrentT] = useState(0);
+	const [width, setWidth] = useState(1);
+	const [start, setStart] = useState(false);
+	const [save, setSave] = useState(false);
 
 	// console.log("videoName is: ", videoID);
 
@@ -134,6 +134,7 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 
 	useEffect(() => {
 		if (nextPlaying) {
+			handleVideo("pause");
 			youtubePlayer.current.cueVideoByUrl(
 				`http://www.youtube.com/v/${videoID}?version=3`,
 			);
@@ -148,11 +149,10 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 					method: "GET",
 					params: {
 						key: process.env.REACT_APP_YOUTUBE_API_KEY,
-						part: ["contentDetails"],
+						part: "contentDetails, snippet",
 						id: videoID,
 					},
 				});
-
 				return items;
 			} catch (err) {
 				console.log(err);
@@ -160,11 +160,26 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 		}
 
 		loadVideoOnYouTube(videoID).then((obj) => {
-			setVideoContent(obj[0]);
+			const { duration } = obj[0].contentDetails;
+			const { thumbnails, title } = obj[0].snippet;
+			const { id } = obj[0];
+
+			const changeToDate = YTDurationToSeconds(duration);
+
+			setVideoContent({
+				id: id,
+				duration: changeToDate,
+				thumbnails: thumbnails.medium,
+				title: title,
+				placeID: locInfo.id,
+				placeName: locInfo.name,
+				coords: {
+					lat: locInfo.noorLat,
+					lng: locInfo.noorLon,
+				},
+			});
 		});
 	}, [videoID]);
-
-	console.log(videoContent);
 
 	useEffect(() => {
 		const handleVideoSocket = (data) => {
@@ -175,6 +190,7 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 			} else if (data === "pause") {
 				console.log("pause video");
 				youtubePlayer.current.pauseVideo();
+				setCurrentT(youtubePlayer.current.playerInfo.currentTime());
 				setPlaying(false);
 			} else {
 				console.log("load video: ", data);
@@ -192,6 +208,27 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 		};
 	}, [socket, connected]);
 
+	// useEffect(() => {
+	// 	if (start) {
+	// 		var totalTime = videoContent.duration;
+	// 		var rate = 100 / totalTime;
+	// 		console.log(totalTime);
+	// 		setInterval(() => {
+	// 			setProgress(progress + 1);
+	// 			setWidth(rate * progress);
+	// 		}, 1000);
+
+	// 		if (progress * rate >= 100) {
+	// 			clearInterval();
+	// 			setStart(false);
+	// 		}
+	// 	}
+	// 	return () => {
+	// 		clearInterval();
+	// 		setStart(false);
+	// 	};
+	// }, [start]);
+
 	function loadVideoPlayer() {
 		const player = new YT.Player("player", {
 			height: "100%",
@@ -208,46 +245,21 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 			},
 		});
 		setNextPlaying(true);
-
-		// console.log("player is: ", player);
 		youtubePlayer.current = player;
 	}
-
-	// function moveProgressBar() {
-	// 	const totalTime = videoPlayer.duration;
-	// 	const rate = 100 / totalTime;
-	// 	console.log("totalTime: ", rate);
-
-	// 	if (i === 0) {
-	// 		i = 1;
-	// 		var width = 1;
-	// 		var id = setInterval(frame, 1000);
-
-	// 		function frame() {
-	// 			if (width * rate >= 100) {
-	// 				clearInterval(id);
-
-	// 				width = 0;
-	// 				progressBar.style.width = "0%";
-	// 				videoPlayer.autoplay = true;
-	// 			} else {
-	// 				width++;
-	// 				progressBar.style.width = width * rate + "%";
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	function handleVideo(data) {
 		if (data === "play") {
 			console.log("play video");
 			socket.emit("play", userName);
 			youtubePlayer.current.playVideo();
+			setStart(!start);
 			setPlaying(true);
 		} else if (data === "pause") {
 			console.log("pause video");
 			socket.emit("pause", userName);
 			youtubePlayer.current.pauseVideo();
+			setStart(!start);
 			setPlaying(false);
 		} else {
 			console.log("load video: ", data);
@@ -256,6 +268,8 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 			setPlaying(false);
 		}
 	}
+
+	useMemo(() => videoContent, [videoID]);
 
 	return (
 		<>
@@ -274,18 +288,12 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 						</button>
 					)}
 					<ProgressBar>
-						<div id="progress" max="100" value="0"></div>
+						<div progress={width} id="progress" max="100" value="0"></div>
 					</ProgressBar>
 					<button>
 						<FontAwesomeIcon icon={faVolumeHigh} />
 					</button>
-
-					<IconButton onClick={handleClick}>
-						<FontAwesomeIcon
-							style={{ color: saveActive ? "red" : "#7B7B7B" }}
-							icon={faBookmark}
-						/>
-					</IconButton>
+					<Bookmark data={videoContent}></Bookmark>
 				</VideoBarWrapper>
 			</Container>
 		</>

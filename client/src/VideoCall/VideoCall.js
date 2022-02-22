@@ -6,6 +6,8 @@ import { useSocket } from "../lib/socket";
 import Grid from "@mui/material/Grid";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
+import { Divider } from "@mui/material";
+
 import {
 	createPeer,
 	addPeer,
@@ -14,7 +16,8 @@ import {
 } from "../lib/peer/peers";
 import IconButton from "@mui/material/IconButton";
 import styled from "styled-components";
-import { faStream } from "@fortawesome/free-solid-svg-icons";
+import { faUserGroup } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // Main handles connection between users and sends those to other pages
 const SOCKET_SERVER_URL = "https://social-moving.herokuapp.com/";
@@ -25,6 +28,13 @@ const TextWrapper = styled.span`
 	display: flex;
 	justify-content: center; /* align horizontal */
 	align-items: center; /* align vertical */
+`;
+
+const CurrentUserWrapper = styled.div`
+	font-size: 20px;
+	text-align: center;
+	padding: 6% 0 2% 0;
+	color: #707070;
 `;
 
 function VideoCall(props) {
@@ -177,7 +187,11 @@ function VideoCall(props) {
 
 	return (
 		<div>
-			현재 접속자 수: {Object.keys(peers).length + 1} 명
+			<CurrentUserWrapper>
+				<FontAwesomeIcon icon={faUserGroup}></FontAwesomeIcon>{" "}
+				{Object.keys(peers).length + 1}
+			</CurrentUserWrapper>
+			<Divider></Divider>
 			<Grid container>
 				<Grid item style={{ padding: "1.5rem" }}>
 					<StyledVideo

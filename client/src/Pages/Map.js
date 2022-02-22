@@ -32,7 +32,6 @@ const TextWrapper = styled.span`
 
 function Map() {
 	const location = useLocation();
-	const [keepPlace, setKeepPlace] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [state, setState] = useState({
 		open: false,
@@ -52,8 +51,6 @@ function Map() {
 		alert("url이 복사되었습니다.");
 	};
 
-	useEffect(() => loadKeepList(), []);
-
 	useEffect(() => {
 		if (socket && connected) {
 			console.log("socket id is:", socket.id);
@@ -61,28 +58,6 @@ function Map() {
 			console.log("joining group");
 		}
 	}, [connected, socket]);
-
-	const loadKeepList = async () => {
-		setLoading(true);
-		readFromFirebase("photos")
-			.then((data) => {
-				setKeepPlace(data);
-				setLoading(false);
-			})
-			.catch((error) => {
-				setLoading(false);
-			});
-
-		console.log("i am loaded");
-	};
-
-	const handleClick = (newState) => () => {
-		setState({ open: true, ...newState });
-	};
-
-	const handleClose = () => {
-		setState({ ...state, open: false });
-	};
 
 	return (
 		<>
@@ -104,10 +79,7 @@ function Map() {
 			</AppBar>
 			<Grid container spacing={2} style={{ marginTop: 40 }}>
 				<Grid item xs={6} md={9}>
-					<NewMapwindow
-						userName={userName}
-						keepPlace={keepPlace}
-					></NewMapwindow>
+					<NewMapwindow userName={userName}></NewMapwindow>
 				</Grid>
 				<Grid item xs={6} md={3}>
 					<VideoCall

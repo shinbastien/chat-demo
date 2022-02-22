@@ -3,7 +3,7 @@
 import { initializeApp } from "firebase/app";
 import "firebase/auth";
 import { getFirestore, getDocs, collection } from "firebase/firestore";
-import { getDatabase, ref, set } from "firebase/database";
+import { getDatabase, ref, set, get, child, onValue } from "firebase/database";
 import data from "../../data";
 
 import axios from "axios";
@@ -25,16 +25,22 @@ function firebaseInstance() {
 }
 
 async function writeToPlaceData(element) {
-	const { coords, groupId, userId, placeId } = element;
+	const { coords, duration, id, placeID, placeName, thumbnails, title } =
+		element;
 	const app = firebaseInstance();
-	console.log(app);
 	const db = getDatabase(app);
+
 	try {
-		set(ref(db, "keeps/" + placeId), {
-			groupId: groupId,
+		set(ref(db, "keeps/" + id), {
+			placeName: placeName,
 			coords: coords,
-			userId: userId,
-			placeId: placeId,
+			placeID: placeID,
+			videoInfo: {
+				id: id,
+				title: title,
+				thumnails: thumbnails,
+				duration: duration,
+			},
 			visited: false,
 		});
 		console.log("uploaded");
@@ -43,15 +49,18 @@ async function writeToPlaceData(element) {
 	}
 }
 
-async function readFromFirebase(element) {
+async function readFromFirebase() {
 	firebaseInstance();
-	const db = getFirestore();
+	const db = getDatabase();
 	const dataInstance = [];
+
 	try {
-		const docRef = await getDocs(collection(db, element));
-		docRef.forEach((doc) => {
-			dataInstance.push(doc.data());
+		const dbRef = await ref(db, `keeps/`);
+		await onValue(dbRef, (snapshot) => {
+			const docRef = snapshot.val();
+			dataInstance.push(docRef);
 		});
+
 		return dataInstance;
 	} catch (error) {
 		console.log(error);

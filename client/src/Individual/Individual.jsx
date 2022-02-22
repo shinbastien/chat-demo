@@ -51,11 +51,11 @@ function TabPanel(props) {
 
 export default function Individual({ stateChanger, ...props }) {
 	const location = useLocation();
-
+	const { individual } = props;
 	const [recvideo, setrecvideo] = useState([]);
-
 	const { groupID, userName } = location.state;
 	const [value, setValue] = React.useState(0);
+	console.log(individual);
 
 	const handleChange = (event, newValue) => {
 		setValue(newValue);
@@ -65,13 +65,12 @@ export default function Individual({ stateChanger, ...props }) {
 		navigator.geolocation.getCurrentPosition(function (position) {
 			const lat = position.coords.latitude;
 			const lng = position.coords.longitude;
-
 			loadpointInfo(lat, lng);
 		});
 		return () => {
 			stateChanger(false); // This worked for me
 		};
-	}, [stateChanger]);
+	}, [individual]);
 
 	const loadpointInfo = async (lat, lng) => {
 		try {
@@ -97,18 +96,20 @@ export default function Individual({ stateChanger, ...props }) {
 	};
 
 	return (
-		<Wrapper>
-			<BarWrapper>
-				<div></div>
-				<button onClick={() => stateChanger(false)}>
-					<FontAwesomeIcon icon={faXmark} />
-				</button>
-			</BarWrapper>
+		individual && (
+			<Wrapper>
+				<BarWrapper>
+					<div></div>
+					<button onClick={() => stateChanger(false)}>
+						<FontAwesomeIcon icon={faXmark} />
+					</button>
+				</BarWrapper>
 
-			<TabPanel value={value} index={0}>
-				Search
-				<Search value={recvideo}></Search>
-			</TabPanel>
-		</Wrapper>
+				<TabPanel value={value} index={0}>
+					Search
+					<Search value={recvideo}></Search>
+				</TabPanel>
+			</Wrapper>
+		)
 	);
 }

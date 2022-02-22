@@ -21,7 +21,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VideoCard from "./VideoCard/VideoCard";
-import { readFromFirebase, searchOnYoutube } from "../lib/functions/firebase";
+import { searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas/Canvas";
 import Individual from "../Individual/Individual";
@@ -185,7 +185,7 @@ ResultList.Item = styled.div`
 export default function NewMapwindow(props) {
 	//map
 	const [map, setMap] = useState(null);
-	const { userName, keepPlace, loading } = props;
+	const { userName, loading } = props;
 
 	//root-tracking
 	const [start, setStart] = useState(null);
@@ -376,26 +376,26 @@ export default function NewMapwindow(props) {
 		}
 	}, [pathMetaData]);
 
-	const onClickMarker = (e) => {
-		const latlng = e.latLng;
-		const marker = new Tmapv2.Marker({
-			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
-			map: map,
-		});
+	// const onClickMarker = (e) => {
+	// 	const latlng = e.latLng;
+	// 	const marker = new Tmapv2.Marker({
+	// 		position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
+	// 		map: map,
+	// 	});
 
-		const buttonWindow = `
-				<div>
-				<input type="text"/>
-					<button onClick={}>Keep 등록</button>
-				</div>
-			`;
-		const infoWindow = new Tmapv2.InfoWindow({
-			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
-			content: `${buttonWindow}`,
-			map: map,
-			type: 2,
-		});
-	};
+	// 	const buttonWindow = `
+	// 			<div>
+	// 			<input type="text"/>
+	// 				<button onClick={}>Keep 등록</button>
+	// 			</div>
+	// 		`;
+	// 	const infoWindow = new Tmapv2.InfoWindow({
+	// 		position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
+	// 		content: `${buttonWindow}`,
+	// 		map: map,
+	// 		type: 2,
+	// 	});
+	// };
 
 	useMemo(() => {
 		if (markerC) {
@@ -403,9 +403,9 @@ export default function NewMapwindow(props) {
 				const { _lat, _lng } = markerC.getPosition();
 				// setSharing(true);
 				// loadpointInfo(_lat, _lng);
-				if (socket && connected) {
-					socket.emit("start shareVideo", videoID);
-				}
+				// if (socket && connected) {
+				// 	socket.emit("start shareVideo", videoID);
+				// }
 			});
 		}
 	}, [markerC, socket, connected]);
@@ -1077,19 +1077,13 @@ export default function NewMapwindow(props) {
 			) : (
 				<></>
 			)}
-			{/* {sharing && (
-				<VideoWrapper>
-					<ShareVideo
-						stateChanger={setSharing}
-						userName={userName}
-						videoName={videoID}
-					></ShareVideo>
-				</VideoWrapper>
-			)} */}
 
 			{individual && (
 				<IndividualWrapper>
-					<Individual stateChanger={setIndividual}></Individual>
+					<Individual
+						individual={individual}
+						stateChanger={setIndividual}
+					></Individual>
 				</IndividualWrapper>
 			)}
 			<MapButtonWrapper>
@@ -1119,17 +1113,14 @@ export default function NewMapwindow(props) {
 						</ResultList>
 					)}
 				</SearchForm>
-				{keepPlace ? (
-					<InfoMenu
-						map={map}
-						totalDaytime={totalDaytime}
-						start={start}
-						end={end}
-						keepPlace={keepPlace}
-					></InfoMenu>
-				) : (
-					<div></div>
-				)}
+
+				<InfoMenu
+					map={map}
+					totalDaytime={totalDaytime}
+					start={start}
+					end={end}
+				></InfoMenu>
+
 				<Draggable>
 					<BoardWrapper>
 						<Stack direction="row" alignItems="center" justifyContent="center">

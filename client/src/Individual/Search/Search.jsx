@@ -12,9 +12,13 @@ import {
 	faSpinner,
 	faMagnifyingGlassLocation,
 	faGlobe,
+	faImage,
 } from "@fortawesome/free-solid-svg-icons";
+import { faYoutube } from "@fortawesome/free-brands-svg-icons";
+import ShareVideo from "../../Mapwindow/ShareVideo/ShareVideo";
 
 import { Divider } from "@mui/material";
+import { SearchImgResult } from "./SearchResult";
 
 const KeyWordWrapper = styled.div`
 	padding: 3%;
@@ -69,15 +73,26 @@ const ResultWrapper = styled.div`
 const Search = (props) => {
 	const termInput = useInput("");
 	const [submit, setSubmit] = useState(false);
-	const [videos, setVideos] = useState([]);
+	const [videos, setVideos] = useState({
+		locInfo: null,
+		videoInfo: null,
+	});
 	const [keyword, setKeyword] = useState();
 	const inputRef = useRef();
+	const [sharing, setSharing] = useState(false);
+	const [share, setShare] = useState({});
+	const [imgs, setImgs] = useState([
+		{ url: "/1_img.jpeg" },
+		{ url: "/2_img.jpeg" },
+		{ url: "/3_img.jpg" },
+	]);
 
 	const filterWords = props.value.filter(
 		(prop) => prop.name.includes("주차장") === false,
 	);
 
 	useMemo(() => filterWords, [props.value]);
+	console.log(keyword);
 
 	const onClickFocus = (event) => {
 		event.preventDefault();
@@ -97,21 +112,26 @@ const Search = (props) => {
 				params: {
 					key: process.env.REACT_APP_YOUTUBE_API_KEY,
 					part: "snippet",
-					q: `${keyword}`,
+					q: `${keyword ? keyword : termInput.value}`,
 					type: "video",
 					videoEmbeddable: "true",
 				},
 			});
 			if (videos.length > 0) {
-				setVideos([]);
+				setVideos(null);
 			}
-			setVideos(items);
+			setVideos({
+				locInfo: filterWords.filter((i) => i.name.includes(keyword)),
+				videoInfo: items,
+			});
 
 			setSubmit(true);
 		} catch (err) {
 			console.log(err);
 		}
 	}
+
+	console.log(videos);
 
 	return (
 		<div>
@@ -164,10 +184,31 @@ const Search = (props) => {
 							<FontAwesomeIcon icon={faGlobe} />
 							{submit ? ` 검색 결과: ` + keyword : null}
 						</div>
-						{submit && videos.length > 0 ? (
-							<SearchResult videos={videos}></SearchResult>
+						{sharing && (
+							<ShareVideo
+								videoName={Object.keys(share)[0]}
+								locInfo={videos.locInfo[0]}
+							></ShareVideo>
+						)}
+						{submit && videos.videoInfo.length > 0 ? (
+							<div>
+								<FontAwesomeIcon icon={faYoutube} />
+								&nbsp; Video
+								<SearchResult
+									share={share}
+									setShare={setShare}
+									setSharing={setSharing}
+									videos={videos.videoInfo}
+								></SearchResult>
+							</div>
 						) : (
-							" 검색어를 입력하여 주세요"
+							<div>" 검색어를 입력하여 주세요"</div>
+						)}
+						{submit && imgs.length && (
+							<div>
+								<FontAwesomeIcon icon={faImage} /> &nbsp; Image
+								<SearchImgResult imgs={imgs}></SearchImgResult>
+							</div>
 						)}
 					</ResultWrapper>
 				</Grid>

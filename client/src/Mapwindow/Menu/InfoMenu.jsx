@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Draggable from "react-draggable"; // The default
+import { readFromFirebase } from "../../lib/functions/firebase";
 
 const MenuWrapper = styled.div`
 	width: 300px;
@@ -98,6 +99,7 @@ const VisitedWrapper = styled.div`
 `;
 
 const KeepPlaceCard = (props) => {
+	console.log(props.info);
 	const { coords, date, id, title, url, visited } = props.info;
 	const { map } = props;
 
@@ -167,16 +169,24 @@ const KeepPlaceCard = (props) => {
 // };
 
 const InfoMenu = (props) => {
-	const { map, totalDaytime, start, end, keepPlace } = props;
-	console.log("I am rendering");
+	const { map, totalDaytime, start, end } = props;
 
 	const [keepOpen, setKeepOpen] = useState(true);
 	const [shareOpen, setShareOpen] = useState(true);
-	const [savePlace, setSavePlace] = useState();
+	const [savePlace, setSavePlace] = useState([]);
 
-	useMemo(() => {
-		setSavePlace(keepPlace);
-	}, [keepPlace]);
+	// useMemo(() => {
+	// 	setSavePlace(keepPlace);
+	// }, [keepPlace]);
+
+	useEffect(async () => {
+		readFromFirebase().then((data) => {
+			console.log(data);
+			setSavePlace(Object.entries(data[0]));
+		});
+	}, []);
+
+	console.log(savePlace);
 
 	return (
 		<Draggable>
