@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { useLocation } from "react-router-dom";
+import {useSocket} from "../lib/socket"
 
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -56,6 +57,7 @@ export default function Individual({ stateChanger, ...props }) {
 
 	const { groupID, userName } = location.state;
 	const [value, setValue] = React.useState(0);
+	const {socket, connected} = useSocket();
 
 	const handleChange = (event, newValue) => {
 		setValue(newValue);
@@ -73,6 +75,21 @@ export default function Individual({ stateChanger, ...props }) {
 			stateChanger(false); // This worked for me
 		};
 	}, [stateChanger]);
+
+	useEffect(() => {
+		if (socket && connected) {
+			socket.on("share individualsearch video", (recvideo) => {
+				setrecvideo(recvideo);
+			});
+		}
+		return () => {
+			if (socket && connected) {
+				socket.off("share individualsearch video", (recvideo) => {
+					setrecvideo(recvideo);
+				});
+			}
+		}
+	}, [socket, connected])
 
 	const loadpointInfo = async (lat, lng) => {
 		try {

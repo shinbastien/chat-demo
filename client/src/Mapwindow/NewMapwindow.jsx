@@ -18,6 +18,7 @@ import {
 	faLocationDot,
 	faMagnifyingGlass,
 	faMapLocationDot,
+	faArrowUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VideoCard from "./VideoCard/VideoCard";
@@ -106,11 +107,18 @@ const BoardWrapper = styled.div`
 	}
 `;
 
-const CurrentLoactionWrapper = styled.div`
+const CurrentLocationWrapper = styled.div`
 	position: absolute;
 	bottom: 0;
 	z-index: 222;
 	margin: 0 0 20px 20px;
+`;
+
+const ShareWrapper = styled.div`
+	position: absolute;
+	bottom: 0;
+	z-index: 222;
+	margin: 0 0 80px 20px;
 `;
 
 const ButtonWrapper = styled.button`
@@ -238,6 +246,13 @@ export default function NewMapwindow(props) {
 		swlat: "",
 		swlng: "",
 	});
+
+	// sharingItems
+	const [sendShare, setSendShare] = useState(false);
+	const [receiveShare, setReceiveShare] = useState(false);
+	const [sharingRecVideo, setSharingRecVideo] = useState(false);
+	const [sharingIndividual, setSharingIndividual] = useState(false);
+	const [sharingLocation, setSharingLocation] = useState(false);
 
 	const [individual, setIndividual] = useState(false);
 
@@ -412,9 +427,6 @@ export default function NewMapwindow(props) {
 				const { _lat, _lng } = markerC.getPosition();
 				// setSharing(true);
 				// loadpointInfo(_lat, _lng);
-				if (socket && connected) {
-					socket.emit("start shareVideo", videoID);
-				}
 			});
 		}
 	}, [markerC, socket, connected]);
@@ -937,6 +949,21 @@ export default function NewMapwindow(props) {
 		map.setCenter(currentPosition);
 	};
 
+	const onShareCurrent = (e) => {
+		// Searched Video after drawing
+		if (socket && connected) {
+			if (!sendShare) {
+				socket.emit("start sendShare request");
+			}
+			else {
+				socket.emit("finish sendShare request");
+				setSendShare(!sendShare);
+				alert("you finished sharing");
+			}
+			
+		}
+	};
+
 	const getPositionFromData = (data) => {
 		const noorLat = Number(data.noorLat);
 		const noorLon = Number(data.noorLon);
@@ -1058,14 +1085,86 @@ export default function NewMapwindow(props) {
 		})
 	}, [socket, connected])
 
+	//
+	useEffect(() => {
+	if (socket && connected) {
+		socket.on("sendshare response", (current, user) => {
+			if (current != user) {
+				alert(`already somebody is sharing:${current}`);
+			}
+			else {
+				alert("now you are sharing Host");
+				setSendShare(!sendShare);
+			}
+		})
+	}
+	}, [sendShare, socket, connected]) 
+
+	// Sending Share Mode
+	useEffect(() => { 
+		if (sendShare) {
+			if (socket && connected) {
+				if (recvideoLoc.length > 0) {
+					socket.emit("sendshare videoLoc", recvideoLoc);
+				}
+			}
+		}
+		else {
+			return;
+		}
+
+	}, [sendShare, recvideoLoc, socket, connected])
+
+	// Receving Share Mode
+	useEffect(() => {
+		if (socket && connected) {
+			socket.on("start sharemode", (user) => {
+				alert(`${user} is now sharing!`);
+				setReceiveShare(true);
+			})
+
+			socket.on("finish sharemode", (user) => {
+				setReceiveShare(false);
+				alert(`${user} finished sharing`);
+			})
+
+			socket.on("receive sharedvideoLoc", (videoLoc) => {
+				setrecvideoLoc(videoLoc);
+			})
+		}
+		return () => {
+			if (socket && connected) {
+				socket.off("receive sharedvideoLoc", (videoLoc) => {
+					setrecvideoLoc(videoLoc);
+					console.log("received sharevideoLoc")
+				})
+
+				socket.off("finish sharemode", () => {
+					setReceiveShare(false);
+				})
+	
+				socket.off("receive sharedvideoLoc", (videoLoc) => {
+					setrecvideoLoc(videoLoc);
+				})
+			}
+		}
+	}, [receiveShare,socket, connected])
 
 	return (
 		<React.Fragment>
-			{searching &&
+			{receiveShare ? (
 				recvideoLoc.length > 0 &&
 				recvideoLoc.map((list, idx) => (
 					<VideoCard key={idx} info={list}></VideoCard>
-				))}
+				))
+			) : (
+				searching &&
+				recvideoLoc.length > 0 &&
+				recvideoLoc.map((list, idx) => (
+					<VideoCard key={idx} info={list}></VideoCard>
+				))
+			)
+			}
 
 			{chosenEmoji && (
 				<EmojiReaction
@@ -1187,11 +1286,17 @@ export default function NewMapwindow(props) {
 					</BoardWrapper>
 				</Draggable>
 			</MapButtonWrapper>
-			<CurrentLoactionWrapper>
+			<CurrentLocationWrapper>
 				<IconButton onClick={onLoadCurrent}>
 					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
 				</IconButton>
-			</CurrentLoactionWrapper>
+			</CurrentLocationWrapper>
+
+			<ShareWrapper>
+				<IconButton onClick={onShareCurrent}>
+					<FontAwesomeIcon style={{fontSize: "3vw" }} icon={faArrowUpRightFromSquare} />
+				</IconButton>
+			</ShareWrapper>
 			{active === "emoji" && emojiResult ? (
 				<EmojiWrapper>
 					<Picker

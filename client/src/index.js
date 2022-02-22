@@ -8,11 +8,12 @@ import Home from "./Home/Home";
 import Map from "./Pages/Map";
 import reportWebVitals from "./reportWebVitals";
 import GlobalStyles from "./Styles/globalStyles";
-
+// "http://localhost:4000"
+// "https://social-moving.herokuapp.com/"
 ReactDOM.render(
 	<BrowserRouter>
 		<GlobalStyles />
-		<SocketProvider url="https://social-moving.herokuapp.com/">
+		<SocketProvider url="http://localhost:4000">
 			<Routes>
 				<Route exact path="/" element={<Home />} />
 				<Route exact path=":roomID" element={<Map />} />

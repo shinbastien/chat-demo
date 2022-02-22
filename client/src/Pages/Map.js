@@ -22,7 +22,6 @@ const ImgWrapper = styled.img`
 	display: block;
 	width: 10%;
 `;
-const SOCKET_SERVER_URL = "https://social-moving.herokuapp.com/";
 
 const TextWrapper = styled.span`
 	display: flex;
