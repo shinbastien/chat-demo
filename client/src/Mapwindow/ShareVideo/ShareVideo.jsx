@@ -174,8 +174,8 @@ function ShareVideo({ stateChanger, userName, videoName, locInfo }) {
 				placeID: locInfo.id,
 				placeName: locInfo.name,
 				coords: {
-					lat: locInfo.noorLat,
-					lng: locInfo.noorLon,
+					_lat: locInfo.noorLat,
+					_long: locInfo.noorLon,
 				},
 			});
 		});

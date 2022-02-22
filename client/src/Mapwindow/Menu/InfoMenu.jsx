@@ -99,24 +99,24 @@ const VisitedWrapper = styled.div`
 `;
 
 const KeepPlaceCard = (props) => {
-	console.log(props.info);
-	const { coords, date, id, title, url, visited } = props.info;
+	const { coords, date, id, title, videoInfo, visited } = props.info[1];
 	const { map } = props;
+	console.log(coords);
 
-	const onClickKeep = (list) => {
-		const { _lat, _long } = list.coords;
+	const onClickKeep = (coords, title) => {
+		const { _lat, _long } = coords;
 		const keepLocation = new Tmapv2.LatLng(_lat, _long);
 		const newMarker = new Tmapv2.Marker({
 			position: keepLocation,
 			icon: point2,
 			iconSize: new Tmapv2.Size(24, 24),
 			map: map,
-			title: list.title,
+			title: title,
 		});
 		newMarker.addListener("mouseenter", function (evt) {
 			new Tmapv2.InfoWindow({
 				position: keepLocation,
-				content: `<img src=${list.url} width="300px" height="auto"></img>`,
+				content: `<img src=${videoInfo.thumnails.url} width="300px" height="auto"></img>`,
 				type: 2,
 				map: map,
 			});
@@ -127,66 +127,34 @@ const KeepPlaceCard = (props) => {
 	};
 
 	return (
-		<button variant="outlined" onClick={() => onClickKeep(props.info)}>
-			<img src={url} width="100%" height="auto"></img>
+		<button variant="outlined" onClick={() => onClickKeep(coords, title)}>
+			<img src={videoInfo.thumnails.url} width="100%" height="auto"></img>
 			<VisitedWrapper visited={visited}></VisitedWrapper>
 		</button>
 	);
 };
 
-// const SharedPlaceCard = (props) => {
-// 	const { coords, date, id, title, url, visited } = props.info;
-// 	const { map } = props;
-
-// 	const onClickKeep = (list) => {
-// 		const { _lat, _long } = list.coords;
-// 		const keepLocation = new Tmapv2.LatLng(_lat, _long);
-// 		const newMarker = new Tmapv2.Marker({
-// 			position: keepLocation,
-// 			icon: point2,
-// 			iconSize: new Tmapv2.Size(24, 24),
-// 			map: map,
-// 			title: list.title,
-// 		});
-// 		newMarker.addListener("mouseenter", function (evt) {
-// 			new Tmapv2.InfoWindow({
-// 				position: keepLocation,
-// 				content: `<img src=${list.url} width="300px" height="auto"></img>`,
-// 				type: 2,
-// 				map: map,
-// 			});
-// 		});
-
-// 		newMarker.setMap(map);
-// 		map.setCenter(keepLocation);
-// 	};
-// 	return (
-// 		<button variant="outlined" onClick={() => onClickKeep(props.info)}>
-// 			<img src={url} width="100%" height="auto"></img>
-// 			<VisitedWrapper visited={visited}></VisitedWrapper>
-// 		</button>
-// 	);
-// };
-
 const InfoMenu = (props) => {
 	const { map, totalDaytime, start, end } = props;
 
 	const [keepOpen, setKeepOpen] = useState(true);
-	const [shareOpen, setShareOpen] = useState(true);
-	const [savePlace, setSavePlace] = useState([]);
+	const [savePlace, setSavePlace] = useState(null);
 
-	// useMemo(() => {
-	// 	setSavePlace(keepPlace);
-	// }, [keepPlace]);
+	useEffect(() => {
+		let active = true;
+		load();
+		return () => {
+			active = false;
+		};
+		async function load() {
+			const result = await readFromFirebase();
 
-	useEffect(async () => {
-		readFromFirebase().then((data) => {
-			console.log(data);
-			setSavePlace(Object.entries(data[0]));
-		});
+			if (!active) {
+				return;
+			}
+			setSavePlace(result);
+		}
 	}, []);
-
-	console.log(savePlace);
 
 	return (
 		<Draggable>

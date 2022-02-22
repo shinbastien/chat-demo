@@ -56,9 +56,11 @@ async function readFromFirebase() {
 
 	try {
 		const dbRef = await ref(db, `keeps/`);
-		await onValue(dbRef, (snapshot) => {
+		onValue(dbRef, (snapshot) => {
 			const docRef = snapshot.val();
-			dataInstance.push(docRef);
+			Object.entries(docRef).forEach((doc) => {
+				dataInstance.push(doc);
+			});
 		});
 
 		return dataInstance;
