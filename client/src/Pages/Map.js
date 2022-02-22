@@ -11,8 +11,6 @@ import logoWhite from "../Styles/source/logo_w.png";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
 
-import { readFromFirebase, searchOnYoutube } from "../lib/functions/firebase";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import { useSocket } from "../lib/socket";
