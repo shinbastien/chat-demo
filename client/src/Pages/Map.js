@@ -58,7 +58,7 @@ function Map() {
 
 	return (
 		<>
-			<AppBar postiion="static" style={{ backgroundColor: "#151ca2" }}>
+			<AppBar postiion="static" style={{ backgroundColor: "#003249" }}>
 				<Typography
 					variant="h5"
 					noWrap

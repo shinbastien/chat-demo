@@ -1,5 +1,5 @@
-import React, { useState} from "react";
-import { Link} from "react-router-dom";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import logo from "../Styles/source/logo.png";
 
 import Grid from "@mui/material/Grid";
@@ -78,7 +78,13 @@ function Home() {
 						userName: username,
 					}}
 				>
-					<Button variant="contained" style={{ fontSize: "1.5rem" }}>
+					<Button
+						variant="contained"
+						style={{
+							fontSize: "1.5rem",
+							backgroundColor: "#007ea7",
+						}}
+					>
 						입장하기
 					</Button>
 				</Link>

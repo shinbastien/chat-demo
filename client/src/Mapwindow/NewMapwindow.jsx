@@ -18,7 +18,9 @@ import {
 	faLocationDot,
 	faMagnifyingGlass,
 	faMapLocationDot,
-	faArrowUpRightFromSquare,
+	faTowerBroadcast,
+	faEye,
+	faEyeSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VideoCard from "./VideoCard/VideoCard";
@@ -98,10 +100,10 @@ const BoardWrapper = styled.div`
 
 		> button {
 			&:active {
-				color: #151ca2;
+				color: ${(props) => props.theme.primaryColor};
 			}
 			&.active {
-				color: #151ca2;
+				color: ${(props) => props.theme.primaryColor};
 			}
 		}
 	}
@@ -444,18 +446,38 @@ export default function NewMapwindow(props) {
 	}, [socket, connected]);
 
 	useMemo(async () => {
-		if (recvideo.length > 0) {
-			for (let i = 0; i < recvideo.length; i++) {
-				const video = await searchOnYoutube(recvideo[i].name);
-				// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
-				setrecvideoLoc((recvideoLoc) => [
-					...recvideoLoc,
-					{ [recvideo[i].name]: video },
-					// { [recvideo[i].name]: video[0] },
-				]);
+		let active = true;
+		fetchData();
+		return () => {
+			active = false;
+		};
+
+		async function fetchData() {
+			if (recvideo.length > 0) {
+				for (let i = 0; i < recvideo.length; i++) {
+					let video = await searchOnYoutube(recvideo[i].name);
+
+					if (video === undefined) {
+						video = {
+							id: { kind: null, videoId: null },
+						};
+					}
+					// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
+					setrecvideoLoc((recvideoLoc) => [
+						...recvideoLoc,
+						{ [recvideo[i].name]: video },
+						// { [recvideo[i].name]: video[0] },
+					]);
+				}
+
+				if (!active) {
+					return;
+				}
 			}
 		}
 	}, [recvideo]);
+
+	console.log(recvideoLoc);
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -1154,6 +1176,8 @@ export default function NewMapwindow(props) {
 		};
 	}, [receiveShare, socket, connected]);
 
+	console.log(recvideoLoc);
+
 	return (
 		<React.Fragment>
 			{receiveShare
@@ -1290,7 +1314,7 @@ export default function NewMapwindow(props) {
 				<IconButton onClick={onShareCurrent}>
 					<FontAwesomeIcon
 						style={{ fontSize: "3vw" }}
-						icon={faArrowUpRightFromSquare}
+						icon={sendShare ? faEyeSlash : faEye}
 					/>
 				</IconButton>
 			</ShareWrapper>
