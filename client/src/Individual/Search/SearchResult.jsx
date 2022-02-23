@@ -45,11 +45,12 @@ export const SearchImgResult = ({ imgs }) => {
 	);
 };
 
-const SearchResult = ({ share, setShare, setSharing, videos }) => {
+const SearchResult = ({ share, sharing, setShare, setSharing, videos }) => {
 	function onClickShare(element) {
 		const { etag, id, snippet } = element;
 		setShare((share) => ({ [id.videoId]: true }));
-		setSharing(true);
+		console.log(share);
+		setSharing(!sharing);
 	}
 
 	return (
@@ -75,7 +76,7 @@ const SearchResult = ({ share, setShare, setSharing, videos }) => {
 									}
 									onClick={() => onClickShare(video)}
 								>
-									{share && Object.keys(share)[0] === video.id.videoId
+									{sharing && Object.keys(share)[0] === video.id.videoId
 										? "공유 중지"
 										: "공유하기"}
 								</button>
