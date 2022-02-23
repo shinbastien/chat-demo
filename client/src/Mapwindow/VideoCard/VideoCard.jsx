@@ -101,11 +101,10 @@ const DeleteTagButton = styled.div`
 	}
 `;
 
-const VideoCard = (props) => {
-	// const { url, width, height } = props.info;
+const VideoCard = ({ info }) => {
 	const [loading, setLoading] = useState(true);
-	const { url, width, height } = Object.values(props.info)[0];
-	const [info, setInfo] = useState({
+	const { id } = Object.values(info)[0];
+	const [data, setData] = useState({
 		x: window.innerWidth / 6 + Math.floor(Math.random() * 70) * 8,
 		y: window.innerHeight / 6 + Math.floor(Math.random() * 70) * 8,
 		width: 320,
@@ -117,7 +116,7 @@ const VideoCard = (props) => {
 		loading && (
 			<Rnd
 				style={{ zIndex: 9 }}
-				default={info}
+				default={data}
 				lockAspectRatio={16 / 9}
 				enableResizing={{
 					top: false,
@@ -134,21 +133,21 @@ const VideoCard = (props) => {
 					onMouseEnter={() => setHover(true)}
 					onMouseLeave={() => setHover(false)}
 				>
-					{/* <iframe
-				title="youtubeTrailer"
-				width="100%"
-				height="100%"
-				src={`https://www.youtube.com/embed/${id}`}
-				frameBorder="0"
-				allow="accelerometer; autoplay;"
-				allowFullScreen
-			/> */}
 					<Cover />
-					<img
+					{/* <img
 						src={process.env.PUBLIC_URL + url}
 						width="100%"
 						height="100%"
-					></img>
+					></img> */}
+					<iframe
+						title="youtubeTrailer"
+						width="100%"
+						height="100%"
+						src={`https://www.youtube.com/embed/${id.videoId}`}
+						frameBorder="0"
+						allow="accelerometer; autoplay;"
+						allowFullScreen
+					/>
 					{hover && (
 						<DeleteVideoButton onClick={() => setLoading(false)}>
 							<svg

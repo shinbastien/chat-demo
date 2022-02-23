@@ -4,7 +4,7 @@ import { initializeApp } from "firebase/app";
 import "firebase/auth";
 import { getFirestore, getDocs, collection } from "firebase/firestore";
 import { getDatabase, ref, set, get, child, onValue } from "firebase/database";
-import data from "../../data";
+// import data from "../../data";
 
 import axios from "axios";
 
@@ -75,30 +75,33 @@ async function searchOnYoutube(props) {
 	const API_URL = "https://www.googleapis.com/youtube/v3/search";
 
 	try {
-		// const {
-		// 	data: { items },
-		// } = await axios(API_URL, {
-		// 	method: "GET",
-		// 	params: {
-		// 		key: process.env.REACT_APP_YOUTUBE_API_KEY,
-		// 		part: "snippet",
-		// 		q: `대전 유성구` + props,
-		// 		maxResults: 1,
-		// 	},
-		// });
-		// return items;
+		const {
+			data: { items },
+		} = await axios(API_URL, {
+			method: "GET",
+			params: {
+				key: process.env.REACT_APP_YOUTUBE_API_KEY,
+				part: "snippet",
+				q: `대전 유성구` + props,
+				maxResults: 1,
+			},
+		});
+
+		console.log(items);
+
+		return items[0];
 
 		//add dummy data
-		const s = data[num];
+		// const s = data[num];
 
-		num += 1;
-		if (num == 5) {
-			num = 0;
-		}
-		return s;
+		// num += 1;
+		// if (num == 5) {
+		// 	num = 0;
+		// }
+		// return s;
 	} catch (err) {
 		console.log(err);
-		return data;
+		// return data;
 	}
 }
 

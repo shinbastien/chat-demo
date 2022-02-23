@@ -5,6 +5,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Divider } from "@mui/material";
 import styled from "styled-components";
 import point2 from "../../Styles/source/point2.png";
+import youtubelogo from "../../Styles/source/youtube-square-brands.svg";
 import {
 	faAngleDown,
 	faAngleUp,
@@ -101,24 +102,32 @@ const VisitedWrapper = styled.div`
 const KeepPlaceCard = (props) => {
 	const { coords, date, id, title, videoInfo, visited } = props.info[1];
 	const { map } = props;
+	const [infoMarker, setInfomarker] = useState([]);
 
 	const onClickKeep = (coords, title) => {
 		const { _lat, _long } = coords;
 		const keepLocation = new Tmapv2.LatLng(_lat, _long);
 		const newMarker = new Tmapv2.Marker({
 			position: keepLocation,
-			icon: point2,
+			icon: youtubelogo,
 			iconSize: new Tmapv2.Size(24, 24),
 			map: map,
 			title: title,
 		});
+
+		const createInfo = new Tmapv2.InfoWindow({
+			position: keepLocation,
+			content: `<img src=${videoInfo.thumnails.url} width="300px" height="auto"></img>`,
+			type: 2,
+			map: map,
+		});
+
 		newMarker.addListener("mouseenter", function (evt) {
-			new Tmapv2.InfoWindow({
-				position: keepLocation,
-				content: `<img src=${videoInfo.thumnails.url} width="300px" height="auto"></img>`,
-				type: 2,
-				map: map,
-			});
+			createInfo.setVisible(true);
+		});
+
+		newMarker.addListener("mouseleave", function (evt) {
+			createInfo.setVisible(false);
 		});
 
 		newMarker.setMap(map);
