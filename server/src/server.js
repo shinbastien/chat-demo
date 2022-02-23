@@ -166,6 +166,21 @@ io.on("connection", (socket) => {
 		socket.broadcast.to(socket.roomName).emit("receive sharedvideoLoc", videoLoc);
 	});
 
+	socket.on("sendshare individual", () => {
+		socket.broadcast.to(socket.roomName).emit("receive share individual");
+	})
+
+	socket.on("share individual searchlist", (recvideo) => {
+		socket.broadcast.to(socket.roomName).emit("receive individual searchlist", recvideo);
+	})
+
+	socket.on("send keyword individual search", (keyword) => {
+		socket.broadcast.to(socket.roomName).emit("receive keyword individual search", keyword);
+	})
+
+	socket.on("send searched videos", (videos) => {
+		 socket.broadcast.to(socket.roomName).emit("receive searched videos", videos);
+	})
 	// Leave the room if the user closes the socket
 	socket.on("disconnect", () => {
 		console.log("socket disconnected");

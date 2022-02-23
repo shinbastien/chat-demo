@@ -101,7 +101,6 @@ const VisitedWrapper = styled.div`
 const KeepPlaceCard = (props) => {
 	const { coords, date, id, title, videoInfo, visited } = props.info[1];
 	const { map } = props;
-	console.log(coords);
 
 	const onClickKeep = (coords, title) => {
 		const { _lat, _long } = coords;
@@ -134,10 +133,12 @@ const KeepPlaceCard = (props) => {
 	);
 };
 
+const MemoKeepPlaceCard = React.memo(KeepPlaceCard);
+
 const InfoMenu = (props) => {
 	const { map, totalDaytime, start, end } = props;
 
-	const [keepOpen, setKeepOpen] = useState(true);
+	const [keepOpen, setKeepOpen] = useState(false);
 	const [savePlace, setSavePlace] = useState(null);
 
 	useEffect(() => {
@@ -154,7 +155,7 @@ const InfoMenu = (props) => {
 			}
 			setSavePlace(result);
 		}
-	}, []);
+	}, [keepOpen]);
 
 	return (
 		<Draggable>
@@ -199,47 +200,20 @@ const InfoMenu = (props) => {
 								<div className="badge">{savePlace && savePlace.length}</div>
 							</div>
 							<button onClick={() => setKeepOpen(!keepOpen)}>
-								<FontAwesomeIcon icon={keepOpen ? faAngleUp : faAngleDown} />
+								<FontAwesomeIcon icon={keepOpen ? faAngleDown : faAngleUp} />
 							</button>
 						</span>
 						<div style={{ display: keepOpen ? "none" : "inline-block" }}>
 							{savePlace &&
 								savePlace.map((list, idx) => (
-									<KeepPlaceCard
+									<MemoKeepPlaceCard
 										key={idx}
 										map={map}
 										info={list}
-									></KeepPlaceCard>
+									></MemoKeepPlaceCard>
 								))}
 						</div>
 					</SubsubmenuWrapper>
-					{/* <SubsubmenuWrapper>
-						<span
-							style={{ fontWeight: 300, marginLeft: 20, fontSize: "1.3vw" }}
-							pt={3}
-							pb={3}
-						>
-							<span role="img" aria-label="Beach with Umbrella">
-								🏖️
-							</span>{" "}
-							Shared Places&nbsp;
-							<div className="badge">{savePlace && savePlace.length}</div>
-							<button onClick={() => setShareOpen(!shareOpen)}>
-								<FontAwesomeIcon icon={shareOpen ? faAngleUp : faAngleDown} />
-							</button>
-						</span>
-						<div style={{ display: shareOpen ? "none" : "inline-block" }}>
-							{savePlace &&
-								savePlace.map((list, idx) => (
-									<SharedPlaceCard
-										key={idx}
-										map={map}
-										info={list}
-									></SharedPlaceCard>
-								))}
-						</div>
-						<Box></Box>
-					</SubsubmenuWrapper> */}
 				</SubmenuWrapper>
 			</MenuWrapper>
 		</Draggable>

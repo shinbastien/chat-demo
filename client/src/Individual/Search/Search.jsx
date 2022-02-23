@@ -1,5 +1,5 @@
 //search YouTube video
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import useInput from "../../lib/functions/useInput";
 import SearchResult from "./SearchResult";
 import axios from "axios";
@@ -19,6 +19,7 @@ import ShareVideo from "../../Mapwindow/ShareVideo/ShareVideo";
 
 import { Divider } from "@mui/material";
 import { SearchImgResult } from "./SearchResult";
+import { useSocket } from "../../lib/socket";
 
 const KeyWordWrapper = styled.div`
 	padding: 3%;
@@ -86,6 +87,9 @@ const Search = (props) => {
 		{ url: "/2_img.jpeg" },
 		{ url: "/3_img.jpg" },
 	]);
+	const { socket, connected } = useSocket();
+
+	// console.log(props);
 
 	const filterWords = props.value.filter(
 		(prop) => prop.name.includes("주차장") === false,
@@ -100,10 +104,44 @@ const Search = (props) => {
 		setKeyword(event.target.innerText);
 		inputRef.current.focus();
 		setSubmit(false);
+		// setSubmit(true);
+
+		if (props.share === "host") {
+			if (socket && connected) {
+				socket.emit("send keyword individual search", event.target.innerText);
+			}
+		}
 	};
 
+	useEffect(() => {
+		if (socket && connected) {
+			socket.on("receive keyword individual search", async (keyword) => {
+				setKeyword(keyword);
+				setSubmit(true);
+			});
+		}
+	}, [socket, connected]);
+
+	useEffect(() => {
+		if (socket && connected) {
+			if (props.share === "host") {
+				if (videos.length > 0) {
+					socket.emit("send searched videos", videos);
+				}
+				console.log("host");
+			} else if (props.share === "receiver") {
+				socket.on("receive searched videos", async (videos) => {
+					setVideos(videos);
+				});
+				console.log("receiver");
+			}
+		}
+		console.log("share", props.share);
+		console.log("videos", videos);
+	}, [props.share, videos, socket, connected]);
 	async function searchOnYoutube() {
 		const API_URL = "https://www.googleapis.com/youtube/v3/search";
+		console.log(inputRef.current.value, keyword);
 		try {
 			const {
 				data: { items },
@@ -112,9 +150,12 @@ const Search = (props) => {
 				params: {
 					key: process.env.REACT_APP_YOUTUBE_API_KEY,
 					part: "snippet",
-					q: `${keyword ? keyword : termInput.value}`,
-					type: "video",
+					q:
+						`-집 맛집 |가볼만한 곳 ` + inputRef.current.value
+							? inputRef.current.value
+							: keyword,
 					videoEmbeddable: "true",
+					type: "video",
 				},
 			});
 			if (videos.length > 0) {
@@ -146,7 +187,11 @@ const Search = (props) => {
 									searchOnYoutube();
 								}
 							}}
-						></input>
+							onChange={(e) => {
+								e.preventDefault();
+								setKeyword(e.target.value);
+							}}
+						/>
 						<Button variant="contained" onClick={searchOnYoutube}>
 							검색
 						</Button>

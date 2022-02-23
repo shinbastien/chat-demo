@@ -1113,11 +1113,15 @@ export default function NewMapwindow(props) {
 				if (recvideoLoc.length > 0) {
 					socket.emit("sendshare videoLoc", recvideoLoc);
 				}
+
+				if (individual) {
+					socket.emit("sendshare individual");
+				}
 			}
 		} else {
 			return;
 		}
-	}, [sendShare, recvideoLoc, socket, connected]);
+	}, [sendShare, individual, recvideoLoc, socket, connected]);
 
 	// Receving Share Mode
 	useEffect(() => {
@@ -1135,12 +1139,17 @@ export default function NewMapwindow(props) {
 			socket.on("receive sharedvideoLoc", (videoLoc) => {
 				setrecvideoLoc(videoLoc);
 			});
+
+			socket.on("receive share individual", () => {
+				setIndividual(true);
+			});
 		}
 		return () => {
 			if (socket && connected) {
 				socket.off("start sharemode");
 				socket.off("receive sharedvideoLoc");
 				socket.off("finish sharemode");
+				socket.off("receive share individual");
 			}
 		};
 	}, [receiveShare, socket, connected]);
@@ -1185,8 +1194,8 @@ export default function NewMapwindow(props) {
 						individual={individual}
 						stateChanger={setIndividual}
 						host={sendShare ? true : false}
-					></Individual>
-					{/* <Individual stateChanger={setIndividual} host={sendShare ? true : false} /> */}
+						receiver={receiveShare ? true : false}
+					/>
 				</IndividualWrapper>
 			)}
 			<MapButtonWrapper>
