@@ -29,7 +29,7 @@ const MenuWrapper = styled.div`
 
 	.title {
 		font-weight: 600;
-		color: #151ca1;
+		color: ${(props) => props.theme.color1};
 		margin: 20px;
 	}
 `;
@@ -82,6 +82,10 @@ const SubsubmenuWrapper = styled.div`
 		> button {
 			display: inline-block;
 			padding-left: 2%;
+			&:hover {
+				transition: all 0.5s;
+				transform: scale(0.9);
+			}
 
 			> img {
 				padding: 5%;
@@ -96,7 +100,8 @@ const VisitedWrapper = styled.div`
 	width: 10px;
 	height: 10px;
 	border-radius: 50px;
-	background-color: ${(props) => (props.visited === true ? "red" : "blue")};
+	background-color: ${(props) =>
+		props.visited === true ? "#e56b6f" : "#0081a7"};
 `;
 
 const KeepPlaceCard = (props) => {
@@ -188,7 +193,7 @@ const InfoMenu = (props) => {
 						</div>
 					)}
 					{totalDaytime.totalD ? (
-						<div>
+						<div className="info destination">
 							<li>
 								총 거리:{" "}
 								{totalDaytime.totalD < 1

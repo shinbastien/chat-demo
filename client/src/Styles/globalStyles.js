@@ -36,12 +36,13 @@ const GlobalStyles = createGlobalStyle`
         outline: none;
     }
 	button{
-		 background-color: transparent;
-    background-repeat: no-repeat;
-    border: none;
-    cursor: pointer;
-    overflow: hidden;
-    outline: none;
+		
+		background-color: transparent;
+   	 	background-repeat: no-repeat;
+    	border: none;
+    	cursor: pointer;
+    	overflow: hidden;
+    	outline: none;
 	}
 	button:focus {outline:0 !important;}
 

@@ -8,17 +8,30 @@ import Home from "./Home/Home";
 import Map from "./Pages/Map";
 import reportWebVitals from "./reportWebVitals";
 import GlobalStyles from "./Styles/globalStyles";
+import { ThemeProvider } from "styled-components";
+
 // "http://localhost:4000"
 // "https://social-moving.herokuapp.com/"
+
+const theme = {
+	primaryColor: "#003249",
+	color1: "#007ea7",
+	color2: "#80ced7",
+	color3: "#9ad1d4",
+	color4: "#ccdbdc",
+};
+
 ReactDOM.render(
 	<BrowserRouter>
 		<GlobalStyles />
-		<SocketProvider url="https://social-moving.herokuapp.com/">
-			<Routes>
-				<Route exact path="/" element={<Home />} />
-				<Route exact path=":roomID" element={<Map />} />
-			</Routes>
-		</SocketProvider>
+		<ThemeProvider theme={theme}>
+			<SocketProvider url="https://social-moving.herokuapp.com/">
+				<Routes>
+					<Route exact path="/" element={<Home />} />
+					<Route exact path=":roomID" element={<Map />} />
+				</Routes>
+			</SocketProvider>
+		</ThemeProvider>
 	</BrowserRouter>,
 	document.getElementById("root"),
 );

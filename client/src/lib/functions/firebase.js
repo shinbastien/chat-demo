@@ -84,6 +84,8 @@ async function searchOnYoutube(props) {
 				part: "snippet",
 				q: `대전 유성구` + props,
 				maxResults: 1,
+				videoEmbeddable: "true",
+				type: "video",
 			},
 		});
 

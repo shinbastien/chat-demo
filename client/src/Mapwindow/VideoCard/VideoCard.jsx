@@ -113,6 +113,7 @@ const VideoCard = ({ info }) => {
 	const [hover, setHover] = useState(false);
 
 	return (
+		id.videoId &&
 		loading && (
 			<Rnd
 				style={{ zIndex: 9 }}
@@ -129,16 +130,17 @@ const VideoCard = ({ info }) => {
 					topLeft: false,
 				}}
 			>
+				{/* <img
+						src={process.env.PUBLIC_URL + url}
+						width="100%"
+						height="100%"
+					></img> */}
 				<VideoWrapper
 					onMouseEnter={() => setHover(true)}
 					onMouseLeave={() => setHover(false)}
 				>
 					<Cover />
-					{/* <img
-						src={process.env.PUBLIC_URL + url}
-						width="100%"
-						height="100%"
-					></img> */}
+
 					<iframe
 						title="youtubeTrailer"
 						width="100%"
@@ -148,6 +150,7 @@ const VideoCard = ({ info }) => {
 						allow="accelerometer; autoplay;"
 						allowFullScreen
 					/>
+
 					{hover && (
 						<DeleteVideoButton onClick={() => setLoading(false)}>
 							<svg
