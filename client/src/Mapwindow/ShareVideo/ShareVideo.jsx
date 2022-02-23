@@ -9,37 +9,37 @@ import {
 	faPause,
 	faPlay,
 	faVolumeHigh,
-	faEllipsisVertical,
 } from "@fortawesome/free-solid-svg-icons";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Emoji from "./Emoji";
 
 import styled from "styled-components";
-import { writeToPlaceData } from "../../lib/functions/firebase";
+import { useMemo } from "react";
+import axios from "axios";
+import Bookmark from "./Bookmark";
 
 const Container = styled.div`
 	display: flex;
 	width: 100%;
+	padding: 3% 0 3% 0;
 
 	flex-direction: column;
 `;
 
-const BarWrapper = styled.div`
-	display: flex;
+// const BarWrapper = styled.div`
+// 	display: flex;
 
-	> div {
-		flex-grow: 10;
-	}
-	> button {
-		padding-right: 2%;
-		font-size: 3vw;
-	}
-`;
+// 	> div {
+// 		flex-grow: 10;
+// 	}
+// 	> button {
+// 		padding-right: 2%;
+// 		font-size: 3vw;
+// 	}
+// `;
+
 const VideoWrapper = styled.div`
 	aspect-ratio: 16 / 9;
 	width: 100%;
+	pointer-events: none;
 `;
 
 const VideoBarWrapper = styled.div`
@@ -47,20 +47,17 @@ const VideoBarWrapper = styled.div`
 	justify-content: space-between;
 	align-items: center;
 	width: 100%;
-	padding: 2%;
+	padding: 2% 0 2% 0;
+
+	&:hover {
+		background-color: #f5f5f5;
+	}
 
 	> button {
-		font-size: 2vw;
+		font-size: 1vw;
 		cursor: pointer;
 		padding: 3%;
 	}
-`;
-
-const EmojiWrapper = styled.div`
-	display: flex;
-	justify-content: space-between;
-	font-size: 4vw;
-	align-items: center;
 `;
 
 const ProgressBar = styled.span`
@@ -72,43 +69,52 @@ const ProgressBar = styled.span`
 
 	#progress {
 		position: absolute;
-		width: 1%;
+		width: ${(props) => (props.progress ? props.progress + "%" : "1%")}
 		height: 100%;
 		z-index: 999;
 		background-color: yellow;
+		
 	}
 `;
 
-function ShareVideo({ stateChanger, userName, videoName }) {
+function YTDurationToSeconds(duration) {
+	var match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+
+	match = match.slice(1).map(function (x) {
+		if (x != null) {
+			return x.replace(/\D/, "");
+		}
+	});
+
+	var hours = parseInt(match[0]) || 0;
+	var minutes = parseInt(match[1]) || 0;
+	var seconds = parseInt(match[2]) || 0;
+
+	return hours * 3600 + minutes * 60 + seconds;
+}
+
+function ShareVideo({ stateChanger, userName, videoName, locInfo }) {
 	const { socket, connected } = useSocket();
 	const youtubePlayer = useRef();
 	const userVideo = useRef();
-	// console.log("videoName is: ", videoName);
+
 	const [videoID, setVideoID] = useState(videoName);
 	const [peers, setPeers] = useState([]);
 	const location = useLocation();
 	const [playing, setPlaying] = useState(false);
 	const [nextPlaying, setNextPlaying] = useState(false);
+	const [videoContent, setVideoContent] = useState(null);
+	const [progress, setProgress] = useState(1);
+	const [currentT, setCurrentT] = useState(0);
+	const [width, setWidth] = useState(1);
+	const [start, setStart] = useState(false);
+	const [save, setSave] = useState(false);
 
-	const [anchorEl, setAnchorEl] = useState(null);
-	const open = Boolean(anchorEl);
+	// console.log("videoName is: ", videoID);
 
-	const [data, setData] = useState({
-		groupId: "a",
-		coords: "a",
-		userId: "a",
-		placeId: "a",
-		visited: false,
-	});
-
-	const handleClick = (event) => {
-		setAnchorEl(event.currentTarget);
-	};
-	const handleClose = async () => {
-		setAnchorEl(null);
-		console.log(data);
-		await writeToPlaceData(data);
-	};
+	useMemo(() => {
+		setVideoID(videoName);
+	}, [videoName]);
 
 	useEffect(() => {
 		if (!window.YT) {
@@ -118,12 +124,61 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 			window.onYouTubeIframeAPIReady = loadVideoPlayer;
-			console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
+			// console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
 		} else {
 			loadVideoPlayer();
-			console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
+			// console.log("prepare youtube player", window.onYoutubeIframeAPIReady);
 		}
 	}, []);
+
+	useEffect(() => {
+		if (nextPlaying) {
+			handleVideo("pause");
+			youtubePlayer.current.cueVideoByUrl(
+				`http://www.youtube.com/v/${videoID}?version=3`,
+			);
+		}
+
+		async function loadVideoOnYouTube(videoID) {
+			const API_URL = "https://www.googleapis.com/youtube/v3/videos";
+			try {
+				const {
+					data: { items },
+				} = await axios(API_URL, {
+					method: "GET",
+					params: {
+						key: process.env.REACT_APP_YOUTUBE_API_KEY,
+						part: "contentDetails, snippet",
+						id: videoID,
+					},
+				});
+				return items;
+			} catch (err) {
+				console.log(err);
+			}
+		}
+
+		loadVideoOnYouTube(videoID).then((obj) => {
+			const { duration } = obj[0].contentDetails;
+			const { thumbnails, title } = obj[0].snippet;
+			const { id } = obj[0];
+
+			const changeToDate = YTDurationToSeconds(duration);
+
+			setVideoContent({
+				id: id,
+				duration: changeToDate,
+				thumbnails: thumbnails.medium,
+				title: title,
+				placeID: locInfo.id,
+				placeName: locInfo.name,
+				coords: {
+					_lat: locInfo.noorLat,
+					_long: locInfo.noorLon,
+				},
+			});
+		});
+	}, [videoID]);
 
 	useEffect(() => {
 		const handleVideoSocket = (data) => {
@@ -132,16 +187,15 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 				youtubePlayer.current.playVideo();
 				setPlaying(true);
 			} else if (data === "pause") {
-
 				console.log("pause video");
 				youtubePlayer.current.pauseVideo();
+				setCurrentT(youtubePlayer.current.playerInfo.currentTime());
 				setPlaying(false);
 			} else {
 				console.log("load video: ", data);
 				youtubePlayer.current.loadVideoById(data.split("=")[1]);
 			}
 		};
-
 
 		if (socket && connected) {
 			socket.on("ShareVideoAction", handleVideoSocket);
@@ -153,6 +207,27 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 		};
 	}, [socket, connected]);
 
+	// useEffect(() => {
+	// 	if (start) {
+	// 		var totalTime = videoContent.duration;
+	// 		var rate = 100 / totalTime;
+	// 		console.log(totalTime);
+	// 		setInterval(() => {
+	// 			setProgress(progress + 1);
+	// 			setWidth(rate * progress);
+	// 		}, 1000);
+
+	// 		if (progress * rate >= 100) {
+	// 			clearInterval();
+	// 			setStart(false);
+	// 		}
+	// 	}
+	// 	return () => {
+	// 		clearInterval();
+	// 		setStart(false);
+	// 	};
+	// }, [start]);
+
 	function loadVideoPlayer() {
 		const player = new YT.Player("player", {
 			height: "100%",
@@ -163,13 +238,12 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 				autoplay: 0,
 				controls: 0,
 				autohide: 1,
+
 				wmode: "opaque",
 				origin: "https://www.youtube.com",
 			},
 		});
 		setNextPlaying(true);
-
-		console.log("player is: ", player);
 		youtubePlayer.current = player;
 	}
 
@@ -178,11 +252,13 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 			console.log("play video");
 			socket.emit("play", userName);
 			youtubePlayer.current.playVideo();
+			setStart(!start);
 			setPlaying(true);
 		} else if (data === "pause") {
 			console.log("pause video");
 			socket.emit("pause", userName);
 			youtubePlayer.current.pauseVideo();
+			setStart(!start);
 			setPlaying(false);
 		} else {
 			console.log("load video: ", data);
@@ -192,10 +268,11 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 		}
 	}
 
+	useMemo(() => videoContent, [videoID]);
+
 	return (
 		<>
 			<Container>
-				공유중
 				<VideoWrapper>
 					<div id="player" ref={youtubePlayer} />
 				</VideoWrapper>
@@ -210,38 +287,13 @@ function ShareVideo({ stateChanger, userName, videoName }) {
 						</button>
 					)}
 					<ProgressBar>
-						<div id="progress" max="100" value="0"></div>
+						<div progress={width} id="progress" max="100" value="0"></div>
 					</ProgressBar>
 					<button>
 						<FontAwesomeIcon icon={faVolumeHigh} />
 					</button>
-
-					<IconButton
-						aria-controls={open ? "basic-menu" : undefined}
-						aria-haspopup="true"
-						aria-expanded={open ? "true" : undefined}
-						onClick={handleClick}
-					>
-						<FontAwesomeIcon icon={faEllipsisVertical} />
-					</IconButton>
-					<Menu
-						id="basic-menu"
-						anchorEl={anchorEl}
-						open={open}
-						onClose={handleClose}
-						MenuListProps={{
-							"aria-labelledby": "basic-button",
-						}}
-					>
-						<MenuItem onClick={handleClose}>🏃🏻‍♀️ Save to Keep</MenuItem>
-					</Menu>
+					<Bookmark data={videoContent}></Bookmark>
 				</VideoBarWrapper>
-				{/* <EmojiWrapper>
-					<Emoji symbol="😍" label="love" />
-					<Emoji symbol="🤔" label="hmm" />
-					<Emoji symbol="😱" label="euo" />
-					<Emoji symbol="🤗" label="yes" />
-				</EmojiWrapper> */}
 			</Container>
 		</>
 	);

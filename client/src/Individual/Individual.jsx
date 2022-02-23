@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { useLocation } from "react-router-dom";
-import {useSocket} from "../lib/socket"
+import { useSocket } from "../lib/socket";
 
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -50,69 +50,65 @@ function TabPanel(props) {
 	);
 }
 
-export default function Individual({ stateChanger, host, receiver }) {
+export default function Individual({
+	individual,
+	stateChanger,
+	host,
+	receiver,
+}) {
 	const location = useLocation();
-
 	const [recvideo, setrecvideo] = useState([]);
 	const [share, setShare] = useState("");
 	const { groupID, userName } = location.state;
 	const [value, setValue] = React.useState(0);
-	const {socket, connected} = useSocket();
+	const { socket, connected } = useSocket();
 
-	const handleChange = (event, newValue) => {
-		setValue(newValue);
-	};
-
+	// const handleChange = (event, newValue) => {
+	// 	setValue(newValue);
+	// };
 
 	useEffect(() => {
 		navigator.geolocation.getCurrentPosition(function (position) {
 			const lat = position.coords.latitude;
 			const lng = position.coords.longitude;
-
 			loadpointInfo(lat, lng);
 		});
-		console.log("load");
 		return () => {
 			stateChanger(false); // This worked for me
 		};
-	}, [stateChanger]);
+	}, [individual]);
 
 	useEffect(() => {
 		if (host) {
 			setShare("host");
-		}
-		else {
+		} else {
 			if (receiver) {
 				setShare("receiver");
-			}
-			
-			else {
+			} else {
 				setShare("");
 			}
 		}
 		console.log(host, receiver);
-	}, [share, host, receiver])
+	}, [share, host, receiver]);
 
 	useEffect(() => {
 		if (socket && connected) {
-			if (share =="host") {
+			if (share == "host") {
 				if (recvideo.length > 0) {
 					socket.emit("share individual searchlist", recvideo);
 				}
-				
-			}
-			else if (share =="receiver") {
+			} else if (share == "receiver") {
 				socket.on("receive individual searchlist", (recvideo) => {
 					setrecvideo(recvideo);
-				})
+				});
 			}
 		}
 		return () => {
 			if (socket && connected) {
 				socket.off("receive individual searchlist");
 			}
-		}
-	}, [socket, connected])
+		};
+	}, [socket, connected]);
 
 	const loadpointInfo = async (lat, lng) => {
 		try {

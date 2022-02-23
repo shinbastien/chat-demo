@@ -22,7 +22,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VideoCard from "./VideoCard/VideoCard";
-import { readFromFirebase, searchOnYoutube } from "../lib/functions/firebase";
+import { searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas/Canvas";
 import Individual from "../Individual/Individual";
@@ -198,7 +198,7 @@ ResultList.Item = styled.div`
 export default function NewMapwindow(props) {
 	//map
 	const [map, setMap] = useState(null);
-	const { userName, keepPlace, loading } = props;
+	const { userName, loading } = props;
 
 	//root-tracking
 	const [start, setStart] = useState(null);
@@ -400,26 +400,26 @@ export default function NewMapwindow(props) {
 		}
 	}, [pathMetaData]);
 
-	const onClickMarker = (e) => {
-		const latlng = e.latLng;
-		const marker = new Tmapv2.Marker({
-			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
-			map: map,
-		});
+	// const onClickMarker = (e) => {
+	// 	const latlng = e.latLng;
+	// 	const marker = new Tmapv2.Marker({
+	// 		position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
+	// 		map: map,
+	// 	});
 
-		const buttonWindow = `
-				<div>
-				<input type="text"/>
-					<button onClick={}>Keep 등록</button>
-				</div>
-			`;
-		const infoWindow = new Tmapv2.InfoWindow({
-			position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
-			content: `${buttonWindow}`,
-			map: map,
-			type: 2,
-		});
-	};
+	// 	const buttonWindow = `
+	// 			<div>
+	// 			<input type="text"/>
+	// 				<button onClick={}>Keep 등록</button>
+	// 			</div>
+	// 		`;
+	// 	const infoWindow = new Tmapv2.InfoWindow({
+	// 		position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
+	// 		content: `${buttonWindow}`,
+	// 		map: map,
+	// 		type: 2,
+	// 	});
+	// };
 
 	useMemo(() => {
 		if (markerC) {
@@ -427,6 +427,9 @@ export default function NewMapwindow(props) {
 				const { _lat, _lng } = markerC.getPosition();
 				// setSharing(true);
 				// loadpointInfo(_lat, _lng);
+				// if (socket && connected) {
+				// 	socket.emit("start shareVideo", videoID);
+				// }
 			});
 		}
 	}, [markerC, socket, connected]);
@@ -954,13 +957,11 @@ export default function NewMapwindow(props) {
 		if (socket && connected) {
 			if (!sendShare) {
 				socket.emit("start sendShare request");
-			}
-			else {
+			} else {
 				socket.emit("finish sendShare request");
 				setSendShare(!sendShare);
 				alert("you finished sharing");
 			}
-			
 		}
 	};
 
@@ -1078,36 +1079,35 @@ export default function NewMapwindow(props) {
 		const handleCanvas = () => {
 			setActive("draw");
 			console.log("handleCanvas");
-		}
+		};
 		if (socket && connected) {
 			socket.on("open canvas", handleCanvas);
 			console.log("start canvas", active);
 		}
-		return (() => {
+		return () => {
 			if (socket && connected) {
 				socket.off("open canvas", handleCanvas);
 				console.log("active changed", active);
 			}
-		})
-	}, [active, socket, connected])
+		};
+	}, [active, socket, connected]);
 
 	//
 	useEffect(() => {
-	if (socket && connected) {
-		socket.on("sendshare response", (current, user) => {
-			if (current != user) {
-				alert(`already somebody is sharing:${current}`);
-			}
-			else {
-				alert("now you are sharing Host");
-				setSendShare(!sendShare);
-			}
-		})
-	}
-	}, [sendShare, socket, connected]) 
+		if (socket && connected) {
+			socket.on("sendshare response", (current, user) => {
+				if (current != user) {
+					alert(`already somebody is sharing:${current}`);
+				} else {
+					alert("now you are sharing Host");
+					setSendShare(!sendShare);
+				}
+			});
+		}
+	}, [sendShare, socket, connected]);
 
 	// Sending Share Mode
-	useEffect(() => { 
+	useEffect(() => {
 		if (sendShare) {
 			if (socket && connected) {
 				if (recvideoLoc.length > 0) {
@@ -1118,13 +1118,10 @@ export default function NewMapwindow(props) {
 					socket.emit("sendshare individual");
 				}
 			}
-			
-		}
-		else {
+		} else {
 			return;
 		}
-
-	}, [sendShare, individual, recvideoLoc, socket, connected])
+	}, [sendShare, individual, recvideoLoc, socket, connected]);
 
 	// Receving Share Mode
 	useEffect(() => {
@@ -1132,20 +1129,20 @@ export default function NewMapwindow(props) {
 			socket.on("start sharemode", (user) => {
 				alert(`${user} is now sharing!`);
 				setReceiveShare(true);
-			})
+			});
 
 			socket.on("finish sharemode", (user) => {
 				setReceiveShare(false);
 				alert(`${user} finished sharing`);
-			})
+			});
 
 			socket.on("receive sharedvideoLoc", (videoLoc) => {
 				setrecvideoLoc(videoLoc);
-			})
+			});
 
 			socket.on("receive share individual", () => {
 				setIndividual(true);
-			})
+			});
 		}
 		return () => {
 			if (socket && connected) {
@@ -1154,24 +1151,21 @@ export default function NewMapwindow(props) {
 				socket.off("finish sharemode");
 				socket.off("receive share individual");
 			}
-		}
-	}, [receiveShare,socket, connected])
+		};
+	}, [receiveShare, socket, connected]);
 
 	return (
 		<React.Fragment>
-			{receiveShare ? (
-				recvideoLoc.length > 0 &&
-				recvideoLoc.map((list, idx) => (
-					<VideoCard key={idx} info={list}></VideoCard>
-				))
-			) : (
-				searching &&
-				recvideoLoc.length > 0 &&
-				recvideoLoc.map((list, idx) => (
-					<VideoCard key={idx} info={list}></VideoCard>
-				))
-			)
-			}
+			{receiveShare
+				? recvideoLoc.length > 0 &&
+				  recvideoLoc.map((list, idx) => (
+						<VideoCard key={idx} info={list}></VideoCard>
+				  ))
+				: searching &&
+				  recvideoLoc.length > 0 &&
+				  recvideoLoc.map((list, idx) => (
+						<VideoCard key={idx} info={list}></VideoCard>
+				  ))}
 
 			{chosenEmoji && (
 				<EmojiReaction
@@ -1193,19 +1187,15 @@ export default function NewMapwindow(props) {
 			) : (
 				<></>
 			)}
-			{/* {sharing && (
-				<VideoWrapper>
-					<ShareVideo
-						stateChanger={setSharing}
-						userName={userName}
-						videoName={videoID}
-					></ShareVideo>
-				</VideoWrapper>
-			)} */}
 
 			{individual && (
 				<IndividualWrapper>
-					<Individual stateChanger={setIndividual} host={sendShare ? true : false} receiver = {receiveShare ? true : false} />
+					<Individual
+						individual={individual}
+						stateChanger={setIndividual}
+						host={sendShare ? true : false}
+						receiver={receiveShare ? true : false}
+					/>
 				</IndividualWrapper>
 			)}
 			<MapButtonWrapper>
@@ -1235,17 +1225,14 @@ export default function NewMapwindow(props) {
 						</ResultList>
 					)}
 				</SearchForm>
-				{keepPlace ? (
-					<InfoMenu
-						map={map}
-						totalDaytime={totalDaytime}
-						start={start}
-						end={end}
-						keepPlace={keepPlace}
-					></InfoMenu>
-				) : (
-					<div></div>
-				)}
+
+				<InfoMenu
+					map={map}
+					totalDaytime={totalDaytime}
+					start={start}
+					end={end}
+				></InfoMenu>
+
 				<Draggable>
 					<BoardWrapper>
 						<Stack direction="row" alignItems="center" justifyContent="center">
@@ -1301,7 +1288,10 @@ export default function NewMapwindow(props) {
 
 			<ShareWrapper>
 				<IconButton onClick={onShareCurrent}>
-					<FontAwesomeIcon style={{fontSize: "3vw" }} icon={faArrowUpRightFromSquare} />
+					<FontAwesomeIcon
+						style={{ fontSize: "3vw" }}
+						icon={faArrowUpRightFromSquare}
+					/>
 				</IconButton>
 			</ShareWrapper>
 			{active === "emoji" && emojiResult ? (

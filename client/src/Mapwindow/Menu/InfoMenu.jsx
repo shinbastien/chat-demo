@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Draggable from "react-draggable"; // The default
+import { readFromFirebase } from "../../lib/functions/firebase";
 
 const MenuWrapper = styled.div`
 	width: 300px;
@@ -98,23 +99,23 @@ const VisitedWrapper = styled.div`
 `;
 
 const KeepPlaceCard = (props) => {
-	const { coords, date, id, title, url, visited } = props.info;
+	const { coords, date, id, title, videoInfo, visited } = props.info[1];
 	const { map } = props;
 
-	const onClickKeep = (list) => {
-		const { _lat, _long } = list.coords;
+	const onClickKeep = (coords, title) => {
+		const { _lat, _long } = coords;
 		const keepLocation = new Tmapv2.LatLng(_lat, _long);
 		const newMarker = new Tmapv2.Marker({
 			position: keepLocation,
 			icon: point2,
 			iconSize: new Tmapv2.Size(24, 24),
 			map: map,
-			title: list.title,
+			title: title,
 		});
 		newMarker.addListener("mouseenter", function (evt) {
 			new Tmapv2.InfoWindow({
 				position: keepLocation,
-				content: `<img src=${list.url} width="300px" height="auto"></img>`,
+				content: `<img src=${videoInfo.thumnails.url} width="300px" height="auto"></img>`,
 				type: 2,
 				map: map,
 			});
@@ -125,58 +126,36 @@ const KeepPlaceCard = (props) => {
 	};
 
 	return (
-		<button variant="outlined" onClick={() => onClickKeep(props.info)}>
-			<img src={url} width="100%" height="auto"></img>
+		<button variant="outlined" onClick={() => onClickKeep(coords, title)}>
+			<img src={videoInfo.thumnails.url} width="100%" height="auto"></img>
 			<VisitedWrapper visited={visited}></VisitedWrapper>
 		</button>
 	);
 };
 
-// const SharedPlaceCard = (props) => {
-// 	const { coords, date, id, title, url, visited } = props.info;
-// 	const { map } = props;
-
-// 	const onClickKeep = (list) => {
-// 		const { _lat, _long } = list.coords;
-// 		const keepLocation = new Tmapv2.LatLng(_lat, _long);
-// 		const newMarker = new Tmapv2.Marker({
-// 			position: keepLocation,
-// 			icon: point2,
-// 			iconSize: new Tmapv2.Size(24, 24),
-// 			map: map,
-// 			title: list.title,
-// 		});
-// 		newMarker.addListener("mouseenter", function (evt) {
-// 			new Tmapv2.InfoWindow({
-// 				position: keepLocation,
-// 				content: `<img src=${list.url} width="300px" height="auto"></img>`,
-// 				type: 2,
-// 				map: map,
-// 			});
-// 		});
-
-// 		newMarker.setMap(map);
-// 		map.setCenter(keepLocation);
-// 	};
-// 	return (
-// 		<button variant="outlined" onClick={() => onClickKeep(props.info)}>
-// 			<img src={url} width="100%" height="auto"></img>
-// 			<VisitedWrapper visited={visited}></VisitedWrapper>
-// 		</button>
-// 	);
-// };
+const MemoKeepPlaceCard = React.memo(KeepPlaceCard);
 
 const InfoMenu = (props) => {
-	const { map, totalDaytime, start, end, keepPlace } = props;
-	console.log("I am rendering");
+	const { map, totalDaytime, start, end } = props;
 
-	const [keepOpen, setKeepOpen] = useState(true);
-	const [shareOpen, setShareOpen] = useState(true);
-	const [savePlace, setSavePlace] = useState();
+	const [keepOpen, setKeepOpen] = useState(false);
+	const [savePlace, setSavePlace] = useState(null);
 
-	useMemo(() => {
-		setSavePlace(keepPlace);
-	}, [keepPlace]);
+	useEffect(() => {
+		let active = true;
+		load();
+		return () => {
+			active = false;
+		};
+		async function load() {
+			const result = await readFromFirebase();
+
+			if (!active) {
+				return;
+			}
+			setSavePlace(result);
+		}
+	}, [keepOpen]);
 
 	return (
 		<Draggable>
@@ -221,47 +200,20 @@ const InfoMenu = (props) => {
 								<div className="badge">{savePlace && savePlace.length}</div>
 							</div>
 							<button onClick={() => setKeepOpen(!keepOpen)}>
-								<FontAwesomeIcon icon={keepOpen ? faAngleUp : faAngleDown} />
+								<FontAwesomeIcon icon={keepOpen ? faAngleDown : faAngleUp} />
 							</button>
 						</span>
 						<div style={{ display: keepOpen ? "none" : "inline-block" }}>
 							{savePlace &&
 								savePlace.map((list, idx) => (
-									<KeepPlaceCard
+									<MemoKeepPlaceCard
 										key={idx}
 										map={map}
 										info={list}
-									></KeepPlaceCard>
+									></MemoKeepPlaceCard>
 								))}
 						</div>
 					</SubsubmenuWrapper>
-					{/* <SubsubmenuWrapper>
-						<span
-							style={{ fontWeight: 300, marginLeft: 20, fontSize: "1.3vw" }}
-							pt={3}
-							pb={3}
-						>
-							<span role="img" aria-label="Beach with Umbrella">
-								🏖️
-							</span>{" "}
-							Shared Places&nbsp;
-							<div className="badge">{savePlace && savePlace.length}</div>
-							<button onClick={() => setShareOpen(!shareOpen)}>
-								<FontAwesomeIcon icon={shareOpen ? faAngleUp : faAngleDown} />
-							</button>
-						</span>
-						<div style={{ display: shareOpen ? "none" : "inline-block" }}>
-							{savePlace &&
-								savePlace.map((list, idx) => (
-									<SharedPlaceCard
-										key={idx}
-										map={map}
-										info={list}
-									></SharedPlaceCard>
-								))}
-						</div>
-						<Box></Box>
-					</SubsubmenuWrapper> */}
 				</SubmenuWrapper>
 			</MenuWrapper>
 		</Draggable>
