@@ -13,7 +13,7 @@ import GlobalStyles from "./Styles/globalStyles";
 ReactDOM.render(
 	<BrowserRouter>
 		<GlobalStyles />
-		<SocketProvider url="https://social-moving.herokuapp.com/">
+		<SocketProvider url="http://localhost:4000">
 			<Routes>
 				<Route exact path="/" element={<Home />} />
 				<Route exact path=":roomID" element={<Map />} />

@@ -117,31 +117,67 @@ const Search = (props) => {
 		if (socket && connected) {
 			socket.on("receive keyword individual search", async (keyword) => {
 				setKeyword(keyword);
-				setSubmit(true);
+				setSubmit(false);
 			});
 		}
+		return (() => {
+			socket.off("receive keyword individual search");
+		})
 	}, [socket, connected]);
 
 	useEffect(() => {
 		if (socket && connected) {
 			if (props.share === "host") {
-				if (videos.length > 0) {
-					socket.emit("send searched videos", videos);
+				if (videos && Object.keys(videos).length > 0) {
+					socket.emit("send searched videos", videos, keyword);
+				}
+
+				if (share) {
+					
 				}
 				console.log("host");
 			} else if (props.share === "receiver") {
-				socket.on("receive searched videos", async (videos) => {
-					setVideos(videos);
+				socket.on("receive searched videos", async (videos, keyword) => {
+					// setVideos(videos);
+					setKeyword(keyword);
+					if(keyword) {
+						searchOnYoutube();
+					}
 				});
-				console.log("receiver");
+
 			}
 		}
 		console.log("share", props.share);
 		console.log("videos", videos);
 	}, [props.share, videos, socket, connected]);
+
+	useEffect(() => {
+		if (socket && connected) {
+			if (props.share === "host") {
+				if (share) {
+					socket.emit("start sharevideo", sharing, share);
+					console.log("share is :", share)
+				}
+			}
+
+			else if (props.share === "receiver") {
+				console.log("sharevideo receiver");
+				socket.on("receive sharevideo", async (sharing, item) => {
+					console.log("received item");
+					setSharing(sharing);
+					console.log("receiving sharevideo item is:", item);
+					setShare(item);
+				})
+			}
+		}
+
+		return () => {
+			socket.off("receive sharevideo");
+		}
+	},[props.share, share, sharing, socket, connected])
 	async function searchOnYoutube() {
 		const API_URL = "https://www.googleapis.com/youtube/v3/search";
-		console.log(inputRef.current.value, keyword);
+		// console.log(inputRef.current.value, keyword);
 		try {
 			const {
 				data: { items },
@@ -158,15 +194,17 @@ const Search = (props) => {
 					type: "video",
 				},
 			});
-			if (videos.length > 0) {
-				setVideos(null);
-			}
+			// if (videos && Object.keys(videos).length > 0) {
+			// 	setVideos(null);
+			// }
+			console.log(items);
 			setVideos({
 				locInfo: filterWords.filter((i) => i.name.includes(keyword)),
 				videoInfo: items,
 			});
 
 			setSubmit(true);
+			console.log("videos after searchOnYoutube :", videos);
 		} catch (err) {
 			console.log(err);
 		}
@@ -189,7 +227,7 @@ const Search = (props) => {
 							}}
 							onChange={(e) => {
 								e.preventDefault();
-								setKeyword(e.target.value);
+								setKeyword(e.target.value); 
 							}}
 						/>
 						<Button variant="contained" onClick={searchOnYoutube}>
@@ -241,6 +279,7 @@ const Search = (props) => {
 								&nbsp; Video
 								<SearchResult
 									share={share}
+									sharing={sharing}
 									setShare={setShare}
 									setSharing={setSharing}
 									videos={videos.videoInfo}

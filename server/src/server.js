@@ -80,9 +80,11 @@ io.on("connection", (socket) => {
 	});
 
 	//  ---------------------------SHAREVIDEO----------------------
-	socket.on("start shareVideo", (videoID) => {
+	socket.on("start sharevideo", (sharing, item) => {
 		console.log("starting sharevideo for room");
-		socket.broadcast.to(socket.roomName).emit("start videoplayer", videoID);
+		console.log(sharing);
+		console.log(item);
+		socket.broadcast.to(socket.roomName).emit("receive sharevideo", sharing, item);
 	});
 
 	socket.on("play", (userName) => {
@@ -176,10 +178,12 @@ io.on("connection", (socket) => {
 
 	socket.on("send keyword individual search", (keyword) => {
 		socket.broadcast.to(socket.roomName).emit("receive keyword individual search", keyword);
+		console.log("Individual Search, keyword");
 	})
 
-	socket.on("send searched videos", (videos) => {
-		 socket.broadcast.to(socket.roomName).emit("receive searched videos", videos);
+	socket.on("send searched videos", (videos, keyword) => {
+		 socket.broadcast.to(socket.roomName).emit("receive searched videos", videos, keyword);
+		 console.log("Individual Search, videos");
 	})
 	// Leave the room if the user closes the socket
 	socket.on("disconnect", () => {
