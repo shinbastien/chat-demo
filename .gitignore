@@ -2,4 +2,3 @@
 yarn.lock
 package-lock.json
 **/MyKeyPair.pem
-**/.env
