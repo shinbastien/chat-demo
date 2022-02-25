@@ -257,28 +257,28 @@ export default function NewMapwindow(props) {
 	const { socket, connected } = useSocket();
 
 	const initMap = () => {
-		navigator.geolocation.getCurrentPosition(function (position) {
-			// const lat = position.coords.latitude;
-			// const lng = position.coords.longitude;
+		// navigator.geolocation.getCurrentPosition(function (position) {
+		// const lat = position.coords.latitude;
+		// const lng = position.coords.longitude;
 
-			const lat = 37.56653180179;
-			const lng = 126.98295133464485;
+		const lat = 37.56653180179;
+		const lng = 126.98295133464485;
 
-			socket.emit("start mapwindow", lat, lng);
-			console.log("send location info to server", [lat, lng]);
-			var center = new Tmapv2.LatLng(lat, lng);
+		socket.emit("start mapwindow", lat, lng);
+		console.log("send location info to server", [lat, lng]);
+		var center = new Tmapv2.LatLng(lat, lng);
 
-			setMap(
-				new Tmapv2.Map("map_div", {
-					center: center,
-					width: "100%",
-					height: "100vh",
-					zoom: 18,
-					zoomControl: true,
-					scrollwheel: true,
-				}),
-			);
-		});
+		setMap(
+			new Tmapv2.Map("map_div", {
+				center: center,
+				width: "100%",
+				height: "100vh",
+				zoom: 18,
+				zoomControl: true,
+				scrollwheel: true,
+			}),
+		);
+		// });
 	};
 
 	useEffect(() => {
@@ -293,30 +293,30 @@ export default function NewMapwindow(props) {
 		// 	map.addListener("click", onClickMarker);
 		// }
 
-		if (navigator.geolocation) {
-			navigator.geolocation.getCurrentPosition(function (position) {
-				// const lat = position.coords.latitude;
-				// const lng = position.coords.longitude;
-				const lat = 37.56653180179;
-				const lng = 126.98295133464485;
-				console.log("lat is: ", lat);
-				console.log("lng is: ", lng);
+		// if (navigator.geolocation) {
+		// 	navigator.geolocation.getCurrentPosition(function (position) {
+		// const lat = position.coords.latitude;
+		// const lng = position.coords.longitude;
+		const lat = 37.56653180179;
+		const lng = 126.98295133464485;
+		console.log("lat is: ", lat);
+		console.log("lng is: ", lng);
 
-				setMarkerC(
-					new Tmapv2.Marker({
-						position: new Tmapv2.LatLng(lat, lng),
-						icon: Car,
-						iconSize: new Tmapv2.Size(50, 50),
-						title: "현재위치",
-						map: map,
-						label:
-							"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
-							"현재위치" +
-							"</span>",
-					}),
-				);
-			});
-		}
+		setMarkerC(
+			new Tmapv2.Marker({
+				position: new Tmapv2.LatLng(lat, lng),
+				icon: Car,
+				iconSize: new Tmapv2.Size(50, 50),
+				title: "현재위치",
+				map: map,
+				label:
+					"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
+					"현재위치" +
+					"</span>",
+			}),
+		);
+		// 	});
+		// }
 	}, [map]);
 
 	// 출발 -- 도착 자동 이동
