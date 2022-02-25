@@ -1240,10 +1240,18 @@ export default function NewMapwindow(props) {
 										src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
 									/>
 									{result.name}
-									<Button onClick={() => handleStartSetting(result)}>
+									<Button
+										style={{ cursor: "pointer" }}
+										onClick={() => handleStartSetting(result)}
+									>
 										출발
 									</Button>
-									<Button onClick={() => handleEndSetting(result)}>도착</Button>
+									<Button
+										style={{ cursor: "pointer" }}
+										onClick={() => handleEndSetting(result)}
+									>
+										도착
+									</Button>
 								</ResultList.Item>
 							))}
 						</ResultList>

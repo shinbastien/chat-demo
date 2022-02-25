@@ -146,7 +146,11 @@ const KeepPlaceCard = (props) => {
 	};
 
 	return (
-		<button variant="outlined" onClick={() => onClickKeep(coords, title)}>
+		<button
+			variant="outlined"
+			style={{ cursor: "pointer" }}
+			onClick={() => onClickKeep(coords, title)}
+		>
 			<img src={videoInfo.thumnails.url} width="100%" height="auto"></img>
 			<VisitedWrapper visited={visited}></VisitedWrapper>
 		</button>
@@ -208,7 +212,10 @@ const InfoMenu = (props) => {
 									<FontAwesomeIcon className="fa-spin" icon={faSync} />
 								</div>
 							) : null}
-							<button onClick={() => setKeepOpen(!keepOpen)}>
+							<button
+								style={{ cursor: "pointer" }}
+								onClick={() => setKeepOpen(!keepOpen)}
+							>
 								<FontAwesomeIcon icon={keepOpen ? faAngleDown : faAngleUp} />
 							</button>
 						</span>

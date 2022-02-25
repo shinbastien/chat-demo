@@ -278,11 +278,17 @@ function ShareVideo({ stateChanger, userName, videoName, locInfo }) {
 				</VideoWrapper>
 				<VideoBarWrapper>
 					{playing ? (
-						<button onClick={() => handleVideo("pause")}>
+						<button
+							style={{ cursor: "pointer" }}
+							onClick={() => handleVideo("pause")}
+						>
 							<FontAwesomeIcon icon={faPause} />
 						</button>
 					) : (
-						<button onClick={() => handleVideo("play")}>
+						<button
+							style={{ cursor: "pointer" }}
+							onClick={() => handleVideo("play")}
+						>
 							<FontAwesomeIcon icon={faPlay} />
 						</button>
 					)}

@@ -49,7 +49,7 @@ const EmojiReaction = (props) => {
 
 	return (
 		state && (
-			<EmojiDisplayWrapper style={{ left: 50 + Math.random() * 10 + "%" }}>
+			<EmojiDisplayWrapper>
 				<div>
 					{emoji}
 					<div>{userName}</div>

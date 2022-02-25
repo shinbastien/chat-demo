@@ -74,6 +74,7 @@ const SearchResult = ({ share, sharing, setShare, setSharing, videos }) => {
 										Object.keys(share)[0] === video.id.videoId &&
 										"active"
 									}
+									style={{ cursor: "pointer" }}
 									onClick={() => onClickShare(video)}
 								>
 									{sharing && Object.keys(share)[0] === video.id.videoId

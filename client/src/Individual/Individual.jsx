@@ -132,7 +132,10 @@ export default function Individual({
 		<Wrapper>
 			<BarWrapper>
 				<div></div>
-				<button onClick={() => stateChanger(false)}>
+				<button
+					style={{ cursor: "pointer" }}
+					onClick={() => stateChanger(false)}
+				>
 					<FontAwesomeIcon icon={faXmark} />
 				</button>
 			</BarWrapper>

@@ -88,6 +88,7 @@ const BoardWrapper = styled.div`
 	justify-content: center;
 	left: -13%;
 	z-index: 11;
+	cursor: pointer;
 
 	> div {
 		padding: 1.7%;
@@ -1250,12 +1251,14 @@ export default function NewMapwindow(props) {
 					<BoardWrapper>
 						<Stack direction="row" alignItems="center" justifyContent="center">
 							<IconButton
+								style={{ cursor: "pointer" }}
 								className={active === "hand" ? "active" : ""}
 								onClick={() => onHandleClick("hand")}
 							>
 								<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faHand} />
 							</IconButton>
 							<IconButton
+								style={{ cursor: "pointer" }}
 								className={active === "draw" ? "active" : ""}
 								onClick={() => onHandleClick("draw")}
 							>
@@ -1263,6 +1266,7 @@ export default function NewMapwindow(props) {
 							</IconButton>
 
 							<IconButton
+								style={{ cursor: "pointer" }}
 								className={active === "search" ? "active" : ""}
 								onClick={() => onHandleClick("search")}
 							>
@@ -1272,6 +1276,7 @@ export default function NewMapwindow(props) {
 								/>
 							</IconButton>
 							<IconButton
+								style={{ cursor: "pointer" }}
 								className={active === "emoji" ? "active" : ""}
 								onClick={() => onHandleClick("emoji")}
 							>
@@ -1281,6 +1286,7 @@ export default function NewMapwindow(props) {
 								/>
 							</IconButton>
 							<IconButton
+								style={{ cursor: "pointer" }}
 								className={active === "individualSearch" ? "active" : ""}
 								onClick={() => onHandleClick("individualSearch")}
 							>
