@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useLocation, Link } from "react-router-dom";
 import NewMapwindow from "../Mapwindow/NewMapwindow";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
 import AppBar from "@mui/material/AppBar";
-import Snackbar from "@mui/material/Snackbar";
+
+import { useSocket } from "../lib/socket";
+import { InfoContext } from "../Context/InfoContext";
+import styled from "styled-components";
 
 import Typography from "@mui/material/Typography";
 import logoWhite from "../Styles/source/logo_w.png";
@@ -13,8 +16,6 @@ import Box from "@mui/material/Box";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
-import { useSocket } from "../lib/socket";
-import styled from "styled-components";
 
 const ImgWrapper = styled.img`
 	display: block;
@@ -29,12 +30,8 @@ const TextWrapper = styled.span`
 
 function Map() {
 	const location = useLocation();
-	const [loading, setLoading] = useState(false);
-	const [state, setState] = useState({
-		open: false,
-		vertical: "top",
-		horizontal: "center",
-	});
+	const [onloading, setonLoading] = useState(false);
+	const [infoPlace, setInfoPlace] = useState([]);
 
 	const { groupID, userName } = location.state;
 	console.log("groupID obtained from Home is: ", groupID);
@@ -43,6 +40,7 @@ function Map() {
 	const { socket, connected } = useSocket();
 	console.log("connected is: ", connected);
 
+	//URL 복사
 	const onHandleCopy = (e) => {
 		navigator.clipboard.writeText(window.location.href);
 		alert("url이 복사되었습니다.");
@@ -74,6 +72,7 @@ function Map() {
 					<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
 				</Typography>
 			</AppBar>
+
 			<Grid container spacing={2} style={{ marginTop: 40 }}>
 				<Grid item xs={6} md={9}>
 					<NewMapwindow userName={userName}></NewMapwindow>
@@ -82,7 +81,7 @@ function Map() {
 					<VideoCall
 						roomName={groupID}
 						userName={userName}
-						loading={loading}
+						loading={onloading}
 					></VideoCall>
 				</Grid>
 			</Grid>

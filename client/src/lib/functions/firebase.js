@@ -49,7 +49,7 @@ async function writeToPlaceData(element) {
 	}
 }
 
-async function readFromFirebase() {
+async function readFromFirebase(dbRef) {
 	firebaseInstance();
 	const db = getDatabase();
 	const dataInstance = [];
@@ -62,14 +62,12 @@ async function readFromFirebase() {
 				dataInstance.push(doc);
 			});
 		});
-
+		console.log("I am loading");
 		return dataInstance;
 	} catch (error) {
 		console.log(error);
 	}
 }
-
-var num = 0;
 
 async function searchOnYoutube(props) {
 	const API_URL = "https://www.googleapis.com/youtube/v3/search";
@@ -107,7 +105,12 @@ async function searchOnYoutube(props) {
 	}
 }
 
-export { readFromFirebase, writeToPlaceData, searchOnYoutube };
+export {
+	readFromFirebase,
+	writeToPlaceData,
+	searchOnYoutube,
+	firebaseInstance,
+};
 
 // {
 // 	groups: {
