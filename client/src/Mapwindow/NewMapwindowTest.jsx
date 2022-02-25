@@ -6,9 +6,10 @@ import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
-import point1 from "../Styles/source/point1.png";
+// import point1 from "../Styles/source/point1.png";
 import Stack from "@mui/material/Stack";
 import Draggable from "react-draggable"; // The default
+import Car from "../Styles/source/car-side-solid.svg";
 import {
 	faHand,
 	faVectorSquare,
@@ -257,8 +258,11 @@ export default function NewMapwindow(props) {
 
 	const initMap = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
-			const lat = position.coords.latitude;
-			const lng = position.coords.longitude;
+			// const lat = position.coords.latitude;
+			// const lng = position.coords.longitude;
+
+			const lat = 37.56653180179;
+			const lng = 126.98295133464485;
 
 			socket.emit("start mapwindow", lat, lng);
 			console.log("send location info to server", [lat, lng]);
@@ -291,20 +295,22 @@ export default function NewMapwindow(props) {
 
 		if (navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(function (position) {
-				const lat = position.coords.latitude;
-				const lng = position.coords.longitude;
+				// const lat = position.coords.latitude;
+				// const lng = position.coords.longitude;
+				const lat = 37.56653180179;
+				const lng = 126.98295133464485;
 				console.log("lat is: ", lat);
 				console.log("lng is: ", lng);
 
 				setMarkerC(
 					new Tmapv2.Marker({
 						position: new Tmapv2.LatLng(lat, lng),
-						icon: point1,
-						iconSize: new Tmapv2.Size(24, 24),
+						icon: Car,
+						iconSize: new Tmapv2.Size(50, 50),
 						title: "현재위치",
 						map: map,
 						label:
-							"<span style='background-color: #46414E; color:white'>" +
+							"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
 							"현재위치" +
 							"</span>",
 					}),
@@ -312,32 +318,6 @@ export default function NewMapwindow(props) {
 			});
 		}
 	}, [map]);
-
-	//이동시
-	// useEffect(() => {
-	// 	const interval = setInterval(() => {
-	// 		navigator.geolocation.getCurrentPosition(function (position) {
-	// 			const lat = position.coords.latitude;
-	// 			const lng = position.coords.longitude;
-	// 			if (markerC !== null) {
-	// 				markerC.setMap(null);
-	// 			}
-	// 			setMarkerC(
-	// 				new Tmapv2.Marker({
-	// 					position: new Tmapv2.LatLng(lat, lng),
-	// 					icon: point1,
-	// 					iconSize: new Tmapv2.Size(24, 24),
-	// 					title: "이동중",
-	// 					map: map,
-	// 				}),
-	// 			);
-	// 		});
-	// 		console.log("I am moving...");
-	// 	}, 5000);
-	// 	return () => {
-	// 		clearInterval(interval);
-	// 	};
-	// }, [markerC]);
 
 	// 출발 -- 도착 자동 이동
 	useEffect(() => {
@@ -377,8 +357,11 @@ export default function NewMapwindow(props) {
 									return getMarkers({
 										lat: lat,
 										lng: lng,
-										markerImage: point1,
-										title: `현재위치 ${finishTime - currTick}초 남음`,
+										markerImage: Car,
+										title:
+											"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
+											`${finishTime - currTick}초 남음` +
+											"</span>",
 									});
 								});
 							}
@@ -418,18 +401,18 @@ export default function NewMapwindow(props) {
 	// 	});
 	// };
 
-	useMemo(() => {
-		if (markerC) {
-			markerC.addListener("click", (e) => {
-				const { _lat, _lng } = markerC.getPosition();
-				// setSharing(true);
-				// loadpointInfo(_lat, _lng);
-				// if (socket && connected) {
-				// 	socket.emit("start shareVideo", videoID);
-				// }
-			});
-		}
-	}, [markerC, socket, connected]);
+	// useMemo(() => {
+	// 	if (markerC) {
+	// 		markerC.addListener("click", (e) => {
+	// 			const { _lat, _lng } = markerC.getPosition();
+	// 			// setSharing(true);
+	// 			// loadpointInfo(_lat, _lng);
+	// 			// if (socket && connected) {
+	// 			// 	socket.emit("start shareVideo", videoID);
+	// 			// }
+	// 		});
+	// 	}
+	// }, [markerC, socket, connected]);
 
 	useEffect(() => {
 		if (socket && connected) {
@@ -664,7 +647,7 @@ export default function NewMapwindow(props) {
 	const getMarkers = (infoObj) => {
 		const { pointType, lat, lng, markerImage, title } = infoObj;
 		const size =
-			pointType === "P" ? new Tmapv2.Size(8, 8) : new Tmapv2.Size(24, 38); //아이콘 크기 설정합니다.
+			pointType === "P" ? new Tmapv2.Size(8, 8) : new Tmapv2.Size(40, 60); //아이콘 크기 설정합니다.
 
 		if (title) {
 			var label =
@@ -982,6 +965,12 @@ export default function NewMapwindow(props) {
 		}
 	};
 
+	const startFromCurrentPoint = () => {
+		console.log(markerC);
+		const currentPosition = markerC.convertWGS84GEOToEPSG3857();
+		handleStartSetting(currentPosition);
+	};
+
 	const getPositionFromData = (data) => {
 		const noorLat = Number(data.noorLat);
 		const noorLon = Number(data.noorLon);
@@ -1055,7 +1044,6 @@ export default function NewMapwindow(props) {
 				break;
 		}
 	};
-	console.log(chosenEmoji);
 
 	const onEmojiClick = (event, emojiObject) => {
 		const { emoji } = emojiObject;
@@ -1219,6 +1207,7 @@ export default function NewMapwindow(props) {
 						stateChanger={setIndividual}
 						host={sendShare ? true : false}
 						receiver={receiveShare ? true : false}
+						markerC={markerC}
 					/>
 				</IndividualWrapper>
 			)}
@@ -1256,7 +1245,7 @@ export default function NewMapwindow(props) {
 					start={start}
 					end={end}
 				></InfoMenu>
-
+				<button onClick={startFromCurrentPoint}>현재 위치에서 출발하기</button>
 				<Draggable>
 					<BoardWrapper>
 						<Stack direction="row" alignItems="center" justifyContent="center">

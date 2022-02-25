@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useLocation, Link } from "react-router-dom";
-import NewMapwindow from "../Mapwindow/NewMapwindow";
+import NewMapwindow from "../Mapwindow/NewMapwindowTest";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
 import AppBar from "@mui/material/AppBar";
 
 import { useSocket } from "../lib/socket";
-import { InfoContext } from "../Context/InfoContext";
 import styled from "styled-components";
 
 import Typography from "@mui/material/Typography";

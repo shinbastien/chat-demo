@@ -13,6 +13,7 @@ import {
 	faMagnifyingGlassLocation,
 	faGlobe,
 	faImage,
+	faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 import { faYoutube } from "@fortawesome/free-brands-svg-icons";
 import ShareVideo from "../../Mapwindow/ShareVideo/ShareVideo";
@@ -21,6 +22,28 @@ import { Divider } from "@mui/material";
 import { SearchImgResult } from "./SearchResult";
 import { useSocket } from "../../lib/socket";
 
+const InputWrapper = styled.div`
+	margin: 0 0 0 0;
+	width: 100%;
+	border-radius: 12px;
+	padding: 0 13px;
+	background-color: ${(props) => props.theme.color3};
+	height: 3vw;
+	display: flex;
+	flex-direction: row;
+	margin: 0 5% 0 0;
+
+	> input {
+		border: none;
+		width: inherit;
+		background-color: ${(props) => props.theme.color3};
+	}
+	> button {
+		padding: 0;
+		margin: 0;
+	}
+`;
+
 const KeyWordWrapper = styled.div`
 	padding: 3%;
 	.title {
@@ -28,19 +51,19 @@ const KeyWordWrapper = styled.div`
 		font-weight: 700;
 
 		padding: 3%;
-		color: #151ca2;
+		color: ${(props) => props.theme.color1};
 	}
 
 	.searchKeyword {
 		display: block;
 		padding: 7% 3% 0 1%;
 		&: hover {
-			color: #151ca2;
+			color: ${(props) => props.theme.color1};
 			font-weight: 700;
 		}
 
 		&::before {
-			background-color: #151ca2;
+			background-color: ${(props) => props.theme.color1};
 			display: inline-block;
 			width: 4px;
 			height: 4px;
@@ -120,9 +143,9 @@ const Search = (props) => {
 				setSubmit(false);
 			});
 		}
-		return (() => {
+		return () => {
 			socket.off("receive keyword individual search");
-		})
+		};
 	}, [socket, connected]);
 
 	useEffect(() => {
@@ -133,18 +156,16 @@ const Search = (props) => {
 				}
 
 				if (share) {
-					
 				}
 				console.log("host");
 			} else if (props.share === "receiver") {
 				socket.on("receive searched videos", async (videos, keyword) => {
 					// setVideos(videos);
 					setKeyword(keyword);
-					if(keyword) {
+					if (keyword) {
 						searchOnYoutube();
 					}
 				});
-
 			}
 		}
 		console.log("share", props.share);
@@ -156,25 +177,23 @@ const Search = (props) => {
 			if (props.share === "host") {
 				if (share) {
 					socket.emit("start sharevideo", sharing, share);
-					console.log("share is :", share)
+					console.log("share is :", share);
 				}
-			}
-
-			else if (props.share === "receiver") {
+			} else if (props.share === "receiver") {
 				console.log("sharevideo receiver");
 				socket.on("receive sharevideo", async (sharing, item) => {
 					console.log("received item");
 					setSharing(sharing);
 					console.log("receiving sharevideo item is:", item);
 					setShare(item);
-				})
+				});
 			}
 		}
 
 		return () => {
 			socket.off("receive sharevideo");
-		}
-	},[props.share, share, sharing, socket, connected])
+		};
+	}, [props.share, share, sharing, socket, connected]);
 	async function searchOnYoutube() {
 		const API_URL = "https://www.googleapis.com/youtube/v3/search";
 		// console.log(inputRef.current.value, keyword);
@@ -213,10 +232,10 @@ const Search = (props) => {
 	console.log(videos);
 
 	return (
-		<div>
-			<Grid container>
-				<Grid item>
-					<Stack direction="row">
+		<Grid container>
+			<Grid item>
+				<Stack direction="row">
+					<InputWrapper>
 						<input
 							ref={inputRef}
 							placeholder="검색"
@@ -227,77 +246,70 @@ const Search = (props) => {
 							}}
 							onChange={(e) => {
 								e.preventDefault();
-								setKeyword(e.target.value); 
+								setKeyword(e.target.value);
 							}}
 						/>
-						<Button variant="contained" onClick={searchOnYoutube}>
-							검색
-						</Button>
-					</Stack>
-					<KeyWordWrapper>
-						<div className="title">
-							<FontAwesomeIcon icon={faMagnifyingGlassLocation} />
-							&nbsp; 추천 키워드
+						<button variant="contained" onClick={searchOnYoutube}>
+							<FontAwesomeIcon icon={faMagnifyingGlass} />
+						</button>
+					</InputWrapper>
+				</Stack>
+				<KeyWordWrapper>
+					<div className="title">
+						<FontAwesomeIcon icon={faMagnifyingGlassLocation} />
+						&nbsp; 추천 키워드
+					</div>
+					<Divider></Divider>
+					{filterWords.length > 0 ? (
+						filterWords.map((prop, inx) => (
+							<button className="searchKeyword" onClick={onClickFocus}>
+								{prop.name}
+							</button>
+						))
+					) : (
+						<div className="fa-2x spinner">
+							<FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
 						</div>
-						<Divider></Divider>
-						{filterWords.length > 0 ? (
-							filterWords.map((prop, inx) => (
-								<button className="searchKeyword" onClick={onClickFocus}>
-									{prop.name}
-								</button>
-							))
-						) : (
-							<div className="fa-2x spinner">
-								<FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
-							</div>
-						)}
-					</KeyWordWrapper>
-				</Grid>
-
-				<Grid
-					item
-					xs={6}
-					md={8}
-					direction={"column"}
-					spacing={2}
-					alignItems={"baseline"}
-				>
-					<ResultWrapper>
-						<div className="title">
-							<FontAwesomeIcon icon={faGlobe} />
-							{submit ? ` 검색 결과: ` + keyword : null}
-						</div>
-						{sharing && (
-							<ShareVideo
-								videoName={Object.keys(share)[0]}
-								locInfo={videos.locInfo[0]}
-							></ShareVideo>
-						)}
-						{submit && videos.videoInfo.length > 0 ? (
-							<div>
-								<FontAwesomeIcon icon={faYoutube} />
-								&nbsp; Video
-								<SearchResult
-									share={share}
-									sharing={sharing}
-									setShare={setShare}
-									setSharing={setSharing}
-									videos={videos.videoInfo}
-								></SearchResult>
-							</div>
-						) : (
-							<div>" 검색어를 입력하여 주세요"</div>
-						)}
-						{submit && imgs.length && (
-							<div>
-								<FontAwesomeIcon icon={faImage} /> &nbsp; Image
-								<SearchImgResult imgs={imgs}></SearchImgResult>
-							</div>
-						)}
-					</ResultWrapper>
-				</Grid>
+					)}
+				</KeyWordWrapper>
 			</Grid>
-		</div>
+
+			<Grid item xs={6} md={8} alignItems={"baseline"}>
+				<ResultWrapper>
+					<div className="title">
+						<FontAwesomeIcon icon={faGlobe} />
+						{submit ? ` 검색 결과: ` + keyword : null}
+					</div>
+					{sharing && (
+						<ShareVideo
+							videoName={Object.keys(share)[0]}
+							locInfo={videos.locInfo[0]}
+						></ShareVideo>
+					)}
+					{submit && videos.videoInfo.length > 0 ? (
+						<div>
+							<FontAwesomeIcon icon={faYoutube} />
+							&nbsp; Video
+							<SearchResult
+								share={share}
+								sharing={sharing}
+								setShare={setShare}
+								setSharing={setSharing}
+								videos={videos.videoInfo}
+							></SearchResult>
+						</div>
+					) : (
+						<div>" 검색어를 입력하여 주세요"</div>
+					)}
+					{submit && imgs.length && (
+						<div>
+							<FontAwesomeIcon icon={faImage} /> &nbsp; Image
+							<SearchImgResult imgs={imgs}></SearchImgResult>
+						</div>
+					)}
+				</ResultWrapper>
+			</Grid>
+		</Grid>
 	);
 };
 

@@ -19,7 +19,6 @@ const bounceAnimation = keyframes`
 
 const EmojiDisplayWrapper = styled.div`
 	bottom: 0;
-	// left: 50%;
 	font-size: 5vw;
 	position: absolute;
 	z-index: 300;
@@ -50,7 +49,7 @@ const EmojiReaction = (props) => {
 
 	return (
 		state && (
-			<EmojiDisplayWrapper>
+			<EmojiDisplayWrapper style={{ left: 50 + Math.random() * 10 + "%" }}>
 				<div>
 					{emoji}
 					<div>{userName}</div>

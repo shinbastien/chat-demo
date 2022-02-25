@@ -80,7 +80,7 @@ async function searchOnYoutube(props) {
 			params: {
 				key: process.env.REACT_APP_YOUTUBE_API_KEY,
 				part: "snippet",
-				q: `대전 유성구` + props,
+				q: props,
 				maxResults: 1,
 				videoEmbeddable: "true",
 				type: "video",
