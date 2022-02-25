@@ -55,7 +55,7 @@ function Map() {
 
 	return (
 		<>
-			<AppBar style={{ backgroundColor: "#003249" }}>
+			{/* <AppBar style={{ backgroundColor: "#003249" }}>
 				<Typography
 					variant="h5"
 					noWrap
@@ -70,7 +70,7 @@ function Map() {
 
 					<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
 				</Typography>
-			</AppBar>
+			</AppBar> */}
 
 			<Grid container spacing={2} style={{ marginTop: 40 }}>
 				<Grid item xs={6} md={9}>
