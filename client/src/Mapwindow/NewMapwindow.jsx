@@ -31,6 +31,7 @@ import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
+import { useRef } from "react";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
@@ -172,22 +173,17 @@ const EmojiWrapper = styled.div`
 	left: 43%;
 `;
 
-// const EmojiDisplayWrapper = styled.div`
-// 	font-size: 7vw;
+// const VideoWrapper = styled.div`
 // 	position: absolute;
 // 	z-index: 300;
+
+// 	left: 40%;
+// 	transform: translateX(-50%);
+// 	background-color: white;
+
+// 	text-align: center;
+// 	margin: 0 auto;
 // `;
-const VideoWrapper = styled.div`
-	position: absolute;
-	z-index: 300;
-
-	left: 40%;
-	transform: translateX(-50%);
-	background-color: white;
-
-	text-align: center;
-	margin: 0 auto;
-`;
 
 ResultList.Item = styled.div`
 	display: flex;
@@ -230,7 +226,8 @@ export default function NewMapwindow(props) {
 
 	//board
 	const [active, setActive] = useState("hand");
-	const [chosenEmoji, setChosenEmoji] = useState(null);
+	const [chosenEmoji, setChosenEmoji] = useState([]);
+	const emojiRef = useRef([]);
 
 	const [searching, setSearching] = useState(false);
 	const [drawObject, setDrawObject] = useState(null);
@@ -1060,13 +1057,14 @@ export default function NewMapwindow(props) {
 				break;
 		}
 	};
+	console.log(chosenEmoji);
 
 	const onEmojiClick = (event, emojiObject) => {
 		const { emoji } = emojiObject;
-		setChosenEmoji(emoji);
+		emojiRef.current.push(emoji); //setChosenEmoji(emoji);
+		setChosenEmoji((chosenEmoji) => [...chosenEmoji, emoji]);
 		setEmojiResult(false);
 		setEmojiSender(userName);
-		console.log("emoji is: ", emoji);
 		if (socket && connected) {
 			socket.emit("send emoji", emoji, userName);
 		}
@@ -1075,19 +1073,20 @@ export default function NewMapwindow(props) {
 	//emoji
 	useEffect(() => {
 		const handleGetEmoji = (emoji, userName) => {
-			setChosenEmoji(emoji);
+			// setChosenEmoji(emoji);
 			setEmojiSender(userName);
 		};
 		if (socket && connected) {
 			socket.on("get emoji", handleGetEmoji);
 		}
-		if (chosenEmoji != null) {
+		if (chosenEmoji.length > 0) {
 			setAniEmoji(true);
 
 			setTimeout(() => {
 				setAniEmoji(false);
-				setChosenEmoji(null);
-			}, 3000);
+				emojiRef.current[0] = null;
+				setChosenEmoji([]);
+			}, 200000);
 		}
 		return () => {
 			if (socket && connected) {
@@ -1190,14 +1189,17 @@ export default function NewMapwindow(props) {
 				  recvideoLoc.map((list, idx) => (
 						<VideoCard key={idx} info={list}></VideoCard>
 				  ))}
+			{chosenEmoji.length > 0 &&
+				chosenEmoji.map((emojiObject, idx) => (
+					<EmojiReaction
+						key={idx}
+						ref={emojiRef[idx]}
+						state={aniemoji}
+						emoji={emojiObject}
+						userName={emojisender}
+					></EmojiReaction>
+				))}
 
-			{chosenEmoji && (
-				<EmojiReaction
-					state={aniemoji}
-					emoji={chosenEmoji}
-					userName={emojisender}
-				></EmojiReaction>
-			)}
 			{drawObject ? (
 				[
 					showInfo ? (

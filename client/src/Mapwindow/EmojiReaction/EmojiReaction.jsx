@@ -11,6 +11,7 @@ const bounceAnimation = keyframes`
     transform: translateY(-300px);
   }
    100% {
+	transform: translateY(-300px);
    opacity: 0;
    display: none;
   }
@@ -18,7 +19,7 @@ const bounceAnimation = keyframes`
 
 const EmojiDisplayWrapper = styled.div`
 	bottom: 0;
-	left: 50%;
+	// left: 50%;
 	font-size: 5vw;
 	position: absolute;
 	z-index: 300;
