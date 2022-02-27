@@ -455,8 +455,6 @@ export default function NewMapwindow(props) {
 		}
 	}, [recvideo]);
 
-	console.log(recvideoLoc);
-
 	useEffect(async () => {
 		if (!start || !end) {
 			return;
@@ -1160,8 +1158,6 @@ export default function NewMapwindow(props) {
 			}
 		};
 	}, [receiveShare, socket, connected]);
-
-	console.log(recvideoLoc);
 
 	return (
 		<React.Fragment>
