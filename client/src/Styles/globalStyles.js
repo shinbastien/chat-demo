@@ -45,7 +45,10 @@ const GlobalStyles = createGlobalStyle`
     	outline: none;
 	}
 	button:focus {outline:0 !important;}
-
+	
+	.clickable {
+	cursor: pointer;
+	}
 
 `;
 

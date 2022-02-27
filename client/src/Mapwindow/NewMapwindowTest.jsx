@@ -1,7 +1,7 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
@@ -25,12 +25,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VideoCard from "./VideoCard/VideoCard";
 import { searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
-import Canvas from "./Canvas/Canvas";
+import Canvas from "./Canvas/CanvasV2";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
-import { useRef } from "react";
 
 const MapWrapper = styled.div`
 	z-index: -1000;

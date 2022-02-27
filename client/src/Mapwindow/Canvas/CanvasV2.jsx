@@ -14,7 +14,11 @@ const Canvas = ({ width, height }) => {
 	const [otherIsPainting, setOtherIsPainting] = useState(false);
 	const [mousePosition, setMousePosition] = useState(undefined);
 	const { socket, connected } = useSocket();
-	const [drawing, setDrawing] = useState([]);
+	const [drawings, setDrawings] = useState([]);
+	const [count, setCount] = React.useState(0);
+
+	const requestRef = React.useRef();
+	const previousTimeRef = React.useRef();
 
 	const startPoint = useCallback(
 		(event) => {
@@ -116,31 +120,23 @@ const Canvas = ({ width, height }) => {
 				console.log("stop drawing");
 			}
 		}
-		const subcanvas = subcanvasRef.current;
+		const canvas = canvasRef.current;
 
-		// //when mouse-up set the canvas:
+		const ctx = canvas.getContext("2d");
 		const image = new Image();
-		image.src = subcanvas.toDataUrl();
+		image.src = canvasRef.current.toDataURL();
 		image.onload = () =>
-			setDrawing((drawing) => [
-				...drawing,
+			setDrawings((drawings) => [
+				...drawings,
 				{ image: image, createdAt: new Date().getTime(), opacity: 1 },
 			]);
+
+		ctx.clearRect(0, 0, width, height);
+		console.log("clear");
 
 		setIsPainting(false);
 		setMousePosition(undefined);
 	}, [socket, connected]);
-
-	const updateMain = useCallback(() => {
-		const t = new Date().getTime();
-		for (let i = 0; i < drawing.length; i++) {
-			if (t - drawing[i]["createdAt"] > 2000) {
-				// 드로잉 후 2초 후 지워지기 시작
-				drawing[i]["opacity"] -= 0.015;
-			}
-		}
-		setDrawing(drawing.filter((drawing) => drawing.opacity > 0)); // 다 지워진 오브젝트 삭제
-	});
 
 	const getCoordinate = (event) => {
 		if (!canvasRef.current) {
@@ -157,26 +153,63 @@ const Canvas = ({ width, height }) => {
 			return;
 		}
 		const canvas = canvasRef.current;
-		const subcanvas = subcanvasRef.current;
 		const ctx = canvas.getContext("2d");
-		const subctx = subcanvas.getContext("2d");
-		const stageWidth = subcanvasRef.width;
-		const stageHeight = subcanvasRef.height;
 
-		if (ctx == null && subctx == null) throw new Error("Could not get context");
-		if (subctx && ctx) {
-			subctx.strokeStyle = "#151ca2";
-			subctx.lineJoin = "round";
-			subctx.lineWidth = 3;
+		if (ctx == null) throw new Error("Could not get context");
+		if (ctx) {
+			ctx.strokeStyle = "#151ca2";
+			ctx.lineJoin = "round";
+			ctx.lineWidth = 3;
 
-			subctx.beginPath();
-			subctx.moveTo(originalMousePosition[0], originalMousePosition[1]);
-			subctx.lineTo(newMousePosition[0], newMousePosition[1]);
-			subctx.closePath();
-			subctx.clearRect(0, 0, stageWidth, stageHeight);
-			subctx.stroke();
+			ctx.beginPath();
+			ctx.moveTo(originalMousePosition[0], originalMousePosition[1]);
+			ctx.lineTo(newMousePosition[0], newMousePosition[1]);
+
+			ctx.closePath();
+
+			ctx.stroke();
 		}
 	};
+
+	const update = () => {
+		const t = new Date().getTime();
+
+		for (let i = 0; i < drawings.length; i++) {
+			console.log(t - drawings[i]["createdAt"]);
+			if (t - drawings[i]["createdAt"] > 2000) {
+				// 드로잉 후 2초 후 지워지기 시작
+
+				drawings[i]["opacity"] -= 0.015;
+			}
+		}
+		setDrawings((drawings) => [
+			drawings.filter((drawings) => drawings.opacity > 0),
+		]);
+	};
+
+	const animate = (time) => {
+		// update();
+		const canvas = canvasRef.current;
+		const ctx = canvas.getContext("2d");
+		const subctx = subcanvasRef.current.getContext("2d");
+
+		subctx.putImageData(ctx.getImageData(0, 0, width, height), 0, 0);
+		console.log(drawings);
+		drawings.forEach((drawing) => {
+			subctx.save();
+			subctx.globalAlpha = drawing.opacity;
+			subctx.drawImage(drawing.image, 0, 0);
+			subctx.restore();
+		});
+		previousTimeRef.current = time;
+		requestRef.current = requestAnimationFrame(animate);
+	};
+
+	useEffect(() => {
+		requestRef.current = requestAnimationFrame(animate);
+
+		return () => cancelAnimationFrame(requestRef.current);
+	}, []); // Make sure the effect runs only once
 
 	useEffect(() => {
 		if (!canvasRef.current) {
@@ -184,23 +217,30 @@ const Canvas = ({ width, height }) => {
 		}
 
 		const canvas = canvasRef.current;
-		const subcanvas = subcanvasRef.current;
-		subcanvas.addEventListener("mouseup", exitPaint);
-		subcanvas.addEventListener("mouseleave", exitPaint);
-		updateMain();
+
+		// update();
+		canvas.addEventListener("mouseup", exitPaint);
+		canvas.addEventListener("mouseleave", exitPaint);
 
 		return () => {
-			subcanvas.removeEventListener("mouseup", exitPaint);
-			subcanvas.removeEventListener("mouseleave", exitPaint);
+			canvas.removeEventListener("mouseup", exitPaint);
+			canvas.removeEventListener("mouseleave", exitPaint);
 		};
 	}, [exitPaint]);
 
 	return (
-		<CanvasWrapper
-			ref={subcanvasRef}
-			width={width}
-			height={height}
-		></CanvasWrapper>
+		<>
+			<CanvasWrapper
+				ref={subcanvasRef}
+				width={width}
+				height={height}
+			></CanvasWrapper>
+			<CanvasWrapper
+				ref={canvasRef}
+				width={width}
+				height={height}
+			></CanvasWrapper>
+		</>
 	);
 };
 
