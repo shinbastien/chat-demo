@@ -208,7 +208,7 @@ const InfoMenu = (props) => {
 								<div className="badge">{snapshots && snapshots.length}</div>
 							</div>
 							{loading ? (
-								<div class="fa-3x info">
+								<div className="fa-3x info">
 									<FontAwesomeIcon className="fa-spin" icon={faSync} />
 								</div>
 							) : null}

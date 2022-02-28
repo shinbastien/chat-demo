@@ -1,12 +1,11 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
-// import point1 from "../Styles/source/point1.png";
 import Stack from "@mui/material/Stack";
 import Draggable from "react-draggable"; // The default
 import Car from "../Styles/source/car-side-solid.svg";
@@ -25,12 +24,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VideoCard from "./VideoCard/VideoCard";
 import { searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
-import Canvas from "./Canvas/Canvas";
+import Canvas from "./Canvas/CanvasV2";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
-import { useRef } from "react";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
@@ -148,6 +146,23 @@ const ButtonWrapper = styled.button`
 	}
 `;
 
+const CurrentButtonWrapper = styled.button`
+	width: 300px;
+	height: 100%;
+	margin: 20px 0 0 40px;
+	padding: 3%;
+	background-color: ${(props) => props.theme.color2};
+	font-size: 20px;
+	color: ${(props) => props.theme.primary};
+	border-radius: 12px;
+	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+
+	&:hover {
+		background-color: ${(props) => props.theme.color4};
+	}
+`;
+
 const IndividualWrapper = styled.div`
 	position: absolute;
 	bottom: 7%;
@@ -172,18 +187,6 @@ const EmojiWrapper = styled.div`
 	z-index: 222;
 	left: 43%;
 `;
-
-// const VideoWrapper = styled.div`
-// 	position: absolute;
-// 	z-index: 300;
-
-// 	left: 40%;
-// 	transform: translateX(-50%);
-// 	background-color: white;
-
-// 	text-align: center;
-// 	margin: 0 auto;
-// `;
 
 ResultList.Item = styled.div`
 	display: flex;
@@ -258,15 +261,12 @@ export default function NewMapwindow(props) {
 	const { socket, connected } = useSocket();
 
 	const initMap = () => {
-		// navigator.geolocation.getCurrentPosition(function (position) {
-		// const lat = position.coords.latitude;
-		// const lng = position.coords.longitude;
-
-		const lat = 37.56653180179;
+		const lat = 37.56653180179; //을지로 입구역 좌표
 		const lng = 126.98295133464485;
 
 		socket.emit("start mapwindow", lat, lng);
 		console.log("send location info to server", [lat, lng]);
+
 		var center = new Tmapv2.LatLng(lat, lng);
 
 		setMap(
@@ -279,7 +279,6 @@ export default function NewMapwindow(props) {
 				scrollwheel: true,
 			}),
 		);
-		// });
 	};
 
 	useEffect(() => {
@@ -290,16 +289,9 @@ export default function NewMapwindow(props) {
 
 	//current point
 	useEffect(() => {
-		// if (map !== null) {
-		// 	map.addListener("click", onClickMarker);
-		// }
-
-		// if (navigator.geolocation) {
-		// 	navigator.geolocation.getCurrentPosition(function (position) {
-		// const lat = position.coords.latitude;
-		// const lng = position.coords.longitude;
 		const lat = 37.56653180179;
 		const lng = 126.98295133464485;
+
 		console.log("lat is: ", lat);
 		console.log("lng is: ", lng);
 
@@ -316,8 +308,6 @@ export default function NewMapwindow(props) {
 					"</span>",
 			}),
 		);
-		// 	});
-		// }
 	}, [map]);
 
 	// 출발 -- 도착 자동 이동
@@ -372,48 +362,12 @@ export default function NewMapwindow(props) {
 				});
 			}, duration * 1000);
 
-			// loadKeepList();
-
 			return () => {
 				clearInterval(interval);
 				setTrackSimulationTicker(0);
 			};
 		}
 	}, [pathMetaData]);
-
-	// const onClickMarker = (e) => {
-	// 	const latlng = e.latLng;
-	// 	const marker = new Tmapv2.Marker({
-	// 		position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
-	// 		map: map,
-	// 	});
-
-	// 	const buttonWindow = `
-	// 			<div>
-	// 			<input type="text"/>
-	// 				<button onClick={}>Keep 등록</button>
-	// 			</div>
-	// 		`;
-	// 	const infoWindow = new Tmapv2.InfoWindow({
-	// 		position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
-	// 		content: `${buttonWindow}`,
-	// 		map: map,
-	// 		type: 2,
-	// 	});
-	// };
-
-	// useMemo(() => {
-	// 	if (markerC) {
-	// 		markerC.addListener("click", (e) => {
-	// 			const { _lat, _lng } = markerC.getPosition();
-	// 			// setSharing(true);
-	// 			// loadpointInfo(_lat, _lng);
-	// 			// if (socket && connected) {
-	// 			// 	socket.emit("start shareVideo", videoID);
-	// 			// }
-	// 		});
-	// 	}
-	// }, [markerC, socket, connected]);
 
 	useEffect(() => {
 		if (socket && connected) {
@@ -455,8 +409,6 @@ export default function NewMapwindow(props) {
 			}
 		}
 	}, [recvideo]);
-
-	console.log(recvideoLoc);
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -810,6 +762,10 @@ export default function NewMapwindow(props) {
 	const handleSubmit = async (event) => {
 		event.preventDefault();
 
+		if (openResult === false) {
+			setOpenResult(true);
+		}
+
 		searchMarkers.map((marker) => marker.setMap(null));
 		setSearchMarkers([]);
 
@@ -850,6 +806,7 @@ export default function NewMapwindow(props) {
 	};
 
 	const handleStartSetting = (data) => {
+		console.log(data);
 		setStart(data);
 		const markerPosition = getPositionFromData(data);
 
@@ -967,9 +924,20 @@ export default function NewMapwindow(props) {
 	};
 
 	const startFromCurrentPoint = () => {
-		console.log(markerC);
-		const currentPosition = markerC.convertWGS84GEOToEPSG3857();
-		handleStartSetting(currentPosition);
+		const currentPosition = markerC.getPosition();
+
+		if (markerS !== null) {
+			markerS.setMap(null);
+		}
+
+		setMarkerS(
+			new Tmapv2.Marker({
+				position: currentPosition,
+				icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png",
+				iconSize: new Tmapv2.Size(24, 38),
+				map: map,
+			}),
+		);
 	};
 
 	const getPositionFromData = (data) => {
@@ -1162,8 +1130,6 @@ export default function NewMapwindow(props) {
 		};
 	}, [receiveShare, socket, connected]);
 
-	console.log(recvideoLoc);
-
 	return (
 		<React.Fragment>
 			{receiveShare
@@ -1246,7 +1212,9 @@ export default function NewMapwindow(props) {
 					start={start}
 					end={end}
 				></InfoMenu>
-				<button onClick={startFromCurrentPoint}>현재 위치에서 출발하기</button>
+				<CurrentButtonWrapper onClick={startFromCurrentPoint}>
+					현재 위치에서 출발하기
+				</CurrentButtonWrapper>
 				<Draggable>
 					<BoardWrapper>
 						<Stack direction="row" alignItems="center" justifyContent="center">

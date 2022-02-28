@@ -10,11 +10,20 @@ const CanvasWrapper = styled.canvas`
 const Canvas = ({ width, height }) => {
 	const canvasRef = useRef(null);
 	const subcanvasRef = useRef(null);
+	const drawingRef = useRef([]);
 	const [isPainting, setIsPainting] = useState(false);
 	const [otherIsPainting, setOtherIsPainting] = useState(false);
 	const [mousePosition, setMousePosition] = useState(undefined);
 	const { socket, connected } = useSocket();
-	const [drawing, setDrawing] = useState([]);
+
+	const requestRef = useRef();
+	const previousTimeRef = useRef();
+
+	useEffect(() => {
+		subcanvasRef.current = document.createElement("canvas");
+		subcanvasRef.current.width = width;
+		subcanvasRef.current.height = height;
+	}, []);
 
 	const startPoint = useCallback(
 		(event) => {
@@ -49,6 +58,7 @@ const Canvas = ({ width, height }) => {
 
 				if (mousePosition && newMousePosition) {
 					drawLine(mousePosition, newMousePosition);
+
 					if (socket && connected) {
 						socket.emit("send paint", mousePosition, newMousePosition);
 						console.log("send paint from:", mousePosition);
@@ -118,65 +128,111 @@ const Canvas = ({ width, height }) => {
 		}
 		const subcanvas = subcanvasRef.current;
 
-		// //when mouse-up set the canvas:
+		const subctx = subcanvas.getContext("2d");
 		const image = new Image();
-		image.src = subcanvas.toDataUrl();
+		image.src = canvasRef.current.toDataURL();
+
 		image.onload = () =>
-			setDrawing((drawing) => [
-				...drawing,
-				{ image: image, createdAt: new Date().getTime(), opacity: 1 },
-			]);
+			drawingRef.current.push({
+				image: image,
+				createdAt: new Date().getTime(),
+				opacity: 1,
+			});
+
+		subctx.closePath();
+		subctx.clearRect(0, 0, width, height);
 
 		setIsPainting(false);
 		setMousePosition(undefined);
 	}, [socket, connected]);
-
-	const updateMain = useCallback(() => {
-		const t = new Date().getTime();
-		for (let i = 0; i < drawing.length; i++) {
-			if (t - drawing[i]["createdAt"] > 2000) {
-				// 드로잉 후 2초 후 지워지기 시작
-				drawing[i]["opacity"] -= 0.015;
-			}
-		}
-		setDrawing(drawing.filter((drawing) => drawing.opacity > 0)); // 다 지워진 오브젝트 삭제
-	});
 
 	const getCoordinate = (event) => {
 		if (!canvasRef.current) {
 			return;
 		}
 
-		const canvas = canvasRef.current;
+		const subcanvas = subcanvasRef.current;
 
-		return [event.pageX - canvas.offsetLeft, event.pageY - canvas.offsetTop];
+		return [
+			event.pageX - subcanvas.offsetLeft,
+			event.pageY - subcanvas.offsetTop,
+		];
 	};
 
 	const drawLine = (originalMousePosition, newMousePosition) => {
-		if (!canvasRef.current) {
+		if (!subcanvasRef.current) {
 			return;
 		}
-		const canvas = canvasRef.current;
 		const subcanvas = subcanvasRef.current;
-		const ctx = canvas.getContext("2d");
 		const subctx = subcanvas.getContext("2d");
-		const stageWidth = subcanvasRef.width;
-		const stageHeight = subcanvasRef.height;
 
-		if (ctx == null && subctx == null) throw new Error("Could not get context");
-		if (subctx && ctx) {
+		if (subctx == null) throw new Error("Could not get context");
+		if (subctx) {
 			subctx.strokeStyle = "#151ca2";
 			subctx.lineJoin = "round";
 			subctx.lineWidth = 3;
 
 			subctx.beginPath();
 			subctx.moveTo(originalMousePosition[0], originalMousePosition[1]);
+			subctx.fillRect(
+				originalMousePosition[0] - subctx.lineWidth / 2,
+				originalMousePosition[1] - subctx.lineWidth / 2,
+				subctx.lineWidth,
+				subctx.lineWidth,
+			);
 			subctx.lineTo(newMousePosition[0], newMousePosition[1]);
-			subctx.closePath();
-			subctx.clearRect(0, 0, stageWidth, stageHeight);
 			subctx.stroke();
 		}
 	};
+
+	const update = () => {
+		const subcanvas = subcanvasRef.current;
+		const subctx = subcanvas.getContext("2d");
+		const canvas = canvasRef.current;
+		const ctx = canvas.getContext("2d");
+
+		if (ctx == null) throw new Error("Could not get context");
+
+		const t = new Date().getTime();
+
+		let drawingRefCurrent = drawingRef.current;
+
+		for (let i = 0; i < drawingRefCurrent.length; i++) {
+			if (t - drawingRefCurrent[i]["createdAt"] > 2000) {
+				drawingRefCurrent[i]["opacity"] -= 0.015;
+			}
+		}
+
+		drawingRef.current = drawingRefCurrent.filter(
+			(drawing) => drawing.opacity > 0,
+		);
+	};
+
+	const animate = (time) => {
+		const subcanvas = subcanvasRef.current;
+		const subctx = subcanvas.getContext("2d");
+		const canvas = canvasRef.current;
+		const ctx = canvas.getContext("2d");
+		update();
+		if (previousTimeRef.current != undefined) {
+			ctx.putImageData(subctx.getImageData(0, 0, width, height), 0, 0);
+			drawingRef.current.forEach((drawing) => {
+				ctx.save();
+				ctx.globalAlpha = drawing.opacity;
+				ctx.drawImage(drawing.image, 0, 0);
+				ctx.restore();
+			});
+		}
+
+		previousTimeRef.current = time;
+		requestRef.current = requestAnimationFrame(animate);
+	};
+
+	useEffect(() => {
+		requestRef.current = requestAnimationFrame(animate);
+
+		return () => cancelAnimationFrame(requestRef.current);
+	}, []); // Make sure the effect runs only once
 
 	useEffect(() => {
 		if (!canvasRef.current) {
@@ -184,20 +240,18 @@ const Canvas = ({ width, height }) => {
 		}
 
 		const canvas = canvasRef.current;
-		const subcanvas = subcanvasRef.current;
-		subcanvas.addEventListener("mouseup", exitPaint);
-		subcanvas.addEventListener("mouseleave", exitPaint);
-		updateMain();
+		canvas.addEventListener("mouseup", exitPaint);
+		canvas.addEventListener("mouseleave", exitPaint);
 
 		return () => {
-			subcanvas.removeEventListener("mouseup", exitPaint);
-			subcanvas.removeEventListener("mouseleave", exitPaint);
+			canvas.removeEventListener("mouseup", exitPaint);
+			canvas.removeEventListener("mouseleave", exitPaint);
 		};
 	}, [exitPaint]);
 
 	return (
 		<CanvasWrapper
-			ref={subcanvasRef}
+			ref={canvasRef}
 			width={width}
 			height={height}
 		></CanvasWrapper>

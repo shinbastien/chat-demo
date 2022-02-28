@@ -4,6 +4,7 @@ import NewMapwindow from "../Mapwindow/NewMapwindowTest";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
 import AppBar from "@mui/material/AppBar";
+import { HostContext } from "../lib/Context/HostContext";
 
 import { useSocket } from "../lib/socket";
 import styled from "styled-components";
@@ -30,7 +31,10 @@ const TextWrapper = styled.span`
 function Map() {
 	const location = useLocation();
 	const [onloading, setonLoading] = useState(false);
-	const [infoPlace, setInfoPlace] = useState([]);
+	const [hostUser, setHostUser] = useState({
+		type: "host",
+		userName: "abc",
+	});
 
 	const { groupID, userName } = location.state;
 	console.log("groupID obtained from Home is: ", groupID);
@@ -72,18 +76,20 @@ function Map() {
 				</Typography>
 			</AppBar> */}
 
-			<Grid container spacing={2} style={{ marginTop: 40 }}>
-				<Grid item xs={6} md={9}>
-					<NewMapwindow userName={userName}></NewMapwindow>
+			<HostContext.Provider value={[hostUser, setHostUser]}>
+				<Grid container spacing={2}>
+					<Grid item xs={6} md={9}>
+						<NewMapwindow userName={userName}></NewMapwindow>
+					</Grid>
+					<Grid item xs={6} md={3}>
+						<VideoCall
+							roomName={groupID}
+							userName={userName}
+							loading={onloading}
+						></VideoCall>
+					</Grid>
 				</Grid>
-				<Grid item xs={6} md={3}>
-					<VideoCall
-						roomName={groupID}
-						userName={userName}
-						loading={onloading}
-					></VideoCall>
-				</Grid>
-			</Grid>
+			</HostContext.Provider>
 		</>
 	);
 }

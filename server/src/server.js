@@ -5,10 +5,11 @@ const { v4: uuidv4 } = require("uuid");
 
 const io = require("socket.io")(server, {
 	cors: {
-		origin: "*",
+		origin: "http://localhost:3000",
+		credentials: true,
+		methods: ["GET", "POST"],
 	},
 });
-
 
 const port = process.env.PORT || 3000;
 // const PORT = 4000;
@@ -30,7 +31,7 @@ io.on("connection", (socket) => {
 	socket.on("join", (roomName, userName) => {
 		socket.join(roomName);
 		if (!users[roomName]) {
-			users[roomName] = { participants: {}, youtubeLink: "", sharingHost: ""};
+			users[roomName] = { participants: {}, youtubeLink: "", sharingHost: "" };
 		}
 		socket.roomName = roomName;
 		socket.userName = userName;
@@ -84,7 +85,9 @@ io.on("connection", (socket) => {
 		console.log("starting sharevideo for room");
 		console.log(sharing);
 		console.log(item);
-		socket.broadcast.to(socket.roomName).emit("receive sharevideo", sharing, item);
+		socket.broadcast
+			.to(socket.roomName)
+			.emit("receive sharevideo", sharing, item);
 	});
 
 	socket.on("play", (userName) => {
@@ -134,8 +137,7 @@ io.on("connection", (socket) => {
 		socket.broadcast.to(socket.roomName).emit("other start drawing");
 	});
 	socket.on("send paint", (mousePosition, newMousePosition) => {
-		console.log("send paint of: ", socket.
-		userName);
+		console.log("send paint of: ", socket.userName);
 		socket.broadcast
 			.to(socket.roomName)
 			.emit("receive paint", mousePosition, newMousePosition);
@@ -148,43 +150,62 @@ io.on("connection", (socket) => {
 
 	// -----------------------SHARE CONTENTS----------------------------
 	socket.on("start sendShare request", () => {
-		if (users[socket.roomName].sharingHost==="") {
+		if (users[socket.roomName].sharingHost === "") {
 			users[socket.roomName].sharingHost = socket.userName;
 			socket.share = true;
-			socket.broadcast.to(socket.roomName).emit("start sharemode", socket.userName)
+			socket.broadcast
+				.to(socket.roomName)
+				.emit("start sharemode", socket.userName);
 		}
-		socket.emit("sendshare response", users[socket.roomName].sharingHost, socket.userName);
-	}) 
-	
+		socket.emit(
+			"sendshare response",
+			users[socket.roomName].sharingHost,
+			socket.userName,
+		);
+	});
+
 	socket.on("finish sendShare request", () => {
-		socket.broadcast.to(socket.roomName).emit("finish sharemode", users[socket.roomName].sharingHost);
+		socket.broadcast
+			.to(socket.roomName)
+			.emit("finish sharemode", users[socket.roomName].sharingHost);
 		users[socket.roomName].sharingHost = "";
 		if (socket.share == true) {
 			socket.share = false;
 		}
-	})
+	});
 	socket.on("sendshare videoLoc", (videoLoc) => {
-		console.log("got emit of share videoLoc", users[socket.roomName].sharingHost)
-		socket.broadcast.to(socket.roomName).emit("receive sharedvideoLoc", videoLoc);
+		console.log(
+			"got emit of share videoLoc",
+			users[socket.roomName].sharingHost,
+		);
+		socket.broadcast
+			.to(socket.roomName)
+			.emit("receive sharedvideoLoc", videoLoc);
 	});
 
 	socket.on("sendshare individual", () => {
 		socket.broadcast.to(socket.roomName).emit("receive share individual");
-	})
+	});
 
 	socket.on("share individual searchlist", (recvideo) => {
-		socket.broadcast.to(socket.roomName).emit("receive individual searchlist", recvideo);
-	})
+		socket.broadcast
+			.to(socket.roomName)
+			.emit("receive individual searchlist", recvideo);
+	});
 
 	socket.on("send keyword individual search", (keyword) => {
-		socket.broadcast.to(socket.roomName).emit("receive keyword individual search", keyword);
+		socket.broadcast
+			.to(socket.roomName)
+			.emit("receive keyword individual search", keyword);
 		console.log("Individual Search, keyword");
-	})
+	});
 
 	socket.on("send searched videos", (videos, keyword) => {
-		 socket.broadcast.to(socket.roomName).emit("receive searched videos", videos, keyword);
-		 console.log("Individual Search, videos");
-	})
+		socket.broadcast
+			.to(socket.roomName)
+			.emit("receive searched videos", videos, keyword);
+		console.log("Individual Search, videos");
+	});
 	// Leave the room if the user closes the socket
 	socket.on("disconnect", () => {
 		console.log("socket disconnected");

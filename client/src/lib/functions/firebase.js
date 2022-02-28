@@ -1,5 +1,3 @@
-// Import the functions you need from the SDKs you need
-// import * as firebase from "firebase/app";
 import { initializeApp } from "firebase/app";
 import "firebase/auth";
 import { getFirestore, getDocs, collection } from "firebase/firestore";
@@ -90,18 +88,8 @@ async function searchOnYoutube(props) {
 		console.log(items);
 
 		return items[0];
-
-		//add dummy data
-		// const s = data[num];
-
-		// num += 1;
-		// if (num == 5) {
-		// 	num = 0;
-		// }
-		// return s;
 	} catch (err) {
 		console.log(err);
-		// return data;
 	}
 }
 
