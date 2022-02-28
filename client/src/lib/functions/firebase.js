@@ -1,5 +1,3 @@
-// Import the functions you need from the SDKs you need
-// import * as firebase from "firebase/app";
 import { initializeApp } from "firebase/app";
 import "firebase/auth";
 import { getFirestore, getDocs, collection } from "firebase/firestore";
@@ -49,7 +47,7 @@ async function writeToPlaceData(element) {
 	}
 }
 
-async function readFromFirebase() {
+async function readFromFirebase(dbRef) {
 	firebaseInstance();
 	const db = getDatabase();
 	const dataInstance = [];
@@ -62,14 +60,12 @@ async function readFromFirebase() {
 				dataInstance.push(doc);
 			});
 		});
-
+		console.log("I am loading");
 		return dataInstance;
 	} catch (error) {
 		console.log(error);
 	}
 }
-
-var num = 0;
 
 async function searchOnYoutube(props) {
 	const API_URL = "https://www.googleapis.com/youtube/v3/search";
@@ -82,7 +78,7 @@ async function searchOnYoutube(props) {
 			params: {
 				key: process.env.REACT_APP_YOUTUBE_API_KEY,
 				part: "snippet",
-				q: `대전 유성구` + props,
+				q: props,
 				maxResults: 1,
 				videoEmbeddable: "true",
 				type: "video",
@@ -92,22 +88,17 @@ async function searchOnYoutube(props) {
 		console.log(items);
 
 		return items[0];
-
-		//add dummy data
-		// const s = data[num];
-
-		// num += 1;
-		// if (num == 5) {
-		// 	num = 0;
-		// }
-		// return s;
 	} catch (err) {
 		console.log(err);
-		// return data;
 	}
 }
 
-export { readFromFirebase, writeToPlaceData, searchOnYoutube };
+export {
+	readFromFirebase,
+	writeToPlaceData,
+	searchOnYoutube,
+	firebaseInstance,
+};
 
 // {
 // 	groups: {

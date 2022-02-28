@@ -25,36 +25,27 @@ const BarWrapper = styled.div`
 		flex-grow: 10;
 	}
 	> button {
+		color: ${(props) => props.theme.color4};
 		padding-right: 2%;
 		font-size: 2vw;
 	}
 `;
 
-// function TabPanel(props) {
-// 	const { children, value, index, ...other } = props;
-
-// 	return (
-// 		<div
-// 			role="tabpanel"
-// 			hidden={value !== index}
-// 			id={`simple-tabpanel-${index}`}
-// 			aria-labelledby={`simple-tab-${index}`}
-// 			{...other}
-// 		>
-// 			{value === index && (
-// 				<Box sx={{ p: 3 }}>
-// 					<Typography>{children}</Typography>
-// 				</Box>
-// 			)}
-// 		</div>
-// 	);
-// }
+const BoardWrapper = styled.div`
+	padding: 2%;
+	.title {
+		font-size: 20px;
+		color: ${(props) => props.theme.color1};
+		padding: 2% 0 2% 0;
+	}
+`;
 
 export default function Individual({
 	individual,
 	stateChanger,
 	host,
 	receiver,
+	markerC,
 }) {
 	const location = useLocation();
 	const [recvideo, setrecvideo] = useState([]);
@@ -62,17 +53,21 @@ export default function Individual({
 	const { groupID, userName } = location.state;
 	const [value, setValue] = React.useState(0);
 	const { socket, connected } = useSocket();
-
-	// const handleChange = (event, newValue) => {
-	// 	setValue(newValue);
-	// };
+	const changeToLatLng = markerC.getPosition();
+	console.log(changeToLatLng);
 
 	useEffect(() => {
-		navigator.geolocation.getCurrentPosition(function (position) {
-			const lat = position.coords.latitude;
-			const lng = position.coords.longitude;
-			loadpointInfo(lat, lng);
-		});
+		//현재 위치
+		// navigator.geolocation.getCurrentPosition(function (position) {
+		// 	const lat = position.coords.latitude;
+		// 	const lng = position.coords.longitude;
+		// 	loadpointInfo(lat, lng);
+		// });
+
+		const lat = changeToLatLng._lat;
+		const lng = changeToLatLng._lng;
+		loadpointInfo(lat, lng);
+
 		return () => {
 			stateChanger(false); // This worked for me
 		};
@@ -137,15 +132,19 @@ export default function Individual({
 		<Wrapper>
 			<BarWrapper>
 				<div></div>
-				<button onClick={() => stateChanger(false)}>
+				<button
+					style={{ cursor: "pointer" }}
+					onClick={() => stateChanger(false)}
+				>
 					<FontAwesomeIcon icon={faXmark} />
 				</button>
 			</BarWrapper>
-
-			<div value={value} index={0}>
-				Search
+			<BoardWrapper>
+				<div className="title">
+					<strong>Search</strong>
+				</div>
 				<Search value={recvideo} share={share}></Search>
-			</div>
+			</BoardWrapper>
 		</Wrapper>
 	);
 }

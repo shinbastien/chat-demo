@@ -1,14 +1,14 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
-import point1 from "../Styles/source/point1.png";
 import Stack from "@mui/material/Stack";
 import Draggable from "react-draggable"; // The default
+import Car from "../Styles/source/car-side-solid.svg";
 import {
 	faHand,
 	faVectorSquare,
@@ -24,12 +24,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VideoCard from "./VideoCard/VideoCard";
 import { searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
-import Canvas from "./Canvas/Canvas";
+import Canvas from "./Canvas/CanvasV2";
 import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
-import { useRef } from "react";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
@@ -87,6 +86,7 @@ const BoardWrapper = styled.div`
 	justify-content: center;
 	left: -13%;
 	z-index: 11;
+	cursor: pointer;
 
 	> div {
 		padding: 1.7%;
@@ -146,6 +146,23 @@ const ButtonWrapper = styled.button`
 	}
 `;
 
+const CurrentButtonWrapper = styled.button`
+	width: 300px;
+	height: 100%;
+	margin: 20px 0 0 40px;
+	padding: 3%;
+	background-color: ${(props) => props.theme.color2};
+	font-size: 20px;
+	color: ${(props) => props.theme.primary};
+	border-radius: 12px;
+	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+
+	&:hover {
+		background-color: ${(props) => props.theme.color4};
+	}
+`;
+
 const IndividualWrapper = styled.div`
 	position: absolute;
 	bottom: 7%;
@@ -171,18 +188,6 @@ const EmojiWrapper = styled.div`
 	left: 43%;
 `;
 
-// const VideoWrapper = styled.div`
-// 	position: absolute;
-// 	z-index: 300;
-
-// 	left: 40%;
-// 	transform: translateX(-50%);
-// 	background-color: white;
-
-// 	text-align: center;
-// 	margin: 0 auto;
-// `;
-
 ResultList.Item = styled.div`
 	display: flex;
 	align-items: center;
@@ -194,8 +199,6 @@ ResultList.Item = styled.div`
 export default function NewMapwindow(props) {
 	//map
 	const [map, setMap] = useState(null);
-	const [latitude, setLatitude] = useState(0.0);
-	const [longtitude, setLongtitude] = useState(0.0);
 	const { userName, loading } = props;
 
 	//root-tracking
@@ -211,8 +214,6 @@ export default function NewMapwindow(props) {
 	const [markerS, setMarkerS] = useState(null);
 	const [markerE, setMarkerE] = useState(null);
 	const [markerC, setMarkerC] = useState(null);
-
-	const [userLocObj, setUserLocObj] = useState({})
 	const [searchMarkers, setSearchMarkers] = useState([]);
 	const [totalDaytime, setTotalDaytime] = useState({
 		totalD: "",
@@ -260,123 +261,54 @@ export default function NewMapwindow(props) {
 	const { socket, connected } = useSocket();
 
 	const initMap = () => {
-		navigator.geolocation.getCurrentPosition(function (position) {
-			const lat = position.coords.latitude;
-			const lng = position.coords.longitude;
+		const lat = 37.56653180179; //을지로 입구역 좌표
+		const lng = 126.98295133464485;
 
-			socket.emit("start mapwindow", lat, lng); 
-			console.log("send location info to server", [lat, lng]);
-			var center = new Tmapv2.LatLng(lat, lng);
+		socket.emit("start mapwindow", lat, lng);
+		console.log("send location info to server", [lat, lng]);
 
-			setLatitude(lat);
-			setLongtitude(lng);
-			setMap(
-				new Tmapv2.Map("map_div", {
-					center: center,
-					width: "100%",
-					height: "100vh",
-					zoom: 18,
-					zoomControl: true,
-					scrollwheel: true,
-				}),
-			);
-		});
+		var center = new Tmapv2.LatLng(lat, lng);
+
+		setMap(
+			new Tmapv2.Map("map_div", {
+				center: center,
+				width: "100%",
+				height: "100vh",
+				zoom: 18,
+				zoomControl: true,
+				scrollwheel: true,
+			}),
+		);
 	};
 
 	useEffect(() => {
-		const handleUserLocation = (data) => {
-			const newLocObj = {};
-			Object.keys(data).filter((x) => x!= userName).map(name => {
-				newLocObj[name] = data[name].location;
-			})
-
-			setUserLocObj(newLocObj);
-		}
-
 		if (socket && connected) {
 			initMap();
-			socket.on("bring userLocationInfo", handleUserLocation);
 		}
 	}, [connected, socket]);
 
 	//current point
 	useEffect(() => {
-		// if (map !== null) {
-		// 	map.addListener("click", onClickMarker);
-		// }
+		const lat = 37.56653180179;
+		const lng = 126.98295133464485;
 
-		if (navigator.geolocation) {
-			navigator.geolocation.getCurrentPosition(function (position) {
-				const lat = position.coords.latitude;
-				const lng = position.coords.longitude;
-				console.log("lat is: ", lat);
-				console.log("lng is: ", lng);
+		console.log("lat is: ", lat);
+		console.log("lng is: ", lng);
 
-				setLatitude(lat);
-				setLongtitude(lng);
-
-				setMarkerC(
-					new Tmapv2.Marker({
-						position: new Tmapv2.LatLng(lat, lng),
-						icon: point1,
-						iconSize: new Tmapv2.Size(24, 24),
-						title: "현재위치",
-						map: map,
-						label:
-							"<span style='background-color: #46414E; color:white'>" +
-							"현재위치" +
-							"</span>",
-					}),
-				);
-			});
-		}
-	}, [latitude, longtitude, map]);
-
-	useEffect(() => {
-		Object.keys(userLocObj).map(x => 
-			{
-				setMarkerC(
-					new Tmapv2.Marker({
-						position: new Tmapv2.LatLng(userLocObj[x].location[0], userLocObj[x].location[1]),
-						icon: point1,
-						iconSize: new Tmapv2.Size(30, 30),
-						title: "현재위치",	
-						map: map,
-						label:
-							"<span style='background-color: #46414E; color:white'>" +
-							"현재위치" +
-							"</span>",
-					}),
-				)
-				
-			})
-	}, [userLocObj])
-
-	//이동시
-	// useEffect(() => {
-	// 	const interval = setInterval(() => {
-	// 		navigator.geolocation.getCurrentPosition(function (position) {
-	// 			const lat = position.coords.latitude;
-	// 			const lng = position.coords.longitude;
-	// 			if (markerC !== null) {
-	// 				markerC.setMap(null);
-	// 			}
-	// 			setMarkerC(
-	// 				new Tmapv2.Marker({
-	// 					position: new Tmapv2.LatLng(lat, lng),
-	// 					icon: point1,
-	// 					iconSize: new Tmapv2.Size(24, 24),
-	// 					title: "이동중",
-	// 					map: map,
-	// 				}),
-	// 			);
-	// 		});
-	// 		console.log("I am moving...");
-	// 	}, 5000);
-	// 	return () => {
-	// 		clearInterval(interval);
-	// 	};
-	// }, [markerC]);
+		setMarkerC(
+			new Tmapv2.Marker({
+				position: new Tmapv2.LatLng(lat, lng),
+				icon: Car,
+				iconSize: new Tmapv2.Size(50, 50),
+				title: "현재위치",
+				map: map,
+				label:
+					"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
+					"현재위치" +
+					"</span>",
+			}),
+		);
+	}, [map]);
 
 	// 출발 -- 도착 자동 이동
 	useEffect(() => {
@@ -416,8 +348,11 @@ export default function NewMapwindow(props) {
 									return getMarkers({
 										lat: lat,
 										lng: lng,
-										markerImage: point1,
-										title: `현재위치 ${finishTime - currTick}초 남음`,
+										markerImage: Car,
+										title:
+											"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
+											`${finishTime - currTick}초 남음` +
+											"</span>",
 									});
 								});
 							}
@@ -427,48 +362,12 @@ export default function NewMapwindow(props) {
 				});
 			}, duration * 1000);
 
-			// loadKeepList();
-
 			return () => {
 				clearInterval(interval);
 				setTrackSimulationTicker(0);
 			};
 		}
 	}, [pathMetaData]);
-
-	// const onClickMarker = (e) => {
-	// 	const latlng = e.latLng;
-	// 	const marker = new Tmapv2.Marker({
-	// 		position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
-	// 		map: map,
-	// 	});
-
-	// 	const buttonWindow = `
-	// 			<div>
-	// 			<input type="text"/>
-	// 				<button onClick={}>Keep 등록</button>
-	// 			</div>
-	// 		`;
-	// 	const infoWindow = new Tmapv2.InfoWindow({
-	// 		position: new Tmapv2.LatLng(latlng.lat(), latlng.lng()),
-	// 		content: `${buttonWindow}`,
-	// 		map: map,
-	// 		type: 2,
-	// 	});
-	// };
-
-	useMemo(() => {
-		if (markerC) {
-			markerC.addListener("click", (e) => {
-				const { _lat, _lng } = markerC.getPosition();
-				// setSharing(true);
-				// loadpointInfo(_lat, _lng);
-				// if (socket && connected) {
-				// 	socket.emit("start shareVideo", videoID);
-				// }
-			});
-		}
-	}, [markerC, socket, connected]);
 
 	useEffect(() => {
 		if (socket && connected) {
@@ -510,8 +409,6 @@ export default function NewMapwindow(props) {
 			}
 		}
 	}, [recvideo]);
-
-	console.log(recvideoLoc);
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -703,7 +600,7 @@ export default function NewMapwindow(props) {
 	const getMarkers = (infoObj) => {
 		const { pointType, lat, lng, markerImage, title } = infoObj;
 		const size =
-			pointType === "P" ? new Tmapv2.Size(8, 8) : new Tmapv2.Size(24, 38); //아이콘 크기 설정합니다.
+			pointType === "P" ? new Tmapv2.Size(8, 8) : new Tmapv2.Size(40, 60); //아이콘 크기 설정합니다.
 
 		if (title) {
 			var label =
@@ -865,6 +762,10 @@ export default function NewMapwindow(props) {
 	const handleSubmit = async (event) => {
 		event.preventDefault();
 
+		if (openResult === false) {
+			setOpenResult(true);
+		}
+
 		searchMarkers.map((marker) => marker.setMap(null));
 		setSearchMarkers([]);
 
@@ -905,6 +806,7 @@ export default function NewMapwindow(props) {
 	};
 
 	const handleStartSetting = (data) => {
+		console.log(data);
 		setStart(data);
 		const markerPosition = getPositionFromData(data);
 
@@ -1008,14 +910,6 @@ export default function NewMapwindow(props) {
 		map.setCenter(currentPosition);
 	};
 
-	const onLoadOtherCurrent = (e) => {
-		const currentOtherPosition = markerC.getPosition();
-		if (!markerC.isLoaded()) {
-			markerC.setMap(map);
-		}
-		map.setCenter(currentOtherPosition);
-	}
-
 	const onShareCurrent = (e) => {
 		// clicked share button
 		if (socket && connected) {
@@ -1027,6 +921,23 @@ export default function NewMapwindow(props) {
 				alert("you finished sharing");
 			}
 		}
+	};
+
+	const startFromCurrentPoint = () => {
+		const currentPosition = markerC.getPosition();
+
+		if (markerS !== null) {
+			markerS.setMap(null);
+		}
+
+		setMarkerS(
+			new Tmapv2.Marker({
+				position: currentPosition,
+				icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png",
+				iconSize: new Tmapv2.Size(24, 38),
+				map: map,
+			}),
+		);
 	};
 
 	const getPositionFromData = (data) => {
@@ -1102,7 +1013,6 @@ export default function NewMapwindow(props) {
 				break;
 		}
 	};
-	console.log(chosenEmoji);
 
 	const onEmojiClick = (event, emojiObject) => {
 		const { emoji } = emojiObject;
@@ -1170,9 +1080,6 @@ export default function NewMapwindow(props) {
 				}
 			});
 		}
-		return () => {
-			socket.off("sendshare response");
-		}
 	}, [sendShare, socket, connected]);
 
 	// Sending Share Mode
@@ -1223,8 +1130,6 @@ export default function NewMapwindow(props) {
 		};
 	}, [receiveShare, socket, connected]);
 
-	console.log(recvideoLoc);
-
 	return (
 		<React.Fragment>
 			{receiveShare
@@ -1269,6 +1174,7 @@ export default function NewMapwindow(props) {
 						stateChanger={setIndividual}
 						host={sendShare ? true : false}
 						receiver={receiveShare ? true : false}
+						markerC={markerC}
 					/>
 				</IndividualWrapper>
 			)}
@@ -1290,18 +1196,10 @@ export default function NewMapwindow(props) {
 										src={`http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_${idx}.png`}
 									/>
 									{result.name}
-									<Button
-										style={{ cursor: "pointer" }}
-										onClick={() => handleStartSetting(result)}
-									>
+									<Button onClick={() => handleStartSetting(result)}>
 										출발
 									</Button>
-									<Button
-										style={{ cursor: "pointer" }}
-										onClick={() => handleEndSetting(result)}
-									>
-										도착
-									</Button>
+									<Button onClick={() => handleEndSetting(result)}>도착</Button>
 								</ResultList.Item>
 							))}
 						</ResultList>
@@ -1314,17 +1212,21 @@ export default function NewMapwindow(props) {
 					start={start}
 					end={end}
 				></InfoMenu>
-
+				<CurrentButtonWrapper onClick={startFromCurrentPoint}>
+					현재 위치에서 출발하기
+				</CurrentButtonWrapper>
 				<Draggable>
 					<BoardWrapper>
 						<Stack direction="row" alignItems="center" justifyContent="center">
 							<IconButton
+								style={{ cursor: "pointer" }}
 								className={active === "hand" ? "active" : ""}
 								onClick={() => onHandleClick("hand")}
 							>
 								<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faHand} />
 							</IconButton>
 							<IconButton
+								style={{ cursor: "pointer" }}
 								className={active === "draw" ? "active" : ""}
 								onClick={() => onHandleClick("draw")}
 							>
@@ -1332,6 +1234,7 @@ export default function NewMapwindow(props) {
 							</IconButton>
 
 							<IconButton
+								style={{ cursor: "pointer" }}
 								className={active === "search" ? "active" : ""}
 								onClick={() => onHandleClick("search")}
 							>
@@ -1341,6 +1244,7 @@ export default function NewMapwindow(props) {
 								/>
 							</IconButton>
 							<IconButton
+								style={{ cursor: "pointer" }}
 								className={active === "emoji" ? "active" : ""}
 								onClick={() => onHandleClick("emoji")}
 							>
@@ -1350,6 +1254,7 @@ export default function NewMapwindow(props) {
 								/>
 							</IconButton>
 							<IconButton
+								style={{ cursor: "pointer" }}
 								className={active === "individualSearch" ? "active" : ""}
 								onClick={() => onHandleClick("individualSearch")}
 							>
@@ -1364,10 +1269,6 @@ export default function NewMapwindow(props) {
 			</MapButtonWrapper>
 			<CurrentLocationWrapper>
 				<IconButton onClick={onLoadCurrent}>
-					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
-				</IconButton>
-
-				<IconButton onClick={onLoadOtherCurrent}>
 					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
 				</IconButton>
 			</CurrentLocationWrapper>
