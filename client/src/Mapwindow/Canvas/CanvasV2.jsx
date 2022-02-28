@@ -15,7 +15,6 @@ const Canvas = ({ width, height }) => {
 	const [otherIsPainting, setOtherIsPainting] = useState(false);
 	const [mousePosition, setMousePosition] = useState(undefined);
 	const { socket, connected } = useSocket();
-	const [drawings, setDrawings] = useState([]);
 
 	const requestRef = useRef();
 	const previousTimeRef = useRef();
@@ -139,10 +138,7 @@ const Canvas = ({ width, height }) => {
 				createdAt: new Date().getTime(),
 				opacity: 1,
 			});
-		// setDrawings((drawings) => [
-		// 	...drawings,
-		// 	{ image: image, createdAt: new Date().getTime(), opacity: 1 },
-		// ]);
+
 		subctx.closePath();
 		subctx.clearRect(0, 0, width, height);
 
@@ -210,19 +206,6 @@ const Canvas = ({ width, height }) => {
 		drawingRef.current = drawingRefCurrent.filter(
 			(drawing) => drawing.opacity > 0,
 		);
-
-		// for (let i = 0; i < drawings.length; i++) {
-		// 	if (t - drawings[i]["createdAt"] > 2000) {
-		// 		let newArray = [...drawings];
-		// 		newArray[i]["opacity"] -= 0.015;
-
-		// 		setDrawings(newArray);
-		// 	}
-		// }
-
-		// setDrawings((drawings) => [
-		// 	drawings.filter((drawing) => drawing.opacity > 0),
-		// ]);
 	};
 
 	const animate = (time) => {
