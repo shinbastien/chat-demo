@@ -11,10 +11,13 @@ import {
 	faAngleUp,
 	faCircleInfo,
 	faLocationDot,
+	faSync,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Draggable from "react-draggable"; // The default
-import { readFromFirebase } from "../../lib/functions/firebase";
+import { firebaseInstance } from "../../lib/functions/firebase";
+import { ref, getDatabase } from "firebase/database";
+import { useList } from "react-firebase-hooks/database";
 
 const MenuWrapper = styled.div`
 	width: 300px;
@@ -104,8 +107,11 @@ const VisitedWrapper = styled.div`
 		props.visited === true ? "#e56b6f" : "#0081a7"};
 `;
 
+const firebaseApp = firebaseInstance();
+const database = getDatabase(firebaseApp);
+
 const KeepPlaceCard = (props) => {
-	const { coords, date, id, title, videoInfo, visited } = props.info[1];
+	const { coords, date, id, title, videoInfo, visited } = props.info;
 	const { map } = props;
 	const [infoMarker, setInfomarker] = useState([]);
 
@@ -140,7 +146,11 @@ const KeepPlaceCard = (props) => {
 	};
 
 	return (
-		<button variant="outlined" onClick={() => onClickKeep(coords, title)}>
+		<button
+			variant="outlined"
+			style={{ cursor: "pointer" }}
+			onClick={() => onClickKeep(coords, title)}
+		>
 			<img src={videoInfo.thumnails.url} width="100%" height="auto"></img>
 			<VisitedWrapper visited={visited}></VisitedWrapper>
 		</button>
@@ -153,23 +163,7 @@ const InfoMenu = (props) => {
 	const { map, totalDaytime, start, end } = props;
 
 	const [keepOpen, setKeepOpen] = useState(false);
-	const [savePlace, setSavePlace] = useState(null);
-
-	useEffect(() => {
-		let active = true;
-		load();
-		return () => {
-			active = false;
-		};
-		async function load() {
-			const result = await readFromFirebase();
-
-			if (!active) {
-				return;
-			}
-			setSavePlace(result);
-		}
-	}, [keepOpen]);
+	const [snapshots, loading, error] = useList(ref(database, "keeps"));
 
 	return (
 		<Draggable>
@@ -211,19 +205,27 @@ const InfoMenu = (props) => {
 									🏃🏻‍♀️
 								</span>{" "}
 								Keep&nbsp;{" "}
-								<div className="badge">{savePlace && savePlace.length}</div>
+								<div className="badge">{snapshots && snapshots.length}</div>
 							</div>
-							<button onClick={() => setKeepOpen(!keepOpen)}>
+							{loading ? (
+								<div class="fa-3x info">
+									<FontAwesomeIcon className="fa-spin" icon={faSync} />
+								</div>
+							) : null}
+							<button
+								style={{ cursor: "pointer" }}
+								onClick={() => setKeepOpen(!keepOpen)}
+							>
 								<FontAwesomeIcon icon={keepOpen ? faAngleDown : faAngleUp} />
 							</button>
 						</span>
-						<div style={{ display: keepOpen ? "none" : "inline-block" }}>
-							{savePlace &&
-								savePlace.map((list, idx) => (
+						<div style={{ display: keepOpen ? "inline-block" : "none" }}>
+							{snapshots !== undefined &&
+								snapshots.map((list) => (
 									<MemoKeepPlaceCard
-										key={idx}
+										key={list.key}
 										map={map}
-										info={list}
+										info={list.val()}
 									></MemoKeepPlaceCard>
 								))}
 						</div>

@@ -18,7 +18,10 @@ const Bookmark = ({ data }) => {
 	}, [active]);
 
 	return (
-		<IconButton onClick={() => setActive(!active)}>
+		<IconButton
+			style={{ cursor: "pointer" }}
+			onClick={() => setActive(!active)}
+		>
 			<FontAwesomeIcon
 				style={{ color: active ? "red" : "#7B7B7B" }}
 				icon={faBookmark}

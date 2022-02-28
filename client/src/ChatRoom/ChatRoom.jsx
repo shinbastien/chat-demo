@@ -86,7 +86,11 @@ function ChatRoom() {
 				placeholder="Write message..."
 				className="new-message-input-field"
 			/>
-			<button onClick={handleSendMessage} className="send-message-button">
+			<button
+				style={{ cursor: "pointer" }}
+				onClick={handleSendMessage}
+				className="send-message-button"
+			>
 				Send
 			</button>
 			{/* {Toast('My first toast')} */}

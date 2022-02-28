@@ -200,7 +200,10 @@ function Main(props) {
 							</Stack>
 						</Grid>
 						<Grid item>
-							<IconButton onClick={() => console.log("test")}>
+							<IconButton
+								style={{ cursor: "pointer" }}
+								onClick={() => console.log("test")}
+							>
 								{/* <MoreVertIcon></MoreVertIcon> */}
 							</IconButton>
 						</Grid>
