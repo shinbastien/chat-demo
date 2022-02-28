@@ -283,7 +283,8 @@ export default function NewMapwindow(props) {
 
 	useEffect(() => {
 		if (socket && connected) {
-			initMap();
+			socket.on("joinResponse", initMap);
+			// initMap();
 		}
 	}, [connected, socket]);
 
