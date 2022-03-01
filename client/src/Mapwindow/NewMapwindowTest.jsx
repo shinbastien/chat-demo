@@ -257,6 +257,7 @@ export default function NewMapwindow(props) {
 	const [sharingLocation, setSharingLocation] = useState(false);
 
 	const [individual, setIndividual] = useState(false);
+	const [sumulbutton, setSimulButton] = useState(true);
 
 	const { socket, connected } = useSocket();
 
@@ -277,6 +278,7 @@ export default function NewMapwindow(props) {
 				zoom: 18,
 				zoomControl: true,
 				scrollwheel: true,
+				pinchZoom: true,
 			}),
 		);
 	};
@@ -341,9 +343,11 @@ export default function NewMapwindow(props) {
 								const lat = projection._lat;
 								const lng = projection._lng;
 
-								// console.log(currTick, accTime[j], accTime[j+1], lat, lng)
+								//when car move, the map will move
+								map.setCenter(new Tmapv2.LatLng(lat, lng));
+								map.setZoom(18);
+
 								setMarkerC((prevMarker) => {
-									console.log(prevMarker);
 									prevMarker.setMap(null);
 									prevMarker.setVisible(false);
 									return getMarkers({
@@ -431,6 +435,7 @@ export default function NewMapwindow(props) {
 				trafficInfo: "Y",
 			},
 		});
+		console.log(res);
 
 		resettingMap();
 
@@ -909,6 +914,7 @@ export default function NewMapwindow(props) {
 			markerC.setMap(map);
 		}
 		map.setCenter(currentPosition);
+		map.setZoom(18);
 	};
 
 	const onShareCurrent = (e) => {
@@ -925,20 +931,44 @@ export default function NewMapwindow(props) {
 	};
 
 	const startFromCurrentPoint = () => {
-		const currentPosition = markerC.getPosition();
+		if (sumulbutton) {
+			const currentPosition = markerC.getPosition();
 
-		if (markerS !== null) {
-			markerS.setMap(null);
+			if (markerS !== null) {
+				markerS.setMap(null);
+			}
+
+			setStart({
+				collectionType: "poi",
+				frontLat: "4518367.89098721",
+				frontLon: "14135679.00984259",
+				id: "1133338",
+				mlClass: "1",
+				name: "을지로입구역 3번출구",
+				navSeq: "1",
+				noorLat: "4518367.89098721",
+				noorLon: "14135679.00984259",
+				parkFlag: "0",
+				pkey: "113333801",
+				radius: "0.0",
+				roadName: "을지로",
+				rpFlag: "8",
+				upperAddrName: "서울",
+				upperBizName: "교통편의",
+				zipCode: "04533",
+			});
+
+			setMarkerS(
+				new Tmapv2.Marker({
+					position: currentPosition,
+					icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png",
+					iconSize: new Tmapv2.Size(24, 38),
+					map: map,
+				}),
+			);
+
+			setSimulButton(false);
 		}
-
-		setMarkerS(
-			new Tmapv2.Marker({
-				position: currentPosition,
-				icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png",
-				iconSize: new Tmapv2.Size(24, 38),
-				map: map,
-			}),
-		);
 	};
 
 	const getPositionFromData = (data) => {
@@ -1213,9 +1243,11 @@ export default function NewMapwindow(props) {
 					start={start}
 					end={end}
 				></InfoMenu>
-				<CurrentButtonWrapper onClick={startFromCurrentPoint}>
-					현재 위치에서 출발하기
-				</CurrentButtonWrapper>
+				{sumulbutton && (
+					<CurrentButtonWrapper onClick={startFromCurrentPoint}>
+						현재 위치에서 출발하기
+					</CurrentButtonWrapper>
+				)}
 				<Draggable>
 					<BoardWrapper>
 						<Stack direction="row" alignItems="center" justifyContent="center">
