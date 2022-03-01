@@ -335,19 +335,18 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		Object.keys(userLocObj).map(x => 
 			{
-				setMarkerC(
-					new Tmapv2.Marker({
-						position: new Tmapv2.LatLng(userLocObj[x].location[0], userLocObj[x].location[1]),
-						icon: point1,
-						iconSize: new Tmapv2.Size(30, 30),
-						title: "현재위치",	
-						map: map,
-						label:
-							"<span style='background-color: #46414E; color:white'>" +
-							"현재위치" +
-							"</span>",
-					}),
-				)
+				// Marker List 만들기
+				new Tmapv2.Marker({
+					position: new Tmapv2.LatLng(userLocObj[x].location[0], userLocObj[x].location[1]),
+					icon: point1,
+					iconSize: new Tmapv2.Size(30, 30),
+					title: "현재위치",	
+					map: map,
+					label:
+						"<span style='background-color: #46414E; color:white'>" +
+						"현재위치" +
+						"</span>",
+				}),
 				
 			})
 	}, [userLocObj])

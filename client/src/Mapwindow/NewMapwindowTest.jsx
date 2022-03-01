@@ -199,6 +199,8 @@ ResultList.Item = styled.div`
 export default function NewMapwindow(props) {
 	//map
 	const [map, setMap] = useState(null);
+	const [latitude, setLatitude] = useState(0);
+	const [longtitude, setLongtitude] = useState(0);
 	const { userName, loading } = props;
 
 	//root-tracking
@@ -214,6 +216,11 @@ export default function NewMapwindow(props) {
 	const [markerS, setMarkerS] = useState(null);
 	const [markerE, setMarkerE] = useState(null);
 	const [markerC, setMarkerC] = useState(null);
+
+	const [markerList, setMarkerList] = useState({});
+	const [userLocObj, setUserLocObj] = useState({})
+	const [countMarker, setCountMarker] = useState(0);
+
 	const [searchMarkers, setSearchMarkers] = useState([]);
 	const [totalDaytime, setTotalDaytime] = useState({
 		totalD: "",
@@ -269,6 +276,8 @@ export default function NewMapwindow(props) {
 
 		var center = new Tmapv2.LatLng(lat, lng);
 
+		setLatitude(lat);
+		setLongtitude(lng);
 		setMap(
 			new Tmapv2.Map("map_div", {
 				center: center,
@@ -281,11 +290,6 @@ export default function NewMapwindow(props) {
 		);
 	};
 
-	useEffect(() => {
-		if (socket && connected) {
-			initMap();
-		}
-	}, [connected, socket]);
 
 	//current point
 	useEffect(() => {
@@ -294,6 +298,9 @@ export default function NewMapwindow(props) {
 
 		console.log("lat is: ", lat);
 		console.log("lng is: ", lng);
+
+		setLatitude(lat);
+		setLongtitude(lng);
 
 		setMarkerC(
 			new Tmapv2.Marker({
@@ -308,7 +315,8 @@ export default function NewMapwindow(props) {
 					"</span>",
 			}),
 		);
-	}, [map]);
+	}, [latitude, longtitude, map]);
+
 
 	// 출발 -- 도착 자동 이동
 	useEffect(() => {
@@ -355,6 +363,13 @@ export default function NewMapwindow(props) {
 											"</span>",
 									});
 								});
+
+								// markerC.setPosition(new Tmapv2.LatLng(lat, lng));
+								// markerC.setTitle(
+								// 	"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
+								// 		`${finishTime - currTick}초 남음` +
+								// 		"</span>",
+								// );								
 							}
 						}
 					}
@@ -851,6 +866,8 @@ export default function NewMapwindow(props) {
 		}
 	}, [searching, drawObject]);
 
+
+
 	const onTouchDrawing = (e) => {
 		const { _data } = drawObject;
 		if (map && searching === true && drawObject !== null) {
@@ -909,6 +926,134 @@ export default function NewMapwindow(props) {
 		}
 		map.setCenter(currentPosition);
 	};
+
+	useEffect(() => {
+		const handleUserLocation = (data) => {
+			const newLocObj = {};
+			Object.keys(data).filter((x) => x!= userName).map((name) => {
+				newLocObj[name] = data[name].location;
+			})
+
+			setUserLocObj(newLocObj);
+		}
+
+		if (socket && connected) {
+			socket.on("joinResponse", initMap);
+			// initMap();
+			socket.on("bring userLocationInfo", handleUserLocation);
+		}
+
+		return (() => {
+			if (socket && connected) {
+				// socket.off("joinResponse", initMap);
+				// socket.off("bring userLocationInfo", handleUserLocation);
+			}
+		})
+	}, [connected, socket]);
+
+	useEffect(() => {
+		console.log("userLocObj at setMarkerList", userLocObj);
+		if (Object.keys(userLocObj).length > 0) {
+			Object.keys(userLocObj).filter((x) => {
+				if (Object.keys(markerList).includes(x)) {
+					return (userLocObj[x][0] != markerList[x].getPosition._lat || userLocObj[x][1] != markerList[x].getPosition._lng);
+				}
+				else {
+					return true;
+				}
+			}).map((x) => 
+				{
+					console.log("check userLocObj", x);
+					if (Object.keys(markerList).includes(x)) {
+						// const loc = new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]);
+						// console.log(loc);
+						markerList[x].setMap(null);
+						markerList[x].setVisible(false); 
+					}
+
+						// Marker List 만들기
+					const markerItem = new Tmapv2.Marker({
+						position: new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]),
+						icon: Car,
+						iconSize: new Tmapv2.Size(30, 30),
+						title: "현재위치",
+						map: map,
+						label:
+							"<span style='background-color: #46414E; color:white'>" +
+							"현재위치1" +
+							"</span>",
+					})
+					setMarkerList({...markerList, [x]: markerItem});
+					
+				})
+			
+		}
+	}, [userLocObj])
+
+	const onLoadOtherCurrent = (e) => {
+		console.log("markerList: ", markerList);
+		const currentMarkerItem = Object.keys(markerList)[countMarker]
+		console.log("currentMarkerItem", currentMarkerItem);
+		const currentMarker = markerList[currentMarkerItem];
+		const currentPosition = currentMarker.getPosition();
+		console.log("currentPosition", currentPosition);
+		if (!currentMarker.isLoaded()) {
+			currentMarker.setMap(map);
+		}
+		map.setCenter(currentPosition);
+		
+		if (countMarker >= Object.keys(markerList).length-1 || Object.keys(markerList).length == 0) {
+			setCountMarker(0);
+		}
+		else {
+			setCountMarker(countMarker + 1);
+		}
+		console.log(countMarker);
+	}
+	useEffect(() => {
+		if (socket && connected && markerC) {
+			socket.emit("user moved", markerC.getPosition())
+		}
+	}, [markerC, connected, socket])
+
+	useEffect(() => {
+		const handleMarkerChange = (name, position) => {
+			console.log("position: ", position);
+			console.log("handleMarkerChange, userLocObj: ", userLocObj);
+
+			if (Object.keys(markerList).includes(name)) {
+				markerList[name].setMap(null);
+				markerList[name].setVisible(false);
+			}
+
+			const markerItem = new Tmapv2.Marker({
+				position: new Tmapv2.LatLng(position[0], position[1]),
+				icon: Car,
+				iconSize: new Tmapv2.Size(30, 30),
+				title: "현재위치",	
+				map: map,
+				label:
+					"<span style='background-color: #46414E; color:white'>" +
+					"현재위치2" +
+					"</span>",
+			})
+			setMarkerList({...markerList, [name]: markerItem});
+			setUserLocObj({...userLocObj, [name]: position}) 
+			console.log(name);
+			
+		}
+		if (socket && connected && markerList) {
+			socket.on("bring changed location of user", handleMarkerChange);
+		}
+
+		return (() => {
+			if (socket && connected && markerList) {
+				socket.off("bring changed location of user", handleMarkerChange);
+			}
+		})
+
+	}, [markerList, userLocObj, socket, connected])
+
 
 	const onShareCurrent = (e) => {
 		// clicked share button
@@ -1269,6 +1414,10 @@ export default function NewMapwindow(props) {
 			</MapButtonWrapper>
 			<CurrentLocationWrapper>
 				<IconButton onClick={onLoadCurrent}>
+					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
+				</IconButton>
+
+				<IconButton onClick={onLoadOtherCurrent}>
 					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
 				</IconButton>
 			</CurrentLocationWrapper>
