@@ -1,14 +1,14 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useContext } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Draggable from "react-draggable"; // The default
-import Car from "../Styles/source/car-side-solid.svg";
+import Car from "../Styles/source/car-solid.svg";
 import {
 	faHand,
 	faVectorSquare,
@@ -29,6 +29,7 @@ import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
+import { HostContext } from "../lib/Context/HostContext";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
@@ -196,6 +197,10 @@ ResultList.Item = styled.div`
 	}
 `;
 
+const setPosition = () => {
+	return Math.random().toFixed(1) * 100;
+};
+
 export default function NewMapwindow(props) {
 	//map
 	const [map, setMap] = useState(null);
@@ -237,7 +242,7 @@ export default function NewMapwindow(props) {
 
 	const [aniemoji, setAniEmoji] = useState(false);
 
-	const [emojiResult, setEmojiResult] = useState(true);
+	const [emojiResult, setEmojiResult] = useState(false);
 	const [showInfo, setShowInfo] = useState(false);
 
 	const [emojisender, setEmojiSender] = useState(userName);
@@ -250,7 +255,7 @@ export default function NewMapwindow(props) {
 	});
 
 	// sharingItems
-	const [sendShare, setSendShare] = useState(false);
+	const [sendShare, setSendShare] = useContext(HostContext);
 	const [receiveShare, setReceiveShare] = useState(false);
 	const [sharingRecVideo, setSharingRecVideo] = useState(false);
 	const [sharingIndividual, setSharingIndividual] = useState(false);
@@ -258,6 +263,7 @@ export default function NewMapwindow(props) {
 
 	const [individual, setIndividual] = useState(false);
 	const [sumulbutton, setSimulButton] = useState(true);
+	const [open, setOpen] = useState(false);
 
 	const { socket, connected } = useSocket();
 
@@ -346,20 +352,35 @@ export default function NewMapwindow(props) {
 								//when car move, the map will move
 								map.setCenter(new Tmapv2.LatLng(lat, lng));
 								map.setZoom(18);
+								var seconds = finishTime - currTick;
 
-								setMarkerC((prevMarker) => {
-									prevMarker.setMap(null);
-									prevMarker.setVisible(false);
-									return getMarkers({
-										lat: lat,
-										lng: lng,
-										markerImage: Car,
-										title:
-											"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
-											`${finishTime - currTick}초 남음` +
-											"</span>",
-									});
-								});
+								if (finishTime - currTick / 60 > 1) {
+									var minutes = Math.floor(Number(finishTime - currTick) / 60);
+									seconds = Number(finishTime - currTick) - 60 * minutes;
+								}
+
+								markerC.setPosition(new Tmapv2.LatLng(lat, lng));
+								markerC.setLabel(
+									"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
+										`현재 ${
+											minutes ? minutes + "분" : null
+										} ${seconds}초 남음` +
+										"</span>",
+								);
+
+								// setMarkerC((prevMarker) => {
+								// 	prevMarker.setMap(null);
+								// 	prevMarker.setVisible(false);
+								// 	return getMarkers({
+								// 		lat: lat,
+								// 		lng: lng,
+								// 		markerImage: Car,
+								// 		title:
+								// 			"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
+								// 			`${finishTime - currTick}초 남음` +
+								// 			"</span>",
+								// 	});
+								// });
 							}
 						}
 					}
@@ -1032,7 +1053,7 @@ export default function NewMapwindow(props) {
 				break;
 			case "emoji":
 				setActive("emoji");
-				setEmojiResult(true);
+				setEmojiResult(!emojiResult);
 				onHandleSearchObject();
 				break;
 			case "individualSearch":
@@ -1047,21 +1068,30 @@ export default function NewMapwindow(props) {
 
 	const onEmojiClick = (event, emojiObject) => {
 		const { emoji } = emojiObject;
-		emojiRef.current.push(emoji); //setChosenEmoji(emoji);
-		setChosenEmoji((chosenEmoji) => [...chosenEmoji, emoji]);
-		setEmojiResult(false);
+		const pos = setPosition();
+		emojiRef.current.push(emoji);
+		//setChosenEmoji(emoji);
+
+		setChosenEmoji((chosenEmoji) => [
+			...chosenEmoji,
+			{ emoji: emoji, position: pos },
+		]);
 		setEmojiSender(userName);
 		if (socket && connected) {
-			socket.emit("send emoji", emoji, userName);
+			socket.emit("send emoji", emoji, userName, pos);
 		}
 	};
 
 	//emoji
 	useEffect(() => {
-		const handleGetEmoji = (emoji, userName) => {
-			// setChosenEmoji(emoji);
+		const handleGetEmoji = (emoji, userName, pos) => {
+			setChosenEmoji((chosenEmoji) => [
+				...chosenEmoji,
+				{ emoji: emoji, position: pos },
+			]);
 			setEmojiSender(userName);
 		};
+
 		if (socket && connected) {
 			socket.on("get emoji", handleGetEmoji);
 		}
@@ -1103,11 +1133,11 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		if (socket && connected) {
 			socket.on("sendshare response", (current, user) => {
-				if (current != user) {
+				if (current !== user) {
 					alert(`already somebody is sharing:${current}`);
 				} else {
-					alert("now you are sharing Host");
 					setSendShare(!sendShare);
+					setOpen(true);
 				}
 			});
 		}
@@ -1177,9 +1207,10 @@ export default function NewMapwindow(props) {
 				chosenEmoji.map((emojiObject, idx) => (
 					<EmojiReaction
 						key={idx}
+						position={emojiObject.position}
 						ref={emojiRef[idx]}
 						state={aniemoji}
-						emoji={emojiObject}
+						emoji={emojiObject.emoji}
 						userName={emojisender}
 					></EmojiReaction>
 				))}
@@ -1314,7 +1345,7 @@ export default function NewMapwindow(props) {
 					/>
 				</IconButton>
 			</ShareWrapper>
-			{active === "emoji" && emojiResult ? (
+			{active === "emoji" && emojiResult && (
 				<EmojiWrapper>
 					<Picker
 						onEmojiClick={onEmojiClick}
@@ -1323,7 +1354,7 @@ export default function NewMapwindow(props) {
 						native
 					/>
 				</EmojiWrapper>
-			) : null}
+			)}
 			{active === "draw" ? <Canvas width={2000} height={1000}></Canvas> : null}
 			<MapWrapper id="map_div"></MapWrapper>
 		</React.Fragment>
