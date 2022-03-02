@@ -1,14 +1,14 @@
 /*global Tmapv2*/
 // Do not delete above comment
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useContext } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Draggable from "react-draggable"; // The default
-import Car from "../Styles/source/car-side-solid.svg";
+import Car from "../Styles/source/car-solid.svg";
 import {
 	faHand,
 	faVectorSquare,
@@ -29,6 +29,7 @@ import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
+import { HostContext } from "../lib/Context/HostContext";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
@@ -196,6 +197,10 @@ ResultList.Item = styled.div`
 	}
 `;
 
+const setPosition = () => {
+	return Math.random().toFixed(1) * 100;
+};
+
 export default function NewMapwindow(props) {
 	//map
 	const [map, setMap] = useState(null);
@@ -218,7 +223,7 @@ export default function NewMapwindow(props) {
 	const [markerC, setMarkerC] = useState(null);
 
 	const [markerList, setMarkerList] = useState({});
-	const [userLocObj, setUserLocObj] = useState({})
+	const [userLocObj, setUserLocObj] = useState({});
 	const [countMarker, setCountMarker] = useState(0);
 
 	const [searchMarkers, setSearchMarkers] = useState([]);
@@ -244,7 +249,7 @@ export default function NewMapwindow(props) {
 
 	const [aniemoji, setAniEmoji] = useState(false);
 
-	const [emojiResult, setEmojiResult] = useState(true);
+	const [emojiResult, setEmojiResult] = useState(false);
 	const [showInfo, setShowInfo] = useState(false);
 
 	const [emojisender, setEmojiSender] = useState(userName);
@@ -257,13 +262,15 @@ export default function NewMapwindow(props) {
 	});
 
 	// sharingItems
-	const [sendShare, setSendShare] = useState(false);
+	const [sendShare, setSendShare] = useContext(HostContext);
 	const [receiveShare, setReceiveShare] = useState(false);
 	const [sharingRecVideo, setSharingRecVideo] = useState(false);
 	const [sharingIndividual, setSharingIndividual] = useState(false);
 	const [sharingLocation, setSharingLocation] = useState(false);
 
 	const [individual, setIndividual] = useState(false);
+	const [sumulbutton, setSimulButton] = useState(true);
+	const [open, setOpen] = useState(false);
 
 	const { socket, connected } = useSocket();
 
@@ -286,10 +293,17 @@ export default function NewMapwindow(props) {
 				zoom: 18,
 				zoomControl: true,
 				scrollwheel: true,
+				pinchZoom: true,
 			}),
 		);
 	};
 
+	useEffect(() => {
+		if (socket && connected) {
+			socket.on("joinResponse", initMap);
+			// initMap();
+		}
+	}, [connected, socket]);
 
 	//current point
 	useEffect(() => {
@@ -316,7 +330,6 @@ export default function NewMapwindow(props) {
 			}),
 		);
 	}, [latitude, longtitude, map]);
-
 
 	// 출발 -- 도착 자동 이동
 	useEffect(() => {
@@ -348,28 +361,38 @@ export default function NewMapwindow(props) {
 								const lat = projection._lat;
 								const lng = projection._lng;
 
-								// console.log(currTick, accTime[j], accTime[j+1], lat, lng)
-								setMarkerC((prevMarker) => {
-									console.log(prevMarker);
-									prevMarker.setMap(null);
-									prevMarker.setVisible(false);
-									return getMarkers({
-										lat: lat,
-										lng: lng,
-										markerImage: Car,
-										title:
-											"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
-											`${finishTime - currTick}초 남음` +
-											"</span>",
-									});
-								});
+								//when car move, the map will move
+								map.setCenter(new Tmapv2.LatLng(lat, lng));
+								map.setZoom(18);
+								var seconds = finishTime - currTick;
 
-								// markerC.setPosition(new Tmapv2.LatLng(lat, lng));
-								// markerC.setTitle(
-								// 	"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
-								// 		`${finishTime - currTick}초 남음` +
-								// 		"</span>",
-								// );								
+								if (finishTime - currTick / 60 > 1) {
+									var minutes = Math.floor(Number(finishTime - currTick) / 60);
+									seconds = Number(finishTime - currTick) - 60 * minutes;
+								}
+
+								markerC.setPosition(new Tmapv2.LatLng(lat, lng));
+								markerC.setLabel(
+									"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
+										`현재 ${
+											minutes ? minutes + "분" : null
+										} ${seconds}초 남음` +
+										"</span>",
+								);
+
+								// setMarkerC((prevMarker) => {
+								// 	prevMarker.setMap(null);
+								// 	prevMarker.setVisible(false);
+								// 	return getMarkers({
+								// 		lat: lat,
+								// 		lng: lng,
+								// 		markerImage: Car,
+								// 		title:
+								// 			"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
+								// 			`${finishTime - currTick}초 남음` +
+								// 			"</span>",
+								// 	});
+								// });
 							}
 						}
 					}
@@ -445,6 +468,7 @@ export default function NewMapwindow(props) {
 				trafficInfo: "Y",
 			},
 		});
+		console.log(res);
 
 		resettingMap();
 
@@ -866,8 +890,6 @@ export default function NewMapwindow(props) {
 		}
 	}, [searching, drawObject]);
 
-
-
 	const onTouchDrawing = (e) => {
 		const { _data } = drawObject;
 		if (map && searching === true && drawObject !== null) {
@@ -925,18 +947,21 @@ export default function NewMapwindow(props) {
 			markerC.setMap(map);
 		}
 		map.setCenter(currentPosition);
+		map.setZoom(18);
 	};
 
 	useEffect(() => {
 		const handleUserLocation = (data) => {
 			const newLocObj = {};
-			Object.keys(data).filter((x) => x!= userName).map((name) => {
-				newLocObj[name] = data[name].location;
-			})
+			Object.keys(data)
+				.filter((x) => x != userName)
+				.map((name) => {
+					newLocObj[name] = data[name].location;
+				});
 
 			setUserLocObj(newLocObj);
-		}
-		
+		};
+
 		const handleUserDisconnect = (participants, userName) => {
 			if (Object.keys(userLocObj).includes(userName)) {
 				delete userLocObj[userName];
@@ -946,7 +971,7 @@ export default function NewMapwindow(props) {
 				markerList[userName].setVisible(false);
 				delete markerList[userName];
 			}
-		}
+		};
 
 		if (socket && connected) {
 			socket.on("joinResponse", initMap);
@@ -955,35 +980,38 @@ export default function NewMapwindow(props) {
 			socket.on("disconnectResponse", handleUserDisconnect);
 		}
 
-		return (() => {
+		return () => {
 			if (socket && connected) {
 				// socket.off("joinResponse", initMap);
 				// socket.off("bring userLocationInfo", handleUserLocation);
 			}
-		})
+		};
 	}, [connected, socket]);
 
 	useEffect(() => {
 		console.log("userLocObj at setMarkerList", userLocObj);
 		if (Object.keys(userLocObj).length > 0) {
-			Object.keys(userLocObj).filter((x) => {
-				if (Object.keys(markerList).includes(x)) {
-					return (userLocObj[x][0] != markerList[x].getPosition._lat || userLocObj[x][1] != markerList[x].getPosition._lng);
-				}
-				else {
-					return true;
-				}
-			}).map((x) => 
-				{
+			Object.keys(userLocObj)
+				.filter((x) => {
+					if (Object.keys(markerList).includes(x)) {
+						return (
+							userLocObj[x][0] != markerList[x].getPosition._lat ||
+							userLocObj[x][1] != markerList[x].getPosition._lng
+						);
+					} else {
+						return true;
+					}
+				})
+				.map((x) => {
 					console.log("check userLocObj", x);
 					if (Object.keys(markerList).includes(x)) {
 						// const loc = new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]);
 						console.log(userLocObj[x]);
 						markerList[x].setMap(null);
-						markerList[x].setVisible(false); 
+						markerList[x].setVisible(false);
 					}
 
-						// Marker List 만들기
+					// Marker List 만들기
 					const markerItem = new Tmapv2.Marker({
 						position: new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]),
 						icon: Car,
@@ -994,17 +1022,15 @@ export default function NewMapwindow(props) {
 							"<span style='background-color: #46414E; color:white'>" +
 							"현재위치1" +
 							"</span>",
-					})
-					setMarkerList({...markerList, [x]: markerItem});
-					
-				})
-			
+					});
+					setMarkerList({ ...markerList, [x]: markerItem });
+				});
 		}
-	}, [userLocObj])
+	}, [userLocObj]);
 
 	const onLoadOtherCurrent = (e) => {
 		console.log("markerList: ", markerList);
-		const currentMarkerItem = Object.keys(markerList)[countMarker]
+		const currentMarkerItem = Object.keys(markerList)[countMarker];
 		console.log("currentMarkerItem", currentMarkerItem);
 		const currentMarker = markerList[currentMarkerItem];
 		const currentPosition = currentMarker.getPosition();
@@ -1013,20 +1039,22 @@ export default function NewMapwindow(props) {
 			currentMarker.setMap(map);
 		}
 		map.setCenter(currentPosition);
-		
-		if (countMarker >= Object.keys(markerList).length-1 || Object.keys(markerList).length == 0) {
+
+		if (
+			countMarker >= Object.keys(markerList).length - 1 ||
+			Object.keys(markerList).length == 0
+		) {
 			setCountMarker(0);
-		}
-		else {
+		} else {
 			setCountMarker(countMarker + 1);
 		}
 		console.log(countMarker);
-	}
+	};
 	useEffect(() => {
 		if (socket && connected && markerC) {
-			socket.emit("user moved", markerC.getPosition())
+			socket.emit("user moved", markerC.getPosition());
 		}
-	}, [markerC, connected, socket])
+	}, [markerC, connected, socket]);
 
 	useEffect(() => {
 		const handleMarkerChange = (name, position) => {
@@ -1042,30 +1070,28 @@ export default function NewMapwindow(props) {
 				position: new Tmapv2.LatLng(position[0], position[1]),
 				icon: Car,
 				iconSize: new Tmapv2.Size(30, 30),
-				title: "현재위치",	
+				title: "현재위치",
 				map: map,
 				label:
 					"<span style='background-color: #ff6f00; color:white'>" +
-					"현재위치2" + name +
+					"현재위치2" +
+					name +
 					"</span>",
-			})
-			setMarkerList({...markerList, [name]: markerItem});
-			setUserLocObj({...userLocObj, [name]: position}) 
+			});
+			setMarkerList({ ...markerList, [name]: markerItem });
+			setUserLocObj({ ...userLocObj, [name]: position });
 			console.log(name);
-			
-		}
+		};
 		if (socket && connected && markerList) {
 			socket.on("bring changed location of user", handleMarkerChange);
 		}
 
-		return (() => {
+		return () => {
 			if (socket && connected && markerList) {
 				socket.off("bring changed location of user", handleMarkerChange);
 			}
-		})
-
-	}, [markerList, userLocObj, socket, connected])
-
+		};
+	}, [markerList, userLocObj, socket, connected]);
 
 	const onShareCurrent = (e) => {
 		// clicked share button
@@ -1081,20 +1107,44 @@ export default function NewMapwindow(props) {
 	};
 
 	const startFromCurrentPoint = () => {
-		const currentPosition = markerC.getPosition();
+		if (sumulbutton) {
+			const currentPosition = markerC.getPosition();
 
-		if (markerS !== null) {
-			markerS.setMap(null);
+			if (markerS !== null) {
+				markerS.setMap(null);
+			}
+
+			setStart({
+				collectionType: "poi",
+				frontLat: "4518367.89098721",
+				frontLon: "14135679.00984259",
+				id: "1133338",
+				mlClass: "1",
+				name: "을지로입구역 3번출구",
+				navSeq: "1",
+				noorLat: "4518367.89098721",
+				noorLon: "14135679.00984259",
+				parkFlag: "0",
+				pkey: "113333801",
+				radius: "0.0",
+				roadName: "을지로",
+				rpFlag: "8",
+				upperAddrName: "서울",
+				upperBizName: "교통편의",
+				zipCode: "04533",
+			});
+
+			setMarkerS(
+				new Tmapv2.Marker({
+					position: currentPosition,
+					icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png",
+					iconSize: new Tmapv2.Size(24, 38),
+					map: map,
+				}),
+			);
+
+			setSimulButton(false);
 		}
-
-		setMarkerS(
-			new Tmapv2.Marker({
-				position: currentPosition,
-				icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png",
-				iconSize: new Tmapv2.Size(24, 38),
-				map: map,
-			}),
-		);
 	};
 
 	const getPositionFromData = (data) => {
@@ -1158,7 +1208,7 @@ export default function NewMapwindow(props) {
 				break;
 			case "emoji":
 				setActive("emoji");
-				setEmojiResult(true);
+				setEmojiResult(!emojiResult);
 				onHandleSearchObject();
 				break;
 			case "individualSearch":
@@ -1173,21 +1223,30 @@ export default function NewMapwindow(props) {
 
 	const onEmojiClick = (event, emojiObject) => {
 		const { emoji } = emojiObject;
-		emojiRef.current.push(emoji); //setChosenEmoji(emoji);
-		setChosenEmoji((chosenEmoji) => [...chosenEmoji, emoji]);
-		setEmojiResult(false);
+		const pos = setPosition();
+		emojiRef.current.push(emoji);
+		//setChosenEmoji(emoji);
+
+		setChosenEmoji((chosenEmoji) => [
+			...chosenEmoji,
+			{ emoji: emoji, position: pos },
+		]);
 		setEmojiSender(userName);
 		if (socket && connected) {
-			socket.emit("send emoji", emoji, userName);
+			socket.emit("send emoji", emoji, userName, pos);
 		}
 	};
 
 	//emoji
 	useEffect(() => {
-		const handleGetEmoji = (emoji, userName) => {
-			// setChosenEmoji(emoji);
+		const handleGetEmoji = (emoji, userName, pos) => {
+			setChosenEmoji((chosenEmoji) => [
+				...chosenEmoji,
+				{ emoji: emoji, position: pos },
+			]);
 			setEmojiSender(userName);
 		};
+
 		if (socket && connected) {
 			socket.on("get emoji", handleGetEmoji);
 		}
@@ -1229,11 +1288,11 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		if (socket && connected) {
 			socket.on("sendshare response", (current, user) => {
-				if (current != user) {
+				if (current !== user) {
 					alert(`already somebody is sharing:${current}`);
 				} else {
-					alert("now you are sharing Host");
 					setSendShare(!sendShare);
+					setOpen(true);
 				}
 			});
 		}
@@ -1303,9 +1362,10 @@ export default function NewMapwindow(props) {
 				chosenEmoji.map((emojiObject, idx) => (
 					<EmojiReaction
 						key={idx}
+						position={emojiObject.position}
 						ref={emojiRef[idx]}
 						state={aniemoji}
-						emoji={emojiObject}
+						emoji={emojiObject.emoji}
 						userName={emojisender}
 					></EmojiReaction>
 				))}
@@ -1369,9 +1429,11 @@ export default function NewMapwindow(props) {
 					start={start}
 					end={end}
 				></InfoMenu>
-				<CurrentButtonWrapper onClick={startFromCurrentPoint}>
-					현재 위치에서 출발하기
-				</CurrentButtonWrapper>
+				{sumulbutton && (
+					<CurrentButtonWrapper onClick={startFromCurrentPoint}>
+						현재 위치에서 출발하기
+					</CurrentButtonWrapper>
+				)}
 				<Draggable>
 					<BoardWrapper>
 						<Stack direction="row" alignItems="center" justifyContent="center">
@@ -1442,7 +1504,7 @@ export default function NewMapwindow(props) {
 					/>
 				</IconButton>
 			</ShareWrapper>
-			{active === "emoji" && emojiResult ? (
+			{active === "emoji" && emojiResult && (
 				<EmojiWrapper>
 					<Picker
 						onEmojiClick={onEmojiClick}
@@ -1451,7 +1513,7 @@ export default function NewMapwindow(props) {
 						native
 					/>
 				</EmojiWrapper>
-			) : null}
+			)}
 			{active === "draw" ? <Canvas width={2000} height={1000}></Canvas> : null}
 			<MapWrapper id="map_div"></MapWrapper>
 		</React.Fragment>

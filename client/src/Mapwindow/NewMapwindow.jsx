@@ -212,7 +212,7 @@ export default function NewMapwindow(props) {
 	const [markerE, setMarkerE] = useState(null);
 	const [markerC, setMarkerC] = useState(null);
 
-	const [userLocObj, setUserLocObj] = useState({})
+	const [userLocObj, setUserLocObj] = useState({});
 	const [searchMarkers, setSearchMarkers] = useState([]);
 	const [totalDaytime, setTotalDaytime] = useState({
 		totalD: "",
@@ -264,7 +264,7 @@ export default function NewMapwindow(props) {
 			const lat = position.coords.latitude;
 			const lng = position.coords.longitude;
 
-			socket.emit("start mapwindow", lat, lng); 
+			socket.emit("start mapwindow", lat, lng);
 			console.log("send location info to server", [lat, lng]);
 			var center = new Tmapv2.LatLng(lat, lng);
 
@@ -286,12 +286,14 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		const handleUserLocation = (data) => {
 			const newLocObj = {};
-			Object.keys(data).filter((x) => x!= userName).map(name => {
-				newLocObj[name] = data[name].location;
-			})
+			Object.keys(data)
+				.filter((x) => x != userName)
+				.map((name) => {
+					newLocObj[name] = data[name].location;
+				});
 
 			setUserLocObj(newLocObj);
-		}
+		};
 
 		if (socket && connected) {
 			initMap();
@@ -333,23 +335,24 @@ export default function NewMapwindow(props) {
 	}, [latitude, longtitude, map]);
 
 	useEffect(() => {
-		Object.keys(userLocObj).map(x => 
-			{
-				// Marker List 만들기
-				new Tmapv2.Marker({
-					position: new Tmapv2.LatLng(userLocObj[x].location[0], userLocObj[x].location[1]),
-					icon: point1,
-					iconSize: new Tmapv2.Size(30, 30),
-					title: "현재위치",	
-					map: map,
-					label:
-						"<span style='background-color: #46414E; color:white'>" +
-						"현재위치" +
-						"</span>",
-				}),
-				
-			})
-	}, [userLocObj])
+		Object.keys(userLocObj).map((x) => {
+			// Marker List 만들기
+			new Tmapv2.Marker({
+				position: new Tmapv2.LatLng(
+					userLocObj[x].location[0],
+					userLocObj[x].location[1],
+				),
+				icon: point1,
+				iconSize: new Tmapv2.Size(30, 30),
+				title: "현재위치",
+				map: map,
+				label:
+					"<span style='background-color: #46414E; color:white'>" +
+					"현재위치" +
+					"</span>",
+			});
+		});
+	}, [userLocObj]);
 
 	//이동시
 	// useEffect(() => {
@@ -1013,7 +1016,7 @@ export default function NewMapwindow(props) {
 			markerC.setMap(map);
 		}
 		map.setCenter(currentOtherPosition);
-	}
+	};
 
 	const onShareCurrent = (e) => {
 		// clicked share button
@@ -1171,7 +1174,7 @@ export default function NewMapwindow(props) {
 		}
 		return () => {
 			socket.off("sendshare response");
-		}
+		};
 	}, [sendShare, socket, connected]);
 
 	// Sending Share Mode

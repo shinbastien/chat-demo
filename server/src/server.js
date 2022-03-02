@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const io = require("socket.io")(server, {
 	cors: {
-		origin: "http://localhost:3000",
+		origin: "*",
 		credentials: true,
 		methods: ["GET", "POST"],
 	},
@@ -120,10 +120,10 @@ io.on("connection", (socket) => {
 	});
 
 	// Listen for Emoji sending
-	socket.on("send emoji", (emoji, userName) => {
+	socket.on("send emoji", (emoji, userName, pos) => {
 		console.log("received emoji is: ", emoji);
 		console.log("emoji sneder is: ", userName);
-		io.to(socket.roomName).emit("get emoji", emoji, userName);
+		io.to(socket.roomName).emit("get emoji", emoji, userName, pos);
 	});
 
 	// CANVAS

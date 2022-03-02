@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import "firebase/auth";
-import { getFirestore, getDocs, collection } from "firebase/firestore";
-import { getDatabase, ref, set, get, child, onValue } from "firebase/database";
+import { getDatabase, ref, set, onValue } from "firebase/database";
 // import data from "../../data";
 
 import axios from "axios";
