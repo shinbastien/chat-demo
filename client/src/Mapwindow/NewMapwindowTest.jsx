@@ -1234,11 +1234,11 @@ export default function NewMapwindow(props) {
 
 		setChosenEmoji((chosenEmoji) => [
 			...chosenEmoji,
-			{ emoji: emoji, position: pos },
+			{ emoji: emoji, position: pos, color: color},
 		]);
 		setEmojiSender(userName);
 		if (socket && connected) {
-			socket.emit("send emoji", emoji, userName, pos);
+			socket.emit("send emoji", emoji, userName, pos, color);
 		}
 	};
 
@@ -1247,7 +1247,7 @@ export default function NewMapwindow(props) {
 		const handleGetEmoji = (emoji, userName, pos, color) => {
 			setChosenEmoji((chosenEmoji) => [
 			...chosenEmoji,
-			{ emoji: emoji, position: pos },
+			{ emoji: emoji, position: pos, color: color},
 	        ]);
 			setEmojiSender(userName);
 		};
@@ -1372,6 +1372,7 @@ export default function NewMapwindow(props) {
 						state={aniemoji}
 						emoji={emojiObject.emoji}
 						userName={emojisender}
+						color={emojiObject.color}
 					></EmojiReaction>
 				))}
 

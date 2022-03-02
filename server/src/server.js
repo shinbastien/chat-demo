@@ -119,10 +119,10 @@ io.on("connection", (socket) => {
 
 	// ---------------------------EMOJI---------------------
 	// Listen for Emoji sending
-	socket.on("send emoji", (emoji, userName, pos) => {
+	socket.on("send emoji", (emoji, userName, pos, color) => {
 		console.log("received emoji is: ", emoji);
 		console.log("emoji sneder is: ", userName);
-		io.to(socket.roomName).emit("get emoji", emoji, userName, pos, socket.color);
+		socket.broadcast.to(socket.roomName).emit("get emoji", emoji, userName, pos, color);
 	});
 
 	// ------------------------CANVAS------------------------
