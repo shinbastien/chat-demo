@@ -125,7 +125,6 @@ io.on("connection", (socket) => {
 		console.log("emoji sneder is: ", userName);
 		io.to(socket.roomName).emit("get emoji", emoji, userName, pos);
 	});
-
 	// CANVAS
 	socket.on("start canvas", () => {
 		socket.broadcast.to(socket.roomName).emit("open canvas");

@@ -16,7 +16,7 @@ const bounceAnimation = keyframes`
     opacity: 0;
     display: none;
 	position: absolute;
-	 z-index: -1; /* Update this */
+	z-index: -1;
 	  }
 `;
 

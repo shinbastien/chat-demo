@@ -201,6 +201,22 @@ const setPosition = () => {
 	return Math.random().toFixed(1) * 100;
 };
 
+const getPositionFromData = (data) => {
+	const noorLat = Number(data.noorLat);
+	const noorLon = Number(data.noorLon);
+
+	const pointCng = new Tmapv2.Point(noorLon, noorLat);
+	const projectionCng = new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(
+		pointCng,
+	);
+	const lat = projectionCng._lat;
+	const lon = projectionCng._lng;
+
+	return new Tmapv2.LatLng(lat, lon);
+};
+
+export { getPositionFromData };
+
 export default function NewMapwindow(props) {
 	//map
 	const [map, setMap] = useState(null);
@@ -298,13 +314,6 @@ export default function NewMapwindow(props) {
 		);
 	};
 
-	useEffect(() => {
-		if (socket && connected) {
-			socket.on("joinResponse", initMap);
-			// initMap();
-		}
-	}, [connected, socket]);
-
 	//current point
 	useEffect(() => {
 		const lat = 37.56653180179;
@@ -374,9 +383,9 @@ export default function NewMapwindow(props) {
 								markerC.setPosition(new Tmapv2.LatLng(lat, lng));
 								markerC.setLabel(
 									"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
-										`현재 ${
-											minutes ? minutes + "분" : null
-										} ${seconds}초 남음` +
+										`현재 ${minutes ? minutes + "분" : " "} ${
+											seconds > 0 ? seconds + "초 남음" : "도착"
+										}` +
 										"</span>",
 								);
 
@@ -845,7 +854,6 @@ export default function NewMapwindow(props) {
 	};
 
 	const handleStartSetting = (data) => {
-		console.log(data);
 		setStart(data);
 		const markerPosition = getPositionFromData(data);
 
@@ -1147,20 +1155,6 @@ export default function NewMapwindow(props) {
 		}
 	};
 
-	const getPositionFromData = (data) => {
-		const noorLat = Number(data.noorLat);
-		const noorLon = Number(data.noorLon);
-
-		const pointCng = new Tmapv2.Point(noorLon, noorLat);
-		const projectionCng = new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(
-			pointCng,
-		);
-		const lat = projectionCng._lat;
-		const lon = projectionCng._lng;
-
-		return new Tmapv2.LatLng(lat, lon);
-	};
-
 	const onHandleSearchObject = () => {
 		if (drawObject !== null) {
 			drawObject.clear();
@@ -1387,6 +1381,7 @@ export default function NewMapwindow(props) {
 			{individual && (
 				<IndividualWrapper>
 					<Individual
+						end={end}
 						individual={individual}
 						stateChanger={setIndividual}
 						host={sendShare ? true : false}

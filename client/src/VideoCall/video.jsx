@@ -3,8 +3,10 @@ import Peer from "simple-peer";
 import styled from "styled-components";
 
 const StyledVideo = styled.video`
+	aspect-ratio: 16 / 9;
 	width: 100%;
-	border-radius: 15px;
+
+	border-radius: 12px;
 	overflow: hidden;
 `;
 

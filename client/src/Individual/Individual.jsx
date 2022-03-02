@@ -11,6 +11,7 @@ import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import styled from "styled-components";
+import { getPositionFromData } from "../Mapwindow/NewMapwindowTest";
 
 const Wrapper = styled.div`
 	display: flex;
@@ -46,17 +47,20 @@ export default function Individual({
 	host,
 	receiver,
 	markerC,
+	end,
 }) {
 	const location = useLocation();
 	const [recvideo, setrecvideo] = useState([]);
+	const [endrecvideo, setendrecvideo] = useState([]);
+
 	const [share, setShare] = useState("");
 	const { groupID, userName } = location.state;
 	const [value, setValue] = React.useState(0);
 	const { socket, connected } = useSocket();
 	const changeToLatLng = markerC.getPosition();
-	console.log(changeToLatLng);
+	const endPosition = end && getPositionFromData(end);
 
-	useEffect(() => {
+	useEffect(async () => {
 		//현재 위치
 		// navigator.geolocation.getCurrentPosition(function (position) {
 		// 	const lat = position.coords.latitude;
@@ -64,12 +68,21 @@ export default function Individual({
 		// 	loadpointInfo(lat, lng);
 		// });
 
+		//현재 마커 위치
 		const lat = changeToLatLng._lat;
 		const lng = changeToLatLng._lng;
-		loadpointInfo(lat, lng);
+		const lat_endPosition = end && endPosition._lat;
+		const lng_endPosition = end && endPosition._lng;
+
+		loadpointInfo(lat, lng).then((data) => {
+			setrecvideo(data);
+		});
+		loadpointInfo(lat_endPosition, lng_endPosition).then((data) => {
+			setendrecvideo(data);
+		});
 
 		return () => {
-			stateChanger(false); // This worked for me
+			stateChanger(false);
 		};
 	}, [individual]);
 
@@ -122,7 +135,8 @@ export default function Individual({
 					count: 10,
 				},
 			});
-			setrecvideo(items.searchPoiInfo.pois.poi);
+
+			return items.searchPoiInfo.pois.poi;
 		} catch (err) {
 			console.log(err);
 		}
@@ -143,7 +157,7 @@ export default function Individual({
 				<div className="title">
 					<strong>Search</strong>
 				</div>
-				<Search value={recvideo} share={share}></Search>
+				<Search value={recvideo} end={endrecvideo} share={share}></Search>
 			</BoardWrapper>
 		</Wrapper>
 	);
