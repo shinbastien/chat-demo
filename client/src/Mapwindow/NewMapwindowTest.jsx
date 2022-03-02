@@ -936,11 +936,23 @@ export default function NewMapwindow(props) {
 
 			setUserLocObj(newLocObj);
 		}
+		
+		const handleUserDisconnect = (participants, userName) => {
+			if (Object.keys(userLocObj).includes(userName)) {
+				delete userLocObj[userName];
+			}
+			if (Object.keys(markerList).includes(userName)) {
+				markerList[userName].setMap(null);
+				markerList[userName].setVisible(false);
+				delete markerList[userName];
+			}
+		}
 
 		if (socket && connected) {
 			socket.on("joinResponse", initMap);
 			// initMap();
 			socket.on("bring userLocationInfo", handleUserLocation);
+			socket.on("disconnectResponse", handleUserDisconnect);
 		}
 
 		return (() => {
@@ -966,7 +978,7 @@ export default function NewMapwindow(props) {
 					console.log("check userLocObj", x);
 					if (Object.keys(markerList).includes(x)) {
 						// const loc = new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]);
-						// console.log(loc);
+						console.log(userLocObj[x]);
 						markerList[x].setMap(null);
 						markerList[x].setVisible(false); 
 					}
@@ -1033,8 +1045,8 @@ export default function NewMapwindow(props) {
 				title: "현재위치",	
 				map: map,
 				label:
-					"<span style='background-color: #46414E; color:white'>" +
-					"현재위치2" +
+					"<span style='background-color: #ff6f00; color:white'>" +
+					"현재위치2" + name +
 					"</span>",
 			})
 			setMarkerList({...markerList, [name]: markerItem});
