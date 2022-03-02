@@ -53,6 +53,27 @@ const KeyWordWrapper = styled.div`
 		padding: 3%;
 		color: ${(props) => props.theme.color1};
 	}
+	.subtitle {
+		display: inline-block;
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: 0;
+		color: white;
+		min-width: 6px;
+		padding: 1px 8px;
+		border-radius: 18px;
+		background: #2b5876; /* fallback for old browsers */
+		background: -webkit-linear-gradient(
+			to right,
+			#2b5876,
+			#4e4376
+		); /* Chrome 10-25, Safari 5.1-6 */
+		background: linear-gradient(
+			to right,
+			#2b5876,
+			#4e4376
+		); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+	}
 
 	.searchKeyword {
 		display: block;
@@ -86,11 +107,21 @@ const ResultWrapper = styled.div`
 	margin-block-end: 0.5em;
 
 	.title {
-		font-size: 18px;
+		font-size: 28px;
 		font-weight: 700;
 
 		padding: 0 0 3%;
 		color: #151ca2;
+	}
+
+	> div {
+		.subtitle {
+			font-size: 18px;
+			font-weight: 700;
+
+			padding-bottom: 2%;
+			color: ${(props) => props.theme.color1};
+		}
 	}
 `;
 
@@ -112,14 +143,11 @@ const Search = (props) => {
 	]);
 	const { socket, connected } = useSocket();
 
-	// console.log(props);
-
 	const filterWords = props.value.filter(
 		(prop) => prop.name.includes("주차장") === false,
 	);
 
 	useMemo(() => filterWords, [props.value]);
-	console.log(keyword);
 
 	const onClickFocus = (event) => {
 		event.preventDefault();
@@ -206,17 +234,14 @@ const Search = (props) => {
 					key: process.env.REACT_APP_YOUTUBE_API_KEY,
 					part: "snippet",
 					q:
-						`-집 맛집 |가볼만한 곳 ` + inputRef.current.value
+						`-집 맛집 | 가볼만한 곳 ` + inputRef.current.value
 							? inputRef.current.value
 							: keyword,
 					videoEmbeddable: "true",
 					type: "video",
 				},
 			});
-			// if (videos && Object.keys(videos).length > 0) {
-			// 	setVideos(null);
-			// }
-			console.log(items);
+
 			setVideos({
 				locInfo: filterWords.filter((i) => i.name.includes(keyword)),
 				videoInfo: items,
@@ -228,8 +253,6 @@ const Search = (props) => {
 			console.log(err);
 		}
 	}
-
-	console.log(videos);
 
 	return (
 		<Grid container>
@@ -260,6 +283,10 @@ const Search = (props) => {
 						&nbsp; 추천 키워드
 					</div>
 					<Divider></Divider>
+					<div className="subtitle">
+						{/* <FontAwesomeIcon icon={faMagnifyingGlassLocation} /> */}
+						현재 위치
+					</div>
 					{filterWords.length > 0 ? (
 						filterWords.map((prop, inx) => (
 							<button className="searchKeyword" onClick={onClickFocus}>
@@ -271,6 +298,10 @@ const Search = (props) => {
 							<FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
 						</div>
 					)}
+					<div className="subtitle">
+						{/* <FontAwesomeIcon icon={faMagnifyingGlassLocation} /> */}
+						목적지
+					</div>
 				</KeyWordWrapper>
 			</Grid>
 
@@ -288,8 +319,10 @@ const Search = (props) => {
 					)}
 					{submit && videos.videoInfo.length > 0 ? (
 						<div>
-							<FontAwesomeIcon icon={faYoutube} />
-							&nbsp; Video
+							<div className="subtitle">
+								<FontAwesomeIcon icon={faYoutube} />
+								&nbsp; Video
+							</div>
 							<SearchResult
 								share={share}
 								sharing={sharing}
@@ -301,9 +334,12 @@ const Search = (props) => {
 					) : (
 						<div>" 검색어를 입력하여 주세요"</div>
 					)}
+					<Divider></Divider>
 					{submit && imgs.length && (
 						<div>
-							<FontAwesomeIcon icon={faImage} /> &nbsp; Image
+							<div className="subtitle">
+								<FontAwesomeIcon icon={faImage} /> &nbsp; Image
+							</div>
 							<SearchImgResult imgs={imgs}></SearchImgResult>
 						</div>
 					)}

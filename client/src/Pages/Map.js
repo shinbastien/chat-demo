@@ -1,40 +1,28 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useLocation, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import NewMapwindow from "../Mapwindow/NewMapwindowTest";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
-import AppBar from "@mui/material/AppBar";
 import { HostContext } from "../lib/Context/HostContext";
+import Snackbar from "@mui/material/Snackbar";
 
 import { useSocket } from "../lib/socket";
 import styled from "styled-components";
+import MuiAlert from "@mui/material/Alert";
 
-import Typography from "@mui/material/Typography";
-import logoWhite from "../Styles/source/logo_w.png";
-import IconButton from "@mui/material/IconButton";
-import Box from "@mui/material/Box";
-
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
-
-const ImgWrapper = styled.img`
-	display: block;
-	width: 10%;
-`;
-
-const TextWrapper = styled.span`
-	display: flex;
-	justify-content: center; /* align horizontal */
-	align-items: center; /* align vertical */
-`;
+const Alert = React.forwardRef(function Alert(props, ref) {
+	return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 function Map() {
 	const location = useLocation();
 	const [onloading, setonLoading] = useState(false);
-	const [hostUser, setHostUser] = useState({
-		type: "host",
-		userName: "abc",
-	});
+	// const [hostUser, setHostUser] = useState({
+	// 	type: "host",
+	// 	userName: "abc",
+	// });
+	const [sendShare, setSendShare] = useState(false);
+	const [open, setOpen] = useState(false);
 
 	const { groupID, userName } = location.state;
 	console.log("groupID obtained from Home is: ", groupID);
@@ -43,12 +31,6 @@ function Map() {
 	const { socket, connected } = useSocket();
 	console.log("connected is: ", connected);
 	const randomColor = "#"+ Math.floor(Math.random()*16777215).toString(16);
-
-	//URL 복사
-	const onHandleCopy = (e) => {
-		navigator.clipboard.writeText(window.location.href);
-		alert("url이 복사되었습니다.");
-	};
 
 	useEffect(() => {
 		if (socket && connected) {
@@ -59,26 +41,18 @@ function Map() {
 		}
 	}, [connected, socket]);
 
+	const handleClose = (event, reason) => {
+		if (reason === "clickaway") {
+			return;
+		}
+		setOpen(false);
+	};
+
 	return (
 		<>
-			{/* <AppBar style={{ backgroundColor: "#003249" }}>
-				<Typography
-					variant="h5"
-					noWrap
-					component="div"
-					sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
-				>
-					<ImgWrapper src={logoWhite}></ImgWrapper>
-					<IconButton style={{ color: "white" }} onClick={onHandleCopy}>
-						<FontAwesomeIcon icon={faArrowUpRightFromSquare} />
-					</IconButton>
-					<Box sx={{ flexGrow: 1 }}></Box>
-
-					<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
-				</Typography>
-			</AppBar> */}
-
-			<HostContext.Provider value={[hostUser, setHostUser]}>
+			<HostContext.Provider
+				value={([sendShare, setSendShare], [open, setOpen])}
+			>
 				<Grid container spacing={2}>
 					<Grid item xs={6} md={9}>
 						<NewMapwindow userName={userName} color={randomColor}></NewMapwindow>
@@ -92,6 +66,15 @@ function Map() {
 						></VideoCall>
 					</Grid>
 				</Grid>
+				<Snackbar
+					anchorOrigin={{ vertical: "top", horizontal: "center" }}
+					open={open}
+					onClose={handleClose}
+				>
+					<Alert onClose={handleClose} severity="info" sx={{ width: "100%" }}>
+						You are sharing Host
+					</Alert>
+				</Snackbar>
 			</HostContext.Provider>
 		</>
 	);

@@ -130,17 +130,10 @@ const VideoCard = ({ info }) => {
 					topLeft: false,
 				}}
 			>
-				{/* <img
-						src={process.env.PUBLIC_URL + url}
-						width="100%"
-						height="100%"
-					></img> */}
 				<VideoWrapper
 					onMouseEnter={() => setHover(true)}
 					onMouseLeave={() => setHover(false)}
 				>
-					<Cover />
-
 					<iframe
 						title="youtubeTrailer"
 						width="100%"
@@ -150,6 +143,7 @@ const VideoCard = ({ info }) => {
 						allow="accelerometer; autoplay;"
 						allowFullScreen
 					/>
+					{/* <Cover /> */}
 
 					{hover && (
 						<DeleteVideoButton onClick={() => setLoading(false)}>

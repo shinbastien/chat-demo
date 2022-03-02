@@ -9,16 +9,20 @@ const bounceAnimation = keyframes`
   }
   50% {
     transform: translateY(-300px);
+	
   }
    100% {
 	transform: translateY(-300px);
-   opacity: 0;
-   display: none;
-  }
+    opacity: 0;
+    display: none;
+	position: absolute;
+	 z-index: -1; /* Update this */
+	  }
 `;
 
 const EmojiDisplayWrapper = styled.div`
 	bottom: 0;
+	left: ${(props) => props.position + "%"};
 	font-size: 5vw;
 	position: absolute;
 	z-index: 300;
@@ -45,11 +49,11 @@ const EmojiDisplayWrapper = styled.div`
 `;
 
 const EmojiReaction = (props) => {
-	const { state, emoji, userName } = props;
+	const { state, emoji, userName, position } = props;
 
 	return (
 		state && (
-			<EmojiDisplayWrapper>
+			<EmojiDisplayWrapper position={position}>
 				<div>
 					{emoji}
 					<div>{userName}</div>
