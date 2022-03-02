@@ -42,6 +42,7 @@ function Map() {
 
 	const { socket, connected } = useSocket();
 	console.log("connected is: ", connected);
+	const randomColor = "#"+ Math.floor(Math.random()*16777215).toString(16);
 
 	//URL 복사
 	const onHandleCopy = (e) => {
@@ -52,7 +53,8 @@ function Map() {
 	useEffect(() => {
 		if (socket && connected) {
 			console.log("socket id is:", socket.id);
-			socket.emit("join", groupID, userName);
+			
+			socket.emit("join", groupID, userName, randomColor);
 			console.log("joining group");
 		}
 	}, [connected, socket]);
@@ -79,12 +81,13 @@ function Map() {
 			<HostContext.Provider value={[hostUser, setHostUser]}>
 				<Grid container spacing={2}>
 					<Grid item xs={6} md={9}>
-						<NewMapwindow userName={userName}></NewMapwindow>
+						<NewMapwindow userName={userName} color={randomColor}></NewMapwindow>
 					</Grid>
 					<Grid item xs={6} md={3}>
 						<VideoCall
 							roomName={groupID}
 							userName={userName}
+							userColor={randomColor}
 							loading={onloading}
 						></VideoCall>
 					</Grid>

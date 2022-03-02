@@ -54,6 +54,7 @@ function VideoCall(props) {
 	const userVideo = useRef();
 	const peersRef = useRef([]);
 	const [participants, setParticipants] = useState([]);
+	const [member, setMember] = useState({});
 	const roomName = props.roomName;
 	const userName = props.userName;
 	const delay = require("delay");
@@ -71,8 +72,11 @@ function VideoCall(props) {
 
 	// Set socket connection
 	useEffect(() => {
-		const handleJoinParticipants = async (members) => {
+		const handleJoinParticipants = async (members) => { 
 			console.log("isnew is", isNew);
+			setParticipants([...participants, Object.keys(members)]);
+			setMember({...member, members});
+
 			if (isNew) {
 				setPeers((peers) => {
 					return createPeer(roomName, userName, members, socket);
@@ -86,8 +90,6 @@ function VideoCall(props) {
 
 				console.log("add peer for: ", userName);
 			}
-
-			setParticipants([...participants, Object.keys(members)]);
 		};
 
 		if (socket && connected) {
@@ -100,8 +102,10 @@ function VideoCall(props) {
 		};
 	}, [isNew, socket, connected]);
 
+
 	useEffect(() => {
 		console.log("\n\n\t Test Peers", peers);
+		console.log("participants", member);
 	}, [peers]);
 
 	useEffect(() => {
@@ -206,7 +210,7 @@ function VideoCall(props) {
 					<Grid container direction="row" justifyContent="space-between">
 						<Grid item>
 							<Stack direction="row" spacing={2}>
-								<Avatar sx={{ bgcolor: "#ff4e6c" }}>
+								<Avatar sx={{ bgcolor: props.userColor }}>
 									{props.userName.slice(0, 1).toUpperCase()}
 								</Avatar>
 								<TextWrapper>
@@ -221,12 +225,15 @@ function VideoCall(props) {
 					</Grid>
 				</Grid>
 				{Object.keys(peers).map((key) => {
+					console.log(key);
+					// console.log(member[key].color);
+					console.log(peers[key]);
 					return (
 						<Grid item key={key} style={{ padding: "1.5rem" }}>
 							<Video peer={peers[key].peer} userName={key} />
 							<Grid item>
 								<Stack direction="row" spacing={2}>
-									<Avatar sx={{ bgcolor: "#ff4e6c" }}>
+									<Avatar sx={{bgcolor: Object.keys(peers).includes(key) ? peers[key].color : "#bc2073"}}>
 										{key.slice(0, 1).toUpperCase()}
 									</Avatar>
 									<TextWrapper>{key} &nbsp; &nbsp;</TextWrapper>

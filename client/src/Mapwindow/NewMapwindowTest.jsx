@@ -201,7 +201,7 @@ export default function NewMapwindow(props) {
 	const [map, setMap] = useState(null);
 	const [latitude, setLatitude] = useState(0);
 	const [longtitude, setLongtitude] = useState(0);
-	const { userName, loading } = props;
+	const { userName, color } = props;
 
 	//root-tracking
 	const [start, setStart] = useState(null);
@@ -979,6 +979,7 @@ export default function NewMapwindow(props) {
 					if (Object.keys(markerList).includes(x)) {
 						// const loc = new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]);
 						console.log(userLocObj[x]);
+						console.log(markerList[x]);
 						markerList[x].setMap(null);
 						markerList[x].setVisible(false); 
 					}
@@ -995,6 +996,7 @@ export default function NewMapwindow(props) {
 							"현재위치1" +
 							"</span>",
 					})
+					console.log("markerItem is loaded", markerItem.isLoaded())
 					setMarkerList({...markerList, [x]: markerItem});
 					
 				})
@@ -1034,6 +1036,7 @@ export default function NewMapwindow(props) {
 			console.log("handleMarkerChange, userLocObj: ", userLocObj);
 
 			if (Object.keys(markerList).includes(name)) {
+				console.log("socket markerlist", markerList[name]);
 				markerList[name].setMap(null);
 				markerList[name].setVisible(false);
 			}
@@ -1184,8 +1187,11 @@ export default function NewMapwindow(props) {
 
 	//emoji
 	useEffect(() => {
-		const handleGetEmoji = (emoji, userName) => {
-			// setChosenEmoji(emoji);
+		const handleGetEmoji = (emoji, userName, pos, color) => {
+			setChosenEmoji((chosenEmoji) => [
+			...chosenEmoji,
+			{ emoji: emoji, position: pos },
+	        ]);
 			setEmojiSender(userName);
 		};
 		if (socket && connected) {
@@ -1452,7 +1458,7 @@ export default function NewMapwindow(props) {
 					/>
 				</EmojiWrapper>
 			) : null}
-			{active === "draw" ? <Canvas width={2000} height={1000}></Canvas> : null}
+			{active === "draw" ? <Canvas width={2000} height={1000} color={color}></Canvas> : null}
 			<MapWrapper id="map_div"></MapWrapper>
 		</React.Fragment>
 	);
