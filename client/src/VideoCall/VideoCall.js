@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-
-import Peer from "simple-peer";
 import { StyledVideo, Video, videoConstraints } from "./videostyle";
 import { useSocket } from "../lib/socket";
 import Grid from "@mui/material/Grid";
@@ -21,9 +19,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // Main handles connection between users and sends those to other pages
 
-const SOCKET_SERVER_URL = "https://social-moving.herokuapp.com/";
-
-const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 
 const TextWrapper = styled.span`
 	display: flex;
@@ -52,7 +47,6 @@ function VideoCall(props) {
 	const { socket, connected } = useSocket();
 	console.log("peers is: ", peers);
 	const userVideo = useRef();
-	const peersRef = useRef([]);
 	const [participants, setParticipants] = useState([]);
 	const roomName = props.roomName;
 	const userName = props.userName;
@@ -71,7 +65,7 @@ function VideoCall(props) {
 
 	// Set socket connection
 	useEffect(() => {
-		const handleJoinParticipants = async (members) => { 
+		const handleJoinParticipants = async (members, name) => { 
 			console.log("isnew is", isNew);
 			setParticipants([...participants, Object.keys(members)]);
 
@@ -98,7 +92,7 @@ function VideoCall(props) {
 				socket.off("joinResponse", handleJoinParticipants);
 			}
 		};
-	}, [isNew, socket, connected]);
+	}, [isNew, participants, socket, connected]);
 
 
 	useEffect(() => {
@@ -167,25 +161,8 @@ function VideoCall(props) {
 				socket.off("disconnectResponse", handleDisconnectResponse);
 			}
 		};
-	}, [participants, socket, connected]);
+	}, [peers, participants, socket, connected]);
 
-	function handleGetUserMediaError(e) {
-		switch (e.name) {
-			case "NotFoundError":
-				alert(
-					"Unable to open your call because no camera and/or microphone" +
-						"were found.",
-				);
-				break;
-			case "SecurityError":
-			case "PermissionDeniedError":
-				// Do nothing; this is the same as the user canceling the call.
-				break;
-			default:
-				alert("Error opening your camera and/or microphone: " + e.message);
-				break;
-		}
-	}
 
 	return (
 		<div>
