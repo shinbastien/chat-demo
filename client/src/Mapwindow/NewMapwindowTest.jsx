@@ -19,6 +19,7 @@ import {
 	faMapLocationDot,
 	faEye,
 	faEyeSlash,
+	faStreetView,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VideoCard from "./VideoCard/VideoCard";
@@ -30,6 +31,7 @@ import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
 import { HostContext } from "../lib/Context/HostContext";
+import { filterWords } from "../Individual/Search/Search";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
@@ -201,6 +203,22 @@ const setPosition = () => {
 	return Math.random().toFixed(1) * 100;
 };
 
+const getPositionFromData = (data) => {
+	const noorLat = Number(data.noorLat);
+	const noorLon = Number(data.noorLon);
+
+	const pointCng = new Tmapv2.Point(noorLon, noorLat);
+	const projectionCng = new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(
+		pointCng,
+	);
+	const lat = projectionCng._lat;
+	const lon = projectionCng._lng;
+
+	return new Tmapv2.LatLng(lat, lon);
+};
+
+export { getPositionFromData };
+
 export default function NewMapwindow(props) {
 	//map
 	const [map, setMap] = useState(null);
@@ -263,13 +281,14 @@ export default function NewMapwindow(props) {
 
 	// sharingItems
 	const [sendShare, setSendShare] = useContext(HostContext);
+
 	const [receiveShare, setReceiveShare] = useState(false);
 	const [sharingRecVideo, setSharingRecVideo] = useState(false);
 	const [sharingIndividual, setSharingIndividual] = useState(false);
 	const [sharingLocation, setSharingLocation] = useState(false);
 
 	const [individual, setIndividual] = useState(false);
-	const [sumulbutton, setSimulButton] = useState(true);
+	const [simulbutton, setSimulButton] = useState(true);
 	const [open, setOpen] = useState(false);
 
 	const { socket, connected } = useSocket();
@@ -387,9 +406,9 @@ export default function NewMapwindow(props) {
 								markerC.setPosition(new Tmapv2.LatLng(lat, lng));
 								markerC.setLabel(
 									"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
-										`현재 ${
-											minutes ? minutes + "분" : null
-										} ${seconds}초 남음` +
+										`현재 ${minutes ? minutes + "분" : " "} ${
+											seconds > 0 ? seconds + "초 남음" : "도착"
+										}` +
 										"</span>",
 								);
 
@@ -439,19 +458,23 @@ export default function NewMapwindow(props) {
 		async function fetchData() {
 			if (recvideo.length > 0) {
 				for (let i = 0; i < recvideo.length; i++) {
-					let video = await searchOnYoutube(recvideo[i].name);
+					if (recvideo[i].name.includes("주차장") === false) {
+						let video = await searchOnYoutube(recvideo[i].name);
+						console.log(recvideo[i]);
 
-					if (video === undefined) {
-						video = {
-							id: { kind: null, videoId: null },
-						};
+						if (video === undefined) {
+							video = {
+								id: { kind: null, videoId: null },
+							};
+						}
+
+						// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
+						setrecvideoLoc((recvideoLoc) => [
+							...recvideoLoc,
+							{ [recvideo[i].name]: video },
+							// { [recvideo[i].name]: video[0] },
+						]);
 					}
-					// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
-					setrecvideoLoc((recvideoLoc) => [
-						...recvideoLoc,
-						{ [recvideo[i].name]: video },
-						// { [recvideo[i].name]: video[0] },
-					]);
 				}
 
 				if (!active) {
@@ -858,7 +881,6 @@ export default function NewMapwindow(props) {
 	};
 
 	const handleStartSetting = (data) => {
-		console.log(data);
 		setStart(data);
 		const markerPosition = getPositionFromData(data);
 
@@ -1036,12 +1058,10 @@ export default function NewMapwindow(props) {
 							"<span style='background-color: #46414E; color:white'>" +
 							"현재위치1" +
 							"</span>",
-					})
-					console.log("markerItem is loaded", markerItem.isLoaded())
-					setMarkerList({...markerList, [x]: markerItem});
-					
-				})
-			
+					});
+					console.log("markerItem is loaded", markerItem.isLoaded());
+					setMarkerList({ ...markerList, [x]: markerItem });
+				});
 		}
 	}, [userLocObj]);
 
@@ -1050,7 +1070,9 @@ export default function NewMapwindow(props) {
 		const currentMarkerItem = Object.keys(markerList)[countMarker];
 		console.log("currentMarkerItem", currentMarkerItem);
 		const currentMarker = markerList[currentMarkerItem];
+
 		const currentPosition = currentMarker.getPosition();
+		console.log(currentPosition);
 		console.log("currentPosition", currentPosition);
 		if (!currentMarker.isLoaded()) {
 			currentMarker.setMap(map);
@@ -1119,13 +1141,13 @@ export default function NewMapwindow(props) {
 			} else {
 				socket.emit("finish sendShare request");
 				setSendShare(!sendShare);
-				alert("you finished sharing");
+				// alert("you finished sharing");
 			}
 		}
 	};
 
 	const startFromCurrentPoint = () => {
-		if (sumulbutton) {
+		if (simulbutton) {
 			const currentPosition = markerC.getPosition();
 
 			if (markerS !== null) {
@@ -1163,20 +1185,6 @@ export default function NewMapwindow(props) {
 
 			setSimulButton(false);
 		}
-	};
-
-	const getPositionFromData = (data) => {
-		const noorLat = Number(data.noorLat);
-		const noorLon = Number(data.noorLon);
-
-		const pointCng = new Tmapv2.Point(noorLon, noorLat);
-		const projectionCng = new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(
-			pointCng,
-		);
-		const lat = projectionCng._lat;
-		const lon = projectionCng._lng;
-
-		return new Tmapv2.LatLng(lat, lon);
 	};
 
 	const onHandleSearchObject = () => {
@@ -1247,7 +1255,7 @@ export default function NewMapwindow(props) {
 
 		setChosenEmoji((chosenEmoji) => [
 			...chosenEmoji,
-			{ emoji: emoji, position: pos, color: color},
+			{ emoji: emoji, position: pos, color: color },
 		]);
 		setEmojiSender(userName);
 		if (socket && connected) {
@@ -1259,9 +1267,9 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		const handleGetEmoji = (emoji, userName, pos, color) => {
 			setChosenEmoji((chosenEmoji) => [
-			...chosenEmoji,
-			{ emoji: emoji, position: pos, color: color},
-	        ]);
+				...chosenEmoji,
+				{ emoji: emoji, position: pos, color: color },
+			]);
 			setEmojiSender(userName);
 		};
 
@@ -1406,6 +1414,7 @@ export default function NewMapwindow(props) {
 			{individual && (
 				<IndividualWrapper>
 					<Individual
+						end={end}
 						individual={individual}
 						stateChanger={setIndividual}
 						host={sendShare ? true : false}
@@ -1448,7 +1457,7 @@ export default function NewMapwindow(props) {
 					start={start}
 					end={end}
 				></InfoMenu>
-				{sumulbutton && (
+				{simulbutton && (
 					<CurrentButtonWrapper onClick={startFromCurrentPoint}>
 						현재 위치에서 출발하기
 					</CurrentButtonWrapper>
@@ -1511,12 +1520,15 @@ export default function NewMapwindow(props) {
 				</IconButton>
 
 				<IconButton onClick={onLoadOtherCurrent}>
-					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
+					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faStreetView} />
 				</IconButton>
 			</CurrentLocationWrapper>
 
 			<ShareWrapper>
-				<IconButton onClick={onShareCurrent}>
+				<IconButton
+					onClick={onShareCurrent}
+					disabled={receiveShare ? true : false}
+				>
 					<FontAwesomeIcon
 						style={{ fontSize: "3vw" }}
 						icon={sendShare ? faEyeSlash : faEye}
@@ -1533,7 +1545,9 @@ export default function NewMapwindow(props) {
 					/>
 				</EmojiWrapper>
 			)}
-			{active === "draw" ? <Canvas width={2000} height={1000} color={color}></Canvas> : null}
+			{active === "draw" ? (
+				<Canvas width={2000} height={1000} color={color}></Canvas>
+			) : null}
 			<MapWrapper id="map_div"></MapWrapper>
 		</React.Fragment>
 	);

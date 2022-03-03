@@ -125,6 +125,14 @@ const ResultWrapper = styled.div`
 	}
 `;
 
+const filterWords = (data) => {
+	console.log(data);
+	data.filter((prop) => prop.name.includes("주차장") === false);
+	return data;
+};
+
+export { filterWords };
+
 const Search = (props) => {
 	const termInput = useInput("");
 	const [submit, setSubmit] = useState(false);
@@ -143,11 +151,11 @@ const Search = (props) => {
 	]);
 	const { socket, connected } = useSocket();
 
-	const filterWords = props.value.filter(
-		(prop) => prop.name.includes("주차장") === false,
+	const currentResult = useMemo(() => filterWords(props.value), [props.value]);
+	const endResult = useMemo(
+		() => props.end && filterWords(props.end),
+		[props.end],
 	);
-
-	useMemo(() => filterWords, [props.value]);
 
 	const onClickFocus = (event) => {
 		event.preventDefault();
@@ -243,7 +251,7 @@ const Search = (props) => {
 			});
 
 			setVideos({
-				locInfo: filterWords.filter((i) => i.name.includes(keyword)),
+				locInfo: currentResult.filter((i) => i.name.includes(keyword)),
 				videoInfo: items,
 			});
 
@@ -287,8 +295,8 @@ const Search = (props) => {
 						{/* <FontAwesomeIcon icon={faMagnifyingGlassLocation} /> */}
 						현재 위치
 					</div>
-					{filterWords.length > 0 ? (
-						filterWords.map((prop, inx) => (
+					{currentResult && currentResult.length > 0 ? (
+						currentResult.map((prop, inx) => (
 							<button className="searchKeyword" onClick={onClickFocus}>
 								{prop.name}
 							</button>
@@ -302,6 +310,17 @@ const Search = (props) => {
 						{/* <FontAwesomeIcon icon={faMagnifyingGlassLocation} /> */}
 						목적지
 					</div>
+					{endResult && endResult.length > 0 ? (
+						endResult.map((prop, inx) => (
+							<button className="searchKeyword" onClick={onClickFocus}>
+								{prop.name}
+							</button>
+						))
+					) : (
+						<div className="fa-2x spinner">
+							<FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
+						</div>
+					)}
 				</KeyWordWrapper>
 			</Grid>
 

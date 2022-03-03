@@ -6,6 +6,10 @@ import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
 import { Divider } from "@mui/material";
 
+import Typography from "@mui/material/Typography";
+import logoWhite from "../Styles/source/logo_w.png";
+import Box from "@mui/material/Box";
+
 import {
 	createPeer,
 	addPeer,
@@ -14,11 +18,13 @@ import {
 } from "../lib/peer/peers";
 import IconButton from "@mui/material/IconButton";
 import styled from "styled-components";
-import { faUserGroup } from "@fortawesome/free-solid-svg-icons";
+import {
+	faUserGroup,
+	faArrowUpRightFromSquare,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // Main handles connection between users and sends those to other pages
-
 
 const TextWrapper = styled.span`
 	display: flex;
@@ -31,6 +37,8 @@ const CurrentUserWrapper = styled.div`
 	text-align: center;
 	padding: 6% 0 2% 0;
 	color: #707070;
+	display: flex;
+	justify-content: space-evenly;
 `;
 
 function VideoCall(props) {
@@ -65,7 +73,8 @@ function VideoCall(props) {
 
 	// Set socket connection
 	useEffect(() => {
-		const handleJoinParticipants = async (members, name) => { 
+
+		const handleJoinParticipants = async (members, name) => {
 			console.log("isnew is", isNew);
 			setParticipants([...participants, Object.keys(members)]);
 
@@ -93,7 +102,6 @@ function VideoCall(props) {
 			}
 		};
 	}, [isNew, participants, socket, connected]);
-
 
 	useEffect(() => {
 		console.log("\n\n\t Test Peers", peers);
@@ -164,11 +172,43 @@ function VideoCall(props) {
 	}, [peers, participants, socket, connected]);
 
 
+	//URL 복사
+	const onHandleCopy = (e) => {
+		navigator.clipboard.writeText(window.location.href);
+		alert("url이 복사되었습니다.");
+	};
+
+	{
+		/* <AppBar style={{ backgroundColor: "#003249" }}>
+				<Typography
+					variant="h5"
+					noWrap
+					component="div"
+					sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
+				>
+					<ImgWrapper src={logoWhite}></ImgWrapper>
+					<IconButton style={{ color: "white" }} onClick={onHandleCopy}>
+						<FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+					</IconButton>
+					<Box sx={{ flexGrow: 1 }}></Box>
+
+					<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
+				</Typography>
+			</AppBar> */
+	}
 	return (
 		<div>
 			<CurrentUserWrapper>
-				<FontAwesomeIcon icon={faUserGroup}></FontAwesomeIcon>{" "}
-				{Object.keys(peers).length + 1}
+				<div>
+					<strong> {roomName} </strong>
+					<IconButton onClick={onHandleCopy}>
+						<FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+					</IconButton>
+				</div>
+				<div>
+					<FontAwesomeIcon icon={faUserGroup}></FontAwesomeIcon>{" "}
+					{Object.keys(peers).length + 1}
+				</div>
 			</CurrentUserWrapper>
 			<Divider></Divider>
 			<Grid container>
@@ -204,7 +244,8 @@ function VideoCall(props) {
 							<Video peer={peers[key].peer} userName={key} />
 							<Grid item>
 								<Stack direction="row" spacing={2}>
-									<Avatar sx={{bgcolor: peers[key].color}}>
+
+									<Avatar sx={{ bgcolor: peers[key].color }}>
 										{key.slice(0, 1).toUpperCase()}
 									</Avatar>
 									<TextWrapper>{key} &nbsp; &nbsp;</TextWrapper>
