@@ -57,10 +57,10 @@ const Canvas = ({ width, height, color }) => {
 				const newMousePosition = getCoordinate(event);
 
 				if (mousePosition && newMousePosition) {
-					drawLine(mousePosition, newMousePosition);
+					drawLine(mousePosition, newMousePosition, color);
 
 					if (socket && connected) {
-						socket.emit("send paint", mousePosition, newMousePosition);
+						socket.emit("send paint", mousePosition, newMousePosition, color);
 						console.log("send paint from:", mousePosition);
 						console.log("send paint to: ", newMousePosition);
 					}
@@ -93,8 +93,8 @@ const Canvas = ({ width, height, color }) => {
 	}, [otherIsPainting, socket, connected]);
 
 	useEffect(() => {
-		const handlePainting = async (mousePosition, newMousePosition) => {
-			drawLine(mousePosition, newMousePosition);
+		const handlePainting = async (mousePosition, newMousePosition, color) => {
+			drawLine(mousePosition, newMousePosition, color);
 			console.log("drawing line");
 		};
 		if (socket && connected) {
@@ -159,7 +159,7 @@ const Canvas = ({ width, height, color }) => {
 		];
 	};
 
-	const drawLine = (originalMousePosition, newMousePosition) => {
+	const drawLine = (originalMousePosition, newMousePosition, color) => {
 		if (!subcanvasRef.current) {
 			return;
 		}

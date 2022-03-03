@@ -125,6 +125,14 @@ const ResultWrapper = styled.div`
 	}
 `;
 
+const filterWords = (data) => {
+	console.log(data);
+	data.filter((prop) => prop.name.includes("주차장") === false);
+	return data;
+};
+
+export { filterWords };
+
 const Search = (props) => {
 	const termInput = useInput("");
 	const [submit, setSubmit] = useState(false);
@@ -142,12 +150,6 @@ const Search = (props) => {
 		{ url: "/3_img.jpg" },
 	]);
 	const { socket, connected } = useSocket();
-
-	const filterWords = (data) => {
-		console.log(data);
-		data.filter((prop) => prop.name.includes("주차장") === false);
-		return data;
-	};
 
 	const currentResult = useMemo(() => filterWords(props.value), [props.value]);
 	const endResult = useMemo(

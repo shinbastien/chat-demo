@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-
-import Peer from "simple-peer";
 import { StyledVideo, Video, videoConstraints } from "./videostyle";
 import { useSocket } from "../lib/socket";
 import Grid from "@mui/material/Grid";
@@ -27,10 +25,6 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // Main handles connection between users and sends those to other pages
-
-const SOCKET_SERVER_URL = "https://social-moving.herokuapp.com/";
-
-const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 
 const TextWrapper = styled.span`
 	display: flex;
@@ -61,9 +55,7 @@ function VideoCall(props) {
 	const { socket, connected } = useSocket();
 	console.log("peers is: ", peers);
 	const userVideo = useRef();
-	const peersRef = useRef([]);
 	const [participants, setParticipants] = useState([]);
-	const [member, setMember] = useState({});
 	const roomName = props.roomName;
 	const userName = props.userName;
 	const delay = require("delay");
@@ -81,10 +73,9 @@ function VideoCall(props) {
 
 	// Set socket connection
 	useEffect(() => {
-		const handleJoinParticipants = async (members) => {
+		const handleJoinParticipants = async (members, name) => {
 			console.log("isnew is", isNew);
 			setParticipants([...participants, Object.keys(members)]);
-			setMember({ ...member, members });
 
 			if (isNew) {
 				setPeers((peers) => {
@@ -109,11 +100,10 @@ function VideoCall(props) {
 				socket.off("joinResponse", handleJoinParticipants);
 			}
 		};
-	}, [isNew, socket, connected]);
+	}, [isNew, participants, socket, connected]);
 
 	useEffect(() => {
 		console.log("\n\n\t Test Peers", peers);
-		console.log("participants", member);
 	}, [peers]);
 
 	useEffect(() => {
@@ -178,25 +168,8 @@ function VideoCall(props) {
 				socket.off("disconnectResponse", handleDisconnectResponse);
 			}
 		};
-	}, [participants, socket, connected]);
+	}, [peers, participants, socket, connected]);
 
-	function handleGetUserMediaError(e) {
-		switch (e.name) {
-			case "NotFoundError":
-				alert(
-					"Unable to open your call because no camera and/or microphone" +
-						"were found.",
-				);
-				break;
-			case "SecurityError":
-			case "PermissionDeniedError":
-				// Do nothing; this is the same as the user canceling the call.
-				break;
-			default:
-				alert("Error opening your camera and/or microphone: " + e.message);
-				break;
-		}
-	}
 	//URL 복사
 	const onHandleCopy = (e) => {
 		navigator.clipboard.writeText(window.location.href);
@@ -264,21 +237,12 @@ function VideoCall(props) {
 					</Grid>
 				</Grid>
 				{Object.keys(peers).map((key) => {
-					console.log(key);
-					// console.log(member[key].color);
-					console.log(peers[key]);
 					return (
 						<Grid item key={key} style={{ padding: "1.5rem" }}>
 							<Video peer={peers[key].peer} userName={key} />
 							<Grid item>
 								<Stack direction="row" spacing={2}>
-									<Avatar
-										sx={{
-											bgcolor: Object.keys(peers).includes(key)
-												? peers[key].color
-												: "#bc2073",
-										}}
-									>
+									<Avatar sx={{ bgcolor: peers[key].color }}>
 										{key.slice(0, 1).toUpperCase()}
 									</Avatar>
 									<TextWrapper>{key} &nbsp; &nbsp;</TextWrapper>

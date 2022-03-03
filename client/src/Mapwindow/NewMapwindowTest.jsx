@@ -31,6 +31,7 @@ import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
 import { HostContext } from "../lib/Context/HostContext";
+import { filterWords } from "../Individual/Search/Search";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
@@ -437,19 +438,23 @@ export default function NewMapwindow(props) {
 		async function fetchData() {
 			if (recvideo.length > 0) {
 				for (let i = 0; i < recvideo.length; i++) {
-					let video = await searchOnYoutube(recvideo[i].name);
+					if (recvideo[i].name.includes("주차장") === false) {
+						let video = await searchOnYoutube(recvideo[i].name);
+						console.log(recvideo[i]);
 
-					if (video === undefined) {
-						video = {
-							id: { kind: null, videoId: null },
-						};
+						if (video === undefined) {
+							video = {
+								id: { kind: null, videoId: null },
+							};
+						}
+
+						// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
+						setrecvideoLoc((recvideoLoc) => [
+							...recvideoLoc,
+							{ [recvideo[i].name]: video },
+							// { [recvideo[i].name]: video[0] },
+						]);
 					}
-					// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
-					setrecvideoLoc((recvideoLoc) => [
-						...recvideoLoc,
-						{ [recvideo[i].name]: video },
-						// { [recvideo[i].name]: video[0] },
-					]);
 				}
 
 				if (!active) {
@@ -1033,12 +1038,10 @@ export default function NewMapwindow(props) {
 							"<span style='background-color: #46414E; color:white'>" +
 							"현재위치1" +
 							"</span>",
-					})
-					console.log("markerItem is loaded", markerItem.isLoaded())
-					setMarkerList({...markerList, [x]: markerItem});
-					
-				})
-			
+					});
+					console.log("markerItem is loaded", markerItem.isLoaded());
+					setMarkerList({ ...markerList, [x]: markerItem });
+				});
 		}
 	}, [userLocObj]);
 
@@ -1047,7 +1050,9 @@ export default function NewMapwindow(props) {
 		const currentMarkerItem = Object.keys(markerList)[countMarker];
 		console.log("currentMarkerItem", currentMarkerItem);
 		const currentMarker = markerList[currentMarkerItem];
+
 		const currentPosition = currentMarker.getPosition();
+		console.log(currentPosition);
 		console.log("currentPosition", currentPosition);
 		if (!currentMarker.isLoaded()) {
 			currentMarker.setMap(map);
@@ -1230,7 +1235,7 @@ export default function NewMapwindow(props) {
 
 		setChosenEmoji((chosenEmoji) => [
 			...chosenEmoji,
-			{ emoji: emoji, position: pos, color: color},
+			{ emoji: emoji, position: pos, color: color },
 		]);
 		setEmojiSender(userName);
 		if (socket && connected) {
@@ -1242,9 +1247,9 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		const handleGetEmoji = (emoji, userName, pos, color) => {
 			setChosenEmoji((chosenEmoji) => [
-			...chosenEmoji,
-			{ emoji: emoji, position: pos, color: color},
-	        ]);
+				...chosenEmoji,
+				{ emoji: emoji, position: pos, color: color },
+			]);
 			setEmojiSender(userName);
 		};
 
@@ -1520,7 +1525,9 @@ export default function NewMapwindow(props) {
 					/>
 				</EmojiWrapper>
 			)}
-			{active === "draw" ? <Canvas width={2000} height={1000} color={color}></Canvas> : null}
+			{active === "draw" ? (
+				<Canvas width={2000} height={1000} color={color}></Canvas>
+			) : null}
 			<MapWrapper id="map_div"></MapWrapper>
 		</React.Fragment>
 	);
