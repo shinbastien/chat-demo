@@ -19,6 +19,7 @@ import {
 	faMapLocationDot,
 	faEye,
 	faEyeSlash,
+	faStreetView,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VideoCard from "./VideoCard/VideoCard";
@@ -279,6 +280,7 @@ export default function NewMapwindow(props) {
 
 	// sharingItems
 	const [sendShare, setSendShare] = useContext(HostContext);
+
 	const [receiveShare, setReceiveShare] = useState(false);
 	const [sharingRecVideo, setSharingRecVideo] = useState(false);
 	const [sharingIndividual, setSharingIndividual] = useState(false);
@@ -1487,12 +1489,15 @@ export default function NewMapwindow(props) {
 				</IconButton>
 
 				<IconButton onClick={onLoadOtherCurrent}>
-					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
+					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faStreetView} />
 				</IconButton>
 			</CurrentLocationWrapper>
 
 			<ShareWrapper>
-				<IconButton onClick={onShareCurrent}>
+				<IconButton
+					onClick={onShareCurrent}
+					disabled={receiveShare ? true : false}
+				>
 					<FontAwesomeIcon
 						style={{ fontSize: "3vw" }}
 						icon={sendShare ? faEyeSlash : faEye}

@@ -22,6 +22,7 @@ function Map() {
 	// 	userName: "abc",
 	// });
 	const [sendShare, setSendShare] = useState(false);
+	const [receiveShare, setReceiveShare] = useState(false);
 	const [open, setOpen] = useState(false);
 
 	const { groupID, userName } = location.state;
@@ -67,7 +68,7 @@ function Map() {
 						open={sendShare}
 					>
 						<Alert severity="success" sx={{ width: "100%" }}>
-							You are sharing Host
+							You are sharing your window.
 						</Alert>
 					</Snackbar>
 				) : (
