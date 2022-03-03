@@ -49,7 +49,7 @@ const SearchResult = ({ share, sharing, setShare, setSharing, videos }) => {
 	function onClickShare(element) {
 		const { etag, id, snippet } = element;
 		setShare((share) => ({ [id.videoId]: true }));
-		console.log(share);
+
 		setSharing(!sharing);
 	}
 

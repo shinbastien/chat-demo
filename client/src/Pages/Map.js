@@ -39,18 +39,16 @@ function Map() {
 		}
 	}, [connected, socket]);
 
-	const handleClose = (event, reason) => {
-		if (reason === "clickaway") {
-			return;
-		}
-		setOpen(false);
-	};
+	// const handleClose = (event, reason) => {
+	// 	if (reason === "clickaway") {
+	// 		return;
+	// 	}
+	// 	setOpen(false);
+	// };
 
 	return (
 		<>
-			<HostContext.Provider
-				value={([sendShare, setSendShare], [open, setOpen])}
-			>
+			<HostContext.Provider value={[sendShare, setSendShare]}>
 				<Grid container spacing={2}>
 					<Grid item xs={6} md={9}>
 						<NewMapwindow userName={userName}></NewMapwindow>
@@ -63,15 +61,25 @@ function Map() {
 						></VideoCall>
 					</Grid>
 				</Grid>
-				<Snackbar
-					anchorOrigin={{ vertical: "top", horizontal: "center" }}
-					open={open}
-					onClose={handleClose}
-				>
-					<Alert onClose={handleClose} severity="info" sx={{ width: "100%" }}>
-						You are sharing Host
-					</Alert>
-				</Snackbar>
+				{sendShare ? (
+					<Snackbar
+						anchorOrigin={{ vertical: "top", horizontal: "center" }}
+						open={sendShare}
+					>
+						<Alert severity="success" sx={{ width: "100%" }}>
+							You are sharing Host
+						</Alert>
+					</Snackbar>
+				) : (
+					<Snackbar
+						anchorOrigin={{ vertical: "top", horizontal: "center" }}
+						open={sendShare}
+					>
+						<Alert severity="info" sx={{ width: "100%" }}>
+							You are sharing Host
+						</Alert>
+					</Snackbar>
+				)}
 			</HostContext.Provider>
 		</>
 	);

@@ -285,7 +285,7 @@ export default function NewMapwindow(props) {
 	const [sharingLocation, setSharingLocation] = useState(false);
 
 	const [individual, setIndividual] = useState(false);
-	const [sumulbutton, setSimulButton] = useState(true);
+	const [simulbutton, setSimulButton] = useState(true);
 	const [open, setOpen] = useState(false);
 
 	const { socket, connected } = useSocket();
@@ -1109,13 +1109,13 @@ export default function NewMapwindow(props) {
 			} else {
 				socket.emit("finish sendShare request");
 				setSendShare(!sendShare);
-				alert("you finished sharing");
+				// alert("you finished sharing");
 			}
 		}
 	};
 
 	const startFromCurrentPoint = () => {
-		if (sumulbutton) {
+		if (simulbutton) {
 			const currentPosition = markerC.getPosition();
 
 			if (markerS !== null) {
@@ -1424,7 +1424,7 @@ export default function NewMapwindow(props) {
 					start={start}
 					end={end}
 				></InfoMenu>
-				{sumulbutton && (
+				{simulbutton && (
 					<CurrentButtonWrapper onClick={startFromCurrentPoint}>
 						현재 위치에서 출발하기
 					</CurrentButtonWrapper>
