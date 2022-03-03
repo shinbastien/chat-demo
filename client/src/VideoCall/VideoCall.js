@@ -73,6 +73,7 @@ function VideoCall(props) {
 
 	// Set socket connection
 	useEffect(() => {
+
 		const handleJoinParticipants = async (members, name) => {
 			console.log("isnew is", isNew);
 			setParticipants([...participants, Object.keys(members)]);
@@ -170,6 +171,7 @@ function VideoCall(props) {
 		};
 	}, [peers, participants, socket, connected]);
 
+
 	//URL 복사
 	const onHandleCopy = (e) => {
 		navigator.clipboard.writeText(window.location.href);
@@ -242,6 +244,7 @@ function VideoCall(props) {
 							<Video peer={peers[key].peer} userName={key} />
 							<Grid item>
 								<Stack direction="row" spacing={2}>
+
 									<Avatar sx={{ bgcolor: peers[key].color }}>
 										{key.slice(0, 1).toUpperCase()}
 									</Avatar>
