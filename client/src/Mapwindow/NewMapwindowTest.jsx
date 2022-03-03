@@ -274,47 +274,60 @@ export default function NewMapwindow(props) {
 
 	const { socket, connected } = useSocket();
 
-	const initMap = () => {
-		const lat = 37.56653180179; //을지로 입구역 좌표
-		const lng = 126.98295133464485;
+	const initMap = (participants, userName) => {
+		var lat = 0;
+		var lng = 0;
+		if (Object.keys(participants).length == 1) {
+			lat = 37.56653180179; //을지로 입구역 좌표
+			lng = 126.98295133464485;
+		}
+
+		else if (Object.keys(participants).length == 2) {
+			lat = 36.36832150  // 파스쿠찌 대전카이스트점 좌표
+			lng = 127.36479713;
+		}
+
+		else  {
+			lat = 36.36187754;
+			lng = 127.35049303;
+		}
+		
 
 		socket.emit("start mapwindow", lat, lng);
 		console.log("send location info to server", [lat, lng]);
 
 		var center = new Tmapv2.LatLng(lat, lng);
 
-		setLatitude(lat);
-		setLongtitude(lng);
-		setMap(
-			new Tmapv2.Map("map_div", {
-				center: center,
-				width: "100%",
-				height: "100vh",
-				zoom: 18,
-				zoomControl: true,
-				scrollwheel: true,
-				pinchZoom: true,
-			}),
-		);
+
+		if (userName == props.userName) {
+			setLatitude(lat);
+			setLongtitude(lng);
+			setMap(
+				new Tmapv2.Map("map_div", {
+					center: center,
+					width: "100%",
+					height: "100vh",
+					zoom: 18,
+					zoomControl: true,
+					scrollwheel: true,
+					pinchZoom: true,
+				}),
+			);
+		}
+
 	};
 
-	useEffect(() => {
-		if (socket && connected) {
-			socket.on("joinResponse", initMap);
-			// initMap();
-		}
-	}, [connected, socket]);
 
 	//current point
 	useEffect(() => {
-		const lat = 37.56653180179;
-		const lng = 126.98295133464485;
+		const lat = latitude;
+		const lng = longtitude;
 
 		console.log("lat is: ", lat);
 		console.log("lng is: ", lng);
 
-		setLatitude(lat);
-		setLongtitude(lng);
+		// setLatitude(lat);
+		// setLongtitude(lng);
 
 		setMarkerC(
 			new Tmapv2.Marker({

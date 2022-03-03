@@ -55,7 +55,7 @@ function Map() {
 			>
 				<Grid container spacing={2}>
 					<Grid item xs={6} md={9}>
-						<NewMapwindow userName={userName} color={randomColor}></NewMapwindow>
+						<NewMapwindow userName={userName} color={randomColor}/>
 					</Grid>
 					<Grid item xs={6} md={3}>
 						<VideoCall

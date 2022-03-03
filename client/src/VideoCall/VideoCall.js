@@ -54,7 +54,6 @@ function VideoCall(props) {
 	const userVideo = useRef();
 	const peersRef = useRef([]);
 	const [participants, setParticipants] = useState([]);
-	const [member, setMember] = useState({});
 	const roomName = props.roomName;
 	const userName = props.userName;
 	const delay = require("delay");
@@ -75,7 +74,6 @@ function VideoCall(props) {
 		const handleJoinParticipants = async (members) => { 
 			console.log("isnew is", isNew);
 			setParticipants([...participants, Object.keys(members)]);
-			setMember({...member, members});
 
 			if (isNew) {
 				setPeers((peers) => {
@@ -105,7 +103,6 @@ function VideoCall(props) {
 
 	useEffect(() => {
 		console.log("\n\n\t Test Peers", peers);
-		console.log("participants", member);
 	}, [peers]);
 
 	useEffect(() => {
@@ -225,15 +222,12 @@ function VideoCall(props) {
 					</Grid>
 				</Grid>
 				{Object.keys(peers).map((key) => {
-					console.log(key);
-					// console.log(member[key].color);
-					console.log(peers[key]);
 					return (
 						<Grid item key={key} style={{ padding: "1.5rem" }}>
 							<Video peer={peers[key].peer} userName={key} />
 							<Grid item>
 								<Stack direction="row" spacing={2}>
-									<Avatar sx={{bgcolor: Object.keys(peers).includes(key) ? peers[key].color : "#bc2073"}}>
+									<Avatar sx={{bgcolor: peers[key].color}}>
 										{key.slice(0, 1).toUpperCase()}
 									</Avatar>
 									<TextWrapper>{key} &nbsp; &nbsp;</TextWrapper>

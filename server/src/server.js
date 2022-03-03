@@ -49,7 +49,7 @@ io.on("connection", (socket) => {
 			Object.keys(users[roomName].participants),
 		);
 		console.log(users[roomName].participants);
-		io.to(roomName).emit("joinResponse", users[roomName].participants);
+		io.to(roomName).emit("joinResponse", users[roomName].participants, userName);
 		console.log("server sends joinResponse");
 	});
 
@@ -135,11 +135,11 @@ io.on("connection", (socket) => {
 		console.log("Current user who is drawing: ", socket.userName);
 		socket.broadcast.to(socket.roomName).emit("other start drawing");
 	});
-	socket.on("send paint", (mousePosition, newMousePosition) => {
+	socket.on("send paint", (mousePosition, newMousePosition, color) => {
 		console.log("send paint of: ", socket.userName);
 		socket.broadcast
 			.to(socket.roomName)
-			.emit("receive paint", mousePosition, newMousePosition);
+			.emit("receive paint", mousePosition, newMousePosition, color);
 	});
 
 	socket.on("stop drawing", () => {
