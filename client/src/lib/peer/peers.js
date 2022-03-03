@@ -33,8 +33,9 @@ function createPeer(roomName, userName, participants, socket) {
 			});
 
 			console.log("create Peer of: ", participantName);
+			console.log("participants[participantName]", participants[participantName]);
 
-			newPeers[participantName] = { peer: peer, hasstream: false };
+			newPeers[participantName] = { peer: peer, hasstream: false, color: participants[participantName].color };
 		});
 
 	return newPeers;
@@ -43,6 +44,7 @@ function createPeer(roomName, userName, participants, socket) {
 function addPeer(roomName, userName, participants, peers, socket) {
 	let oldPeers = Object.keys(peers);
 	let newPeers = Object.keys(participants);
+	console.log(participants);
 
 	let newUser = newPeers.filter(
 		(x) => !oldPeers.includes(x) && x !== userName,
@@ -71,7 +73,9 @@ function addPeer(roomName, userName, participants, peers, socket) {
 		console.log(err);
 	});
 
-    return {...peers, [newUser]: {peer: peer, hasstream: false}};
+	console.log(participants[newUser].color);
+
+    return {...peers, [newUser]: {peer: peer, hasstream: false, color: participants[newUser].color}};
 }
 
 function disconnectPeer(peers, userName) {
@@ -87,7 +91,7 @@ function PeeraddStream(peers, mystream) {
     const newPeers = {};
     Object.keys(peers).forEach((participantName) => {
         if (!peers[participantName].hasstream) {
-            newPeers[participantName] = {peer: peers[participantName].peer, hasstream: true};
+            newPeers[participantName] = {peer: peers[participantName].peer, hasstream: true, color: peers[participantName].color};
             newPeers[participantName].peer.addStream(mystream);
             console.log(mystream);
         }

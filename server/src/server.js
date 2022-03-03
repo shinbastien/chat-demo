@@ -11,8 +11,8 @@ const io = require("socket.io")(server, {
 	},
 });
 
-const port = process.env.PORT || 3000;
-// const PORT = 4000;
+// const port = process.env.PORT || 3000;
+const PORT = 4000;
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 const REMOVE_CHAT = "removeChat";
 
@@ -28,17 +28,21 @@ io.on("connection", (socket) => {
 	// console.log("2", userName);
 	// socket.join(GroupID);
 
-	socket.on("join", (roomName, userName) => {
+	socket.on("join", (roomName, userName, color) => {
 		socket.join(roomName);
 		if (!users[roomName]) {
 			users[roomName] = { participants: {}, youtubeLink: "", sharingHost: "" };
 		}
+		
+
 		socket.roomName = roomName;
 		socket.userName = userName;
+		socket.color = color;
 		socket.share = false;
 		users[roomName].participants[userName] = {
 			socket: socket.id,
 			location: [0, 0],
+			color: socket.color,
 		};
 		console.log(
 			"current users after join: ",
@@ -48,16 +52,6 @@ io.on("connection", (socket) => {
 		io.to(roomName).emit("joinResponse", users[roomName].participants);
 		console.log("server sends joinResponse");
 	});
-
-	// socket.on("start videocall", (GroupID) => {
-	// 	console.log("groupID in videocall is: ", GroupID);
-	// 	console.log("socket id is: ", socket.id);
-	// 	console.log("current users is: ", users[GroupID]);
-	// 	console.log("starting videocall for room");
-
-	// 	// send list of group members to each member
-	// 	socket.emit("bring all users in group for videocall", users[GroupID]);
-	// });
 
 	// --------------------PEERCONNECTION-------------------
 	// when a peer is created from newbie, the created peer sends a signal by socket and socket sends the signal to existing peers
@@ -69,15 +63,6 @@ io.on("connection", (socket) => {
 		} catch (error) {
 			console.log(error);
 		}
-	});
-
-	socket.on("returning signal", (payload) => {
-		io.to(payload.callerID).emit("receiving returned signal", {
-			signal: payload.signal,
-			callerID: socket.id,
-			callerName: socket.userName,
-		});
-		console.log("returning signal to : ", payload.callerName);
 	});
 
 	//  ---------------------------SHAREVIDEO----------------------
@@ -112,20 +97,39 @@ io.on("connection", (socket) => {
 	socket.on("start mapwindow", (lat, lng) => {
 		console.log("latitude is: ", lat);
 		console.log("longitude is: ", lng);
-		users[socket.roomName].participants[socket.userName].location = [lat, lng];
+		// console.log(users[socket.roomName]);
+		if (!users[socket.roomName].participants) {
+			users[socket.roomName].participants[socket.userName].location = [lat, lng];
+		}
 		console.log(
 			"updated user info of current socket: ",
 			users[socket.roomName].participants[socket.userName],
 		);
+
+		io.to(socket.roomName).emit("bring userLocationInfo", users[socket.roomName].participants);
 	});
 
+	socket.on("user moved", (position) => {
+		console.log("moved user is: ", socket.userName);
+		console.log("position is: ", [position._lat, position._lng]);
+
+		socket.broadcast.to(socket.roomName).emit("bring changed location of user", socket.userName, [position._lat, position._lng]);
+	})
+
+
+	// ---------------------------EMOJI---------------------
 	// Listen for Emoji sending
-	socket.on("send emoji", (emoji, userName, pos) => {
+	socket.on("send emoji", (emoji, userName, pos, color) => {
 		console.log("received emoji is: ", emoji);
 		console.log("emoji sneder is: ", userName);
-		io.to(socket.roomName).emit("get emoji", emoji, userName, pos);
+		socket.broadcast.to(socket.roomName).emit("get emoji", emoji, userName, pos, color);
 	});
+<<<<<<< HEAD
 	// CANVAS
+=======
+
+	// ------------------------CANVAS------------------------
+>>>>>>> main
 	socket.on("start canvas", () => {
 		socket.broadcast.to(socket.roomName).emit("open canvas");
 		console.log("open canvas");
@@ -227,10 +231,10 @@ io.on("connection", (socket) => {
 	});
 });
 
-server.listen(port, () => {
-	console.log(`Listening on port ${port}`);
-});
-
-// server.listen(PORT, () => {
-// 	console.log(`Listening on port ${PORT}`);
+// server.listen(port, () => {
+// 	console.log(`Listening on port ${port}`);
 // });
+
+server.listen(PORT, () => {
+	console.log(`Listening on port ${PORT}`);
+});

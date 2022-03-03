@@ -7,7 +7,7 @@ const CanvasWrapper = styled.canvas`
 	z-index: 20;
 `;
 
-const Canvas = ({ width, height }) => {
+const Canvas = ({ width, height, color }) => {
 	const canvasRef = useRef(null);
 	const subcanvasRef = useRef(null);
 	const drawingRef = useRef([]);
@@ -168,7 +168,7 @@ const Canvas = ({ width, height }) => {
 
 		if (subctx == null) throw new Error("Could not get context");
 		if (subctx) {
-			subctx.strokeStyle = "#151ca2";
+			subctx.strokeStyle = color;
 			subctx.lineJoin = "round";
 			subctx.lineWidth = 3;
 

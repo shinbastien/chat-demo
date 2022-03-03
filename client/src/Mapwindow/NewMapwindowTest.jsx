@@ -223,7 +223,7 @@ export default function NewMapwindow(props) {
 	const [map, setMap] = useState(null);
 	const [latitude, setLatitude] = useState(0);
 	const [longtitude, setLongtitude] = useState(0);
-	const { userName, loading } = props;
+	const { userName, color } = props;
 
 	//root-tracking
 	const [start, setStart] = useState(null);
@@ -1017,6 +1017,7 @@ export default function NewMapwindow(props) {
 					if (Object.keys(markerList).includes(x)) {
 						// const loc = new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]);
 						console.log(userLocObj[x]);
+						console.log(markerList[x]);
 						markerList[x].setMap(null);
 						markerList[x].setVisible(false);
 					}
@@ -1032,9 +1033,12 @@ export default function NewMapwindow(props) {
 							"<span style='background-color: #46414E; color:white'>" +
 							"현재위치1" +
 							"</span>",
-					});
-					setMarkerList({ ...markerList, [x]: markerItem });
-				});
+					})
+					console.log("markerItem is loaded", markerItem.isLoaded())
+					setMarkerList({...markerList, [x]: markerItem});
+					
+				})
+			
 		}
 	}, [userLocObj]);
 
@@ -1072,6 +1076,7 @@ export default function NewMapwindow(props) {
 			console.log("handleMarkerChange, userLocObj: ", userLocObj);
 
 			if (Object.keys(markerList).includes(name)) {
+				console.log("socket markerlist", markerList[name]);
 				markerList[name].setMap(null);
 				markerList[name].setVisible(false);
 			}
@@ -1225,21 +1230,21 @@ export default function NewMapwindow(props) {
 
 		setChosenEmoji((chosenEmoji) => [
 			...chosenEmoji,
-			{ emoji: emoji, position: pos },
+			{ emoji: emoji, position: pos, color: color},
 		]);
 		setEmojiSender(userName);
 		if (socket && connected) {
-			socket.emit("send emoji", emoji, userName, pos);
+			socket.emit("send emoji", emoji, userName, pos, color);
 		}
 	};
 
 	//emoji
 	useEffect(() => {
-		const handleGetEmoji = (emoji, userName, pos) => {
+		const handleGetEmoji = (emoji, userName, pos, color) => {
 			setChosenEmoji((chosenEmoji) => [
-				...chosenEmoji,
-				{ emoji: emoji, position: pos },
-			]);
+			...chosenEmoji,
+			{ emoji: emoji, position: pos, color: color},
+	        ]);
 			setEmojiSender(userName);
 		};
 
@@ -1363,6 +1368,7 @@ export default function NewMapwindow(props) {
 						state={aniemoji}
 						emoji={emojiObject.emoji}
 						userName={emojisender}
+						color={emojiObject.color}
 					></EmojiReaction>
 				))}
 
@@ -1514,7 +1520,7 @@ export default function NewMapwindow(props) {
 					/>
 				</EmojiWrapper>
 			)}
-			{active === "draw" ? <Canvas width={2000} height={1000}></Canvas> : null}
+			{active === "draw" ? <Canvas width={2000} height={1000} color={color}></Canvas> : null}
 			<MapWrapper id="map_div"></MapWrapper>
 		</React.Fragment>
 	);
