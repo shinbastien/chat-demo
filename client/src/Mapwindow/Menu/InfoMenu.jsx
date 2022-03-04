@@ -20,20 +20,70 @@ import { ref, getDatabase } from "firebase/database";
 import { useList } from "react-firebase-hooks/database";
 
 const MenuWrapper = styled.div`
-	width: 300px;
-	height: 100%;
+	width: ${(props) => (props.keepOpen ? "400px" : "600px")};
+	height: 90%;
 	overflow-y: scroll;
-	margin: 20px 0 0 40px;
-	padding: 3%;
+	margin: 20px 40px;
+	padding: 1% 2%;
 	background-color: #f6f9fa;
 	border-radius: 12px;
 	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
 	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
+`;
 
+const TitleWrapper = styled.div`
+	display: flex;
+	justify-content: space-evenly;
 	.title {
 		font-weight: 600;
 		color: ${(props) => props.theme.color1};
 		margin: 20px;
+		// margin: auto;
+	}
+
+	.short {
+		font-size: 0.8vw;
+		font-weight: 300;
+		color: ${(props) => props.theme.primaryColor};
+		margin: auto;
+	}
+
+	.info {
+		font-size: 1.7vw;
+		margin: auto;
+	}
+	.badge {
+		font-size: 13px;
+		font-weight: 700;
+		letter-spacing: 0;
+		color: white;
+		text-align: center;
+		min-width: 6px;
+		padding: 0 6px;
+		border-radius: 18px;
+		background: #2b5876; /* fallback for old browsers */
+		background: -webkit-linear-gradient(
+			to right,
+			#2b5876,
+			#4e4376
+		); /* Chrome 10-25, Safari 5.1-6 */
+		background: linear-gradient(
+			to right,
+			#2b5876,
+			#4e4376
+		); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+	}
+
+	> button {
+		border-radius: 50%;
+		width: 30px;
+		height: 30px;
+		background-color: ${(props) => props.theme.color3};
+		margin: auto;
+
+		&: hover {
+			background-color: ${(props) => props.theme.color2};
+		}
 	}
 `;
 
@@ -161,76 +211,110 @@ const MemoKeepPlaceCard = React.memo(KeepPlaceCard);
 
 const InfoMenu = (props) => {
 	const { map, totalDaytime, start, end } = props;
-
 	const [keepOpen, setKeepOpen] = useState(false);
 	const [snapshots, loading, error] = useList(ref(database, "keeps"));
 
+	console.log(start);
+
+	useEffect(() => {
+		if (start || end) {
+			setKeepOpen(true);
+		}
+	}, [start, end]);
+
 	return (
 		<Draggable>
-			<MenuWrapper>
-				<div className="title">
-					<FontAwesomeIcon icon={faCircleInfo} />
-					&nbsp;Information
-				</div>
-				<Divider></Divider>
-				<SubmenuWrapper>
-					{start || end ? (
-						<div className="info result">
-							<li>출발: {start ? start.name : "출발지를 정해주세요"}</li>
-							<li>도착: {end ? end.name : "도착지를 정해주세요"}</li>
-							<Divider></Divider>
-						</div>
-					) : (
-						<div className="info destination">
-							<FontAwesomeIcon icon={faLocationDot} />
-							&nbsp;목적지를 정해주세요
-						</div>
-					)}
-					{totalDaytime.totalD ? (
-						<div className="info destination">
-							<li>
-								총 거리:{" "}
-								{totalDaytime.totalD < 1
-									? totalDaytime.totalD * 1000 + "m"
-									: totalDaytime.totalD + "km"}
-							</li>
-							<li>총 시간: {totalDaytime.totalTime} 분</li>
-						</div>
-					) : null}
-					<Divider></Divider>
-					<SubsubmenuWrapper>
-						<span pt={3} pb={3}>
-							<div className="info">
+			<MenuWrapper keepOpen={keepOpen}>
+				<TitleWrapper>
+					<div className="title">
+						<FontAwesomeIcon icon={faCircleInfo} />
+						&nbsp;Information
+					</div>
+					{keepOpen ? null : (
+						<>
+							<div className="title short">
+								{start || end ? (
+									<div>
+										<div>{start && start.name}</div>
+										<div>{end && end.name}</div>
+									</div>
+								) : (
+									<div>
+										<FontAwesomeIcon icon={faLocationDot} />
+										&nbsp;목적지를 정해주세요
+									</div>
+								)}
+							</div>
+							<div className="title info">
 								<span role="img" aria-label="Woman Running">
 									🏃🏻‍♀️
 								</span>{" "}
-								Keep&nbsp;{" "}
 								<div className="badge">{snapshots && snapshots.length}</div>
 							</div>
-							{loading ? (
-								<div className="fa-3x info">
-									<FontAwesomeIcon className="fa-spin" icon={faSync} />
+						</>
+					)}
+					<button
+						style={{ cursor: "pointer" }}
+						onClick={() => setKeepOpen(!keepOpen)}
+					>
+						<FontAwesomeIcon icon={keepOpen ? faAngleUp : faAngleDown} />
+					</button>
+				</TitleWrapper>
+				<Divider></Divider>
+				{keepOpen ? (
+					<SubmenuWrapper>
+						{start || end ? (
+							<div className="info result">
+								<li>출발: {start ? start.name : "출발지를 정해주세요"}</li>
+								<li>도착: {end ? end.name : "도착지를 정해주세요"}</li>
+							</div>
+						) : (
+							<div className="info destination">
+								<FontAwesomeIcon icon={faLocationDot} />
+								&nbsp;목적지를 정해주세요
+							</div>
+						)}
+						<Divider></Divider>
+						{totalDaytime.totalD ? (
+							<div className="info destination">
+								<li>
+									총 거리:{" "}
+									{totalDaytime.totalD < 1
+										? totalDaytime.totalD * 1000 + "m"
+										: totalDaytime.totalD + "km"}
+								</li>
+								<li>총 시간: {totalDaytime.totalTime} 분</li>
+							</div>
+						) : null}
+						<Divider></Divider>
+						<SubsubmenuWrapper>
+							<span pt={3} pb={3}>
+								<div className="info">
+									<span role="img" aria-label="Woman Running">
+										🏃🏻‍♀️
+									</span>{" "}
+									Keep&nbsp;{" "}
+									<div className="badge">{snapshots && snapshots.length}</div>
 								</div>
-							) : null}
-							<button
-								style={{ cursor: "pointer" }}
-								onClick={() => setKeepOpen(!keepOpen)}
-							>
-								<FontAwesomeIcon icon={keepOpen ? faAngleDown : faAngleUp} />
-							</button>
-						</span>
-						<div style={{ display: keepOpen ? "inline-block" : "none" }}>
-							{snapshots !== undefined &&
-								snapshots.map((list) => (
-									<MemoKeepPlaceCard
-										key={list.key}
-										map={map}
-										info={list.val()}
-									></MemoKeepPlaceCard>
-								))}
-						</div>
-					</SubsubmenuWrapper>
-				</SubmenuWrapper>
+								{loading ? (
+									<div className="fa-3x info">
+										<FontAwesomeIcon className="fa-spin" icon={faSync} />
+									</div>
+								) : null}
+							</span>
+							<div style={{ display: keepOpen ? "inline-block" : "none" }}>
+								{snapshots !== undefined &&
+									snapshots.map((list) => (
+										<MemoKeepPlaceCard
+											key={list.key}
+											map={map}
+											info={list.val()}
+										></MemoKeepPlaceCard>
+									))}
+							</div>
+						</SubsubmenuWrapper>
+					</SubmenuWrapper>
+				) : null}
 			</MenuWrapper>
 		</Draggable>
 	);

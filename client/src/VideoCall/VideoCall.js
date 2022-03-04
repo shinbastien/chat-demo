@@ -73,7 +73,6 @@ function VideoCall(props) {
 
 	// Set socket connection
 	useEffect(() => {
-
 		const handleJoinParticipants = async (members, name) => {
 			console.log("isnew is", isNew);
 			setParticipants([...participants, Object.keys(members)]);
@@ -171,7 +170,6 @@ function VideoCall(props) {
 		};
 	}, [peers, participants, socket, connected]);
 
-
 	//URL 복사
 	const onHandleCopy = (e) => {
 		navigator.clipboard.writeText(window.location.href);
@@ -231,6 +229,12 @@ function VideoCall(props) {
 									{props.userName} &nbsp; &nbsp;
 									<span style={{ color: "red" }}>나</span>
 								</TextWrapper>
+								<IconButton>
+									<FontAwesomeIcon
+										icon={faUserGroup}
+										style={{ fontSize: "3vw" }}
+									/>
+								</IconButton>
 							</Stack>
 						</Grid>
 						<Grid item>
@@ -244,7 +248,6 @@ function VideoCall(props) {
 							<Video peer={peers[key].peer} userName={key} />
 							<Grid item>
 								<Stack direction="row" spacing={2}>
-
 									<Avatar sx={{ bgcolor: peers[key].color }}>
 										{key.slice(0, 1).toUpperCase()}
 									</Avatar>
@@ -252,7 +255,12 @@ function VideoCall(props) {
 								</Stack>
 							</Grid>
 							<Grid item>
-								{/* <IconButton onClick={() => console.log("test")}></IconButton> */}
+								<IconButton>
+									<FontAwesomeIcon
+										icon={faUserGroup}
+										style={{ fontSize: "3vw" }}
+									/>
+								</IconButton>{" "}
 							</Grid>
 						</Grid>
 					);

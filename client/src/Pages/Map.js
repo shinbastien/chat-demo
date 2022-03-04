@@ -4,6 +4,8 @@ import NewMapwindow from "../Mapwindow/NewMapwindowTest";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
 import { HostContext } from "../lib/Context/HostContext";
+import { ReceiveContext } from "../lib/Context/ReceiveContext";
+
 import Snackbar from "@mui/material/Snackbar";
 
 import { useSocket } from "../lib/socket";
@@ -13,6 +15,8 @@ import MuiAlert from "@mui/material/Alert";
 const Alert = React.forwardRef(function Alert(props, ref) {
 	return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
+
+export { Alert };
 
 function Map() {
 	const location = useLocation();
@@ -31,12 +35,12 @@ function Map() {
 
 	const { socket, connected } = useSocket();
 	console.log("connected is: ", connected);
-	const randomColor = "#"+ Math.floor(Math.random()*16777215).toString(16);
+	const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
 
 	useEffect(() => {
 		if (socket && connected) {
 			console.log("socket id is:", socket.id);
-			
+
 			socket.emit("join", groupID, userName, randomColor);
 			console.log("joining group");
 		}
@@ -51,40 +55,33 @@ function Map() {
 
 	return (
 		<>
-			<HostContext.Provider value={[sendShare, setSendShare]}>
-				<Grid container spacing={2}>
-					<Grid item xs={6} md={9}>
-						<NewMapwindow userName={userName} color={randomColor}/>
+			<ReceiveContext.Provider value={[receiveShare, setReceiveShare]}>
+				<HostContext.Provider value={[sendShare, setSendShare]}>
+					<Grid container spacing={2}>
+						<Grid item xs={6} md={9}>
+							<NewMapwindow userName={userName} color={randomColor} />
+						</Grid>
+						<Grid item xs={6} md={3}>
+							<VideoCall
+								roomName={groupID}
+								userName={userName}
+								userColor={randomColor}
+								loading={onloading}
+							></VideoCall>
+						</Grid>
 					</Grid>
-					<Grid item xs={6} md={3}>
-						<VideoCall
-							roomName={groupID}
-							userName={userName}
-							userColor={randomColor}
-							loading={onloading}
-						></VideoCall>
-					</Grid>
-				</Grid>
-				{sendShare ? (
-					<Snackbar
-						anchorOrigin={{ vertical: "top", horizontal: "center" }}
-						open={sendShare}
-					>
-						<Alert severity="success" sx={{ width: "100%" }}>
-							You are sharing your window.
-						</Alert>
-					</Snackbar>
-				) : (
-					<Snackbar
-						anchorOrigin={{ vertical: "top", horizontal: "center" }}
-						open={sendShare}
-					>
-						<Alert severity="info" sx={{ width: "100%" }}>
-							You are sharing Host
-						</Alert>
-					</Snackbar>
-				)}
-			</HostContext.Provider>
+					{sendShare && (
+						<Snackbar
+							anchorOrigin={{ vertical: "top", horizontal: "center" }}
+							open={sendShare}
+						>
+							<Alert severity="success" sx={{ width: "100%" }}>
+								You are sharing your window.
+							</Alert>
+						</Snackbar>
+					)}
+				</HostContext.Provider>
+			</ReceiveContext.Provider>
 		</>
 	);
 }

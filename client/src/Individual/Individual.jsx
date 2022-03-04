@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Search from "./Search/Search";
-import Box from "@mui/material/Box";
-
-import Typography from "@mui/material/Typography";
 
 import { useLocation } from "react-router-dom";
 import { useSocket } from "../lib/socket";
