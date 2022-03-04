@@ -988,23 +988,14 @@ export default function NewMapwindow(props) {
 
 	useEffect(() => {
 		const handleUserLocation = (data) => {
-
-			setUserLocObj((userLocationObject)=>{
-				Object.keys(data)
-					.filter((x) => !Object.keys(userLocationObject).includes(x))
-					.reduce((prev, currName)=> {
-						return {...prev, [currName]: data[currName].location}
-					}, {...userLocationObject})
-
-				return data
-			})
-
 			const newLocObj = {};
 			Object.keys(data)
-				.filter((x) => !Object.keys(userLocObj).includes(x))
+				.filter((x) => x != userName)
 				.map((name) => {
-					setUserLocObj({...userLocObj, [name]: data[name].location});
+					newLocObj[name] = data[name].location;
 				});
+
+			setUserLocObj(newLocObj);
 		};
 
 		const handleUserDisconnect = (participants, userName) => {
@@ -1024,11 +1015,11 @@ export default function NewMapwindow(props) {
 			socket.on("bring userLocationInfo", handleUserLocation);
 			socket.on("disconnectResponse", handleUserDisconnect);
 		}
- 
+
 		return () => {
 			if (socket && connected) {
 				// socket.off("joinResponse", initMap);
-				socket.off("bring userLocationInfo", handleUserLocation);
+				// socket.off("bring userLocationInfo", handleUserLocation);
 			}
 		};
 	}, [connected, socket]);
@@ -1070,7 +1061,7 @@ export default function NewMapwindow(props) {
 							"</span>",
 					});
 					console.log("markerItem is loaded", markerItem.isLoaded());
-					setMarkerList({ ...markerList, [x]: markerItem });{}["karina"]
+					setMarkerList({ ...markerList, [x]: markerItem });
 				});
 		}
 	}, [userLocObj]);
