@@ -23,7 +23,6 @@ import {
 	faVectorSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import VideoCard from "./VideoCard/VideoCard";
 import { searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas/CanvasV2";
@@ -35,6 +34,7 @@ import { ReceiveContext } from "../lib/Context/ReceiveContext";
 
 import Snackbar from "@mui/material/Snackbar";
 import { Alert } from "../Pages/Map";
+import VideoBoardWrapper from "./VideoCard/VideoBoardWrapper";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
@@ -285,6 +285,7 @@ export default function NewMapwindow(props) {
 		nelng: "",
 		swlat: "",
 		swlng: "",
+		pixelPath: null,
 	});
 
 	// sharingItems
@@ -924,9 +925,8 @@ export default function NewMapwindow(props) {
 
 	useEffect(() => {
 		if (searching === true && drawObject !== null) {
-			drawObject.drawRectangle();
-			console.log(drawObject);
 			map.addListener("click", onTouchDrawing);
+			drawObject.drawRectangle();
 		}
 	}, [searching, drawObject]);
 
@@ -941,6 +941,7 @@ export default function NewMapwindow(props) {
 					nelng: _data.shapeArray[0]._shape_data.bounds._ne._lng,
 					swlat: _data.shapeArray[0]._shape_data.bounds._sw._lat,
 					swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
+					pixelPath: _data.shapeArray[0]._shape_data.pixelPath,
 				});
 
 				setShowInfo(true);
@@ -977,6 +978,7 @@ export default function NewMapwindow(props) {
 					sort: "score",
 				},
 			});
+			console.log(items);
 			setrecvideo(items.searchPoiInfo.pois.poi);
 		} catch (err) {
 			console.log(err);
@@ -1405,20 +1407,12 @@ export default function NewMapwindow(props) {
 				>
 					<Alert severity="info" sx={{ width: "100%" }}>
 						지도에서 관련 영상을 찾고 싶은 구역을{" "}
-						<FontAwesomeIcon icon={faVectorSquare} /> 로 표시해보세요
+						<FontAwesomeIcon icon={faVectorSquare} /> 로 표시한 후 해당 영역을
+						클릭하세요.
 					</Alert>
 				</Snackbar>
 			}
-			{receiveShare
-				? recvideoLoc.length > 0 &&
-				  recvideoLoc.map((list, idx) => (
-						<VideoCard key={idx} info={list}></VideoCard>
-				  ))
-				: searching &&
-				  recvideoLoc.length > 0 &&
-				  recvideoLoc.map((list, idx) => (
-						<VideoCard key={idx} info={list}></VideoCard>
-				  ))}
+
 			{chosenEmoji.length > 0 &&
 				chosenEmoji.map((emojiObject, idx) => (
 					<EmojiReaction
@@ -1457,6 +1451,14 @@ export default function NewMapwindow(props) {
 						markerC={markerC}
 					/>
 				</IndividualWrapper>
+			)}
+			{searching && recvideoLoc.length > 0 && (
+				<VideoBoardWrapper
+					receiveShare={receiveShare}
+					recvideoLoc={recvideoLoc}
+					searching={searching}
+					pixelPath={searchPoint.pixelPath}
+				></VideoBoardWrapper>
 			)}
 			<MapButtonWrapper>
 				<SearchForm>
@@ -1563,9 +1565,9 @@ export default function NewMapwindow(props) {
 					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
 				</IconButton>
 
-				<IconButton onClick={onLoadOtherCurrent}>
+				{/* <IconButton onClick={onLoadOtherCurrent}>
 					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faStreetView} />
-				</IconButton>
+				</IconButton> */}
 			</CurrentLocationWrapper>
 
 			{active === "emoji" && emojiResult && (
