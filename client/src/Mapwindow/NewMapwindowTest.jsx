@@ -1573,10 +1573,10 @@ export default function NewMapwindow(props) {
 					/>
 				</EmojiWrapper>
 			)}
+			{active === "draw" ? (
+				<Canvas width={2000} height={1000} color={color}></Canvas>
+			) : null}
 			<MapWrapper>
-				{active === "draw" ? (
-					<Canvas width={2000} height={1000} color={color}></Canvas>
-				) : null}
 				<Wrapper searching={searching} id="map_div"></Wrapper>
 			</MapWrapper>
 		</React.Fragment>
