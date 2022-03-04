@@ -11,8 +11,8 @@ const io = require("socket.io")(server, {
 	},
 });
 
-const port = process.env.PORT || 3000;
-// const PORT = 4000;
+// const port = process.env.PORT || 3000;
+const PORT = 4000;
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 const REMOVE_CHAT = "removeChat";
 
@@ -124,12 +124,8 @@ io.on("connection", (socket) => {
 		console.log("emoji sneder is: ", userName);
 		socket.broadcast.to(socket.roomName).emit("get emoji", emoji, userName, pos, color);
 	});
-<<<<<<< HEAD
-	// CANVAS
-=======
 
 	// ------------------------CANVAS------------------------
->>>>>>> main
 	socket.on("start canvas", () => {
 		socket.broadcast.to(socket.roomName).emit("open canvas");
 		console.log("open canvas");
@@ -231,10 +227,10 @@ io.on("connection", (socket) => {
 	});
 });
 
-server.listen(port, () => {
-	console.log(`Listening on port ${port}`);
-});
-
-// server.listen(PORT, () => {
-// 	console.log(`Listening on port ${PORT}`);
+// server.listen(port, () => {
+// 	console.log(`Listening on port ${port}`);
 // });
+
+server.listen(PORT, () => {
+	console.log(`Listening on port ${PORT}`);
+});

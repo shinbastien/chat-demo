@@ -343,8 +343,8 @@ export default function NewMapwindow(props) {
 
 	//current point
 	useEffect(() => {
-		const lat = latitude;
-		const lng = longtitude;
+		const lat = 37.56653180179;
+		const lng = 126.98295133464485;
 
 		console.log("lat is: ", lat);
 		console.log("lng is: ", lng);
