@@ -31,19 +31,14 @@ import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
-import { HostContext } from "../lib/Context/HostContext";
 import { ReceiveContext } from "../lib/Context/ReceiveContext";
 
 import Snackbar from "@mui/material/Snackbar";
 import { Alert } from "../Pages/Map";
 
 const MapWrapper = styled.div`
-	z-index: 2;
-`;
-
-const Wrapper = styled.div`
 	z-index: -1000;
-	cursor: ${(props) => (props.searching ? "crosshair" : "auto")};
+	cursor: ${(props) => (props.searching ? "crosshair" : "grab")};
 `;
 
 const ResultList = styled.div`
@@ -128,10 +123,14 @@ const CurrentLocationWrapper = styled.div`
 `;
 
 const ShareWrapper = styled.div`
-	position: absolute;
 	bottom: 0;
 	z-index: 222;
-	margin: 0 0 80px 20px;
+	margin: auto 0;
+	background-color: #ccdbdc;
+	border-radius: 50%;
+	width: 50px;
+	height: 50px;
+	text-align: center;
 `;
 
 const ButtonWrapper = styled.button`
@@ -289,8 +288,14 @@ export default function NewMapwindow(props) {
 	});
 
 	// sharingItems
-	const [sendShare, setSendShare] = useContext(HostContext);
-	const [receiveShare, setReceiveShare] = useContext(ReceiveContext);
+	const {
+		receiveShare,
+		setReceiveShare,
+		receiveUser,
+		setReceiveUser,
+		sendShare,
+		setSendShare,
+	} = useContext(ReceiveContext);
 
 	// const [receiveShare, setReceiveShare] = useState(false);
 	const [sharingRecVideo, setSharingRecVideo] = useState(false);
@@ -920,6 +925,7 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		if (searching === true && drawObject !== null) {
 			drawObject.drawRectangle();
+			console.log(drawObject);
 			map.addListener("click", onTouchDrawing);
 		}
 	}, [searching, drawObject]);
@@ -1031,8 +1037,8 @@ export default function NewMapwindow(props) {
 				.filter((x) => {
 					if (Object.keys(markerList).includes(x)) {
 						return (
-							userLocObj[x][0] != markerList[x].getPosition._lat ||
-							userLocObj[x][1] != markerList[x].getPosition._lng
+							userLocObj[x][0] !== markerList[x].getPosition._lat ||
+							userLocObj[x][1] !== markerList[x].getPosition._lng
 						);
 					} else {
 						return true;
@@ -1082,7 +1088,7 @@ export default function NewMapwindow(props) {
 
 		if (
 			countMarker >= Object.keys(markerList).length - 1 ||
-			Object.keys(markerList).length == 0
+			Object.keys(markerList).length === 0
 		) {
 			setCountMarker(0);
 		} else {
@@ -1189,6 +1195,7 @@ export default function NewMapwindow(props) {
 
 	const onHandleSearchObject = () => {
 		if (drawObject !== null) {
+			drawObject._status.isDrawing = false;
 			drawObject.clear();
 			setSearchingMessage(false);
 			setDrawObject(null);
@@ -1351,13 +1358,14 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		if (socket && connected) {
 			socket.on("start sharemode", (user) => {
-				alert(`${user} is now sharing!`);
+				// alert(`${user} is now sharing!`);
 				setReceiveShare(true);
+				setReceiveUser(user);
 			});
 
 			socket.on("finish sharemode", (user) => {
 				setReceiveShare(false);
-				alert(`${user} finished sharing`);
+				// alert(`${user} finished sharing`);
 			});
 
 			socket.on("receive sharedvideoLoc", (videoLoc) => {
@@ -1518,6 +1526,14 @@ export default function NewMapwindow(props) {
 									icon={faFaceSmile}
 								/>
 							</IconButton>
+							<ShareWrapper>
+								<IconButton
+									onClick={onShareCurrent}
+									disabled={receiveShare ? true : false}
+								>
+									<FontAwesomeIcon icon={sendShare ? faEyeSlash : faEye} />
+								</IconButton>
+							</ShareWrapper>
 							<IconButton
 								style={{ cursor: "pointer" }}
 								className={active === "search" ? "active" : ""}
@@ -1552,17 +1568,6 @@ export default function NewMapwindow(props) {
 				</IconButton>
 			</CurrentLocationWrapper>
 
-			<ShareWrapper>
-				<IconButton
-					onClick={onShareCurrent}
-					disabled={receiveShare ? true : false}
-				>
-					<FontAwesomeIcon
-						style={{ fontSize: "3vw" }}
-						icon={sendShare ? faEyeSlash : faEye}
-					/>
-				</IconButton>
-			</ShareWrapper>
 			{active === "emoji" && emojiResult && (
 				<EmojiWrapper>
 					<Picker
@@ -1576,9 +1581,8 @@ export default function NewMapwindow(props) {
 			{active === "draw" ? (
 				<Canvas width={2000} height={1000} color={color}></Canvas>
 			) : null}
-			<MapWrapper>
-				<Wrapper searching={searching} id="map_div"></Wrapper>
-			</MapWrapper>
+
+			<MapWrapper searching={searching} id="map_div"></MapWrapper>
 		</React.Fragment>
 	);
 }

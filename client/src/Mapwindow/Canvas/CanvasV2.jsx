@@ -5,7 +5,7 @@ import pencil from "../../Styles/source/pencil.svg";
 
 const CanvasWrapper = styled.canvas`
 	position: absolute;
-	z-index: 2000;
+	z-index: 20;
 	cursor: url(${pencil}), crosshair;
 `;
 
@@ -22,10 +22,22 @@ const Canvas = ({ width, height, color }) => {
 	const previousTimeRef = useRef();
 
 	useEffect(() => {
+		window.addEventListener("resize", windowResize);
+
+		window.dispatchEvent(new Event("resize"));
+
 		subcanvasRef.current = document.createElement("canvas");
 		subcanvasRef.current.width = width;
 		subcanvasRef.current.height = height;
 	}, []);
+
+	function windowResize() {
+		const canvas = document.querySelector("canvas");
+		console.log(canvas.parentNode);
+
+		canvas.width = canvas.parentNode.clientWidth;
+		canvas.height = canvas.parentNode.clientHeight;
+	}
 
 	const startPoint = useCallback(
 		(event) => {
@@ -200,8 +212,8 @@ const Canvas = ({ width, height, color }) => {
 		let drawingRefCurrent = drawingRef.current;
 
 		for (let i = 0; i < drawingRefCurrent.length; i++) {
-			if (t - drawingRefCurrent[i]["createdAt"] > 2000) {
-				drawingRefCurrent[i]["opacity"] -= 0.015;
+			if (t - drawingRefCurrent[i]["createdAt"] > 1500) {
+				drawingRefCurrent[i]["opacity"] -= 0.02;
 			}
 		}
 

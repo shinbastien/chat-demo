@@ -21,6 +21,7 @@ import styled from "styled-components";
 import {
 	faUserGroup,
 	faArrowUpRightFromSquare,
+	faMagnifyingGlassLocation,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -229,22 +230,27 @@ function VideoCall(props) {
 									{props.userName} &nbsp; &nbsp;
 									<span style={{ color: "red" }}>나</span>
 								</TextWrapper>
-								<IconButton>
-									<FontAwesomeIcon
-										icon={faUserGroup}
-										style={{ fontSize: "3vw" }}
-									/>
-								</IconButton>
 							</Stack>
 						</Grid>
 						<Grid item>
-							<IconButton onClick={() => console.log("test")}></IconButton>
+							<IconButton>
+								<FontAwesomeIcon
+									icon={faMagnifyingGlassLocation}
+									style={{ fontSize: "2vw" }}
+								/>
+							</IconButton>{" "}
 						</Grid>
 					</Grid>
 				</Grid>
 				{Object.keys(peers).map((key) => {
 					return (
-						<Grid item key={key} style={{ padding: "1.5rem" }}>
+						<Grid
+							container
+							direction="row"
+							justifyContent="space-between"
+							key={key}
+							style={{ padding: "1.5rem" }}
+						>
 							<Video peer={peers[key].peer} userName={key} />
 							<Grid item>
 								<Stack direction="row" spacing={2}>
@@ -257,8 +263,8 @@ function VideoCall(props) {
 							<Grid item>
 								<IconButton>
 									<FontAwesomeIcon
-										icon={faUserGroup}
-										style={{ fontSize: "3vw" }}
+										icon={faMagnifyingGlassLocation}
+										style={{ fontSize: "2vw" }}
 									/>
 								</IconButton>{" "}
 							</Grid>
