@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import styled from "styled-components";
 import { useSocket } from "../../lib/socket";
+import pencil from "../../Styles/source/pencil.svg";
 
 const CanvasWrapper = styled.canvas`
 	position: absolute;
-	z-index: 20;
+	z-index: 2000;
+	cursor: url(${pencil}), crosshair;
 `;
 
 const Canvas = ({ width, height, color }) => {

@@ -125,14 +125,6 @@ const ResultWrapper = styled.div`
 	}
 `;
 
-const filterWords = (data) => {
-	console.log(data);
-	data.filter((prop) => prop.name.includes("주차장") === false);
-	return data;
-};
-
-export { filterWords };
-
 const Search = (props) => {
 	const termInput = useInput("");
 	const [submit, setSubmit] = useState(false);
@@ -151,6 +143,12 @@ const Search = (props) => {
 	]);
 	const { socket, connected } = useSocket();
 
+	const filterWords = (data) => {
+		console.log(data);
+		data.filter((prop) => prop.name.includes("주차장") === false);
+		return data;
+	};
+
 	const currentResult = useMemo(() => filterWords(props.value), [props.value]);
 	const endResult = useMemo(
 		() => props.end && filterWords(props.end),
@@ -159,6 +157,7 @@ const Search = (props) => {
 
 	const onClickFocus = (event) => {
 		event.preventDefault();
+
 		inputRef.current.value = event.target.innerText;
 		setKeyword(event.target.innerText);
 		inputRef.current.focus();
@@ -263,108 +262,107 @@ const Search = (props) => {
 	}
 
 	return (
-		<Grid container>
-			<Grid item>
-				<Stack direction="row">
-					<InputWrapper>
-						<input
-							ref={inputRef}
-							placeholder="검색"
-							onKeyDown={(evt) => {
-								if (evt.code === "Enter") {
-									searchOnYoutube();
-								}
-							}}
-							onChange={(e) => {
-								e.preventDefault();
-								setKeyword(e.target.value);
-							}}
-						/>
-						<button variant="contained" onClick={searchOnYoutube}>
-							<FontAwesomeIcon icon={faMagnifyingGlass} />
-						</button>
-					</InputWrapper>
-				</Stack>
-				<KeyWordWrapper>
-					<div className="title">
-						<FontAwesomeIcon icon={faMagnifyingGlassLocation} />
-						&nbsp; 추천 키워드
-					</div>
-					<Divider></Divider>
-					<div className="subtitle">
-						{/* <FontAwesomeIcon icon={faMagnifyingGlassLocation} /> */}
-						현재 위치
-					</div>
-					{currentResult && currentResult.length > 0 ? (
-						currentResult.map((prop, inx) => (
-							<button className="searchKeyword" onClick={onClickFocus}>
-								{prop.name}
-							</button>
-						))
-					) : (
-						<div className="fa-2x spinner">
-							<FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
+		<>
+			<Stack direction="row">
+				<InputWrapper>
+					<input
+						autoFocus
+						ref={inputRef}
+						placeholder="검색"
+						onKeyDown={(evt) => {
+							if (evt.code === "Enter") {
+								searchOnYoutube();
+							}
+						}}
+						onChange={(e) => {
+							e.preventDefault();
+							setKeyword(e.target.value);
+						}}
+					/>
+					<button variant="contained" onClick={searchOnYoutube}>
+						<FontAwesomeIcon icon={faMagnifyingGlass} />
+					</button>
+				</InputWrapper>
+			</Stack>
+			<Grid container>
+				<Grid item>
+					<KeyWordWrapper>
+						<div className="title">
+							<FontAwesomeIcon icon={faMagnifyingGlassLocation} />
+							&nbsp; 추천 키워드
 						</div>
-					)}
-					<div className="subtitle">
-						{/* <FontAwesomeIcon icon={faMagnifyingGlassLocation} /> */}
-						목적지
-					</div>
-					{endResult && endResult.length > 0 ? (
-						endResult.map((prop, inx) => (
-							<button className="searchKeyword" onClick={onClickFocus}>
-								{prop.name}
-							</button>
-						))
-					) : (
-						<div className="fa-2x spinner">
-							<FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
+						<Divider></Divider>
+						<div className="subtitle">
+							{/* <FontAwesomeIcon icon={faMagnifyingGlassLocation} /> */}
+							목적지
 						</div>
-					)}
-				</KeyWordWrapper>
-			</Grid>
+						{endResult && endResult.length > 0
+							? endResult.map((prop, inx) => (
+									<button className="searchKeyword" onClick={onClickFocus}>
+										{prop.name}
+									</button>
+							  ))
+							: "목적지를 정해주세요"}
+						<div className="subtitle">
+							{/* <FontAwesomeIcon icon={faMagnifyingGlassLocation} /> */}
+							현재 위치
+						</div>
+						{currentResult && currentResult.length > 0 ? (
+							currentResult.map((prop, inx) => (
+								<button className="searchKeyword" onClick={onClickFocus}>
+									{prop.name}
+								</button>
+							))
+						) : (
+							<div className="fa-2x spinner">
+								<FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
+							</div>
+						)}
+					</KeyWordWrapper>
+				</Grid>
 
-			<Grid item xs={6} md={8} alignItems={"baseline"}>
-				<ResultWrapper>
-					<div className="title">
-						<FontAwesomeIcon icon={faGlobe} />
-						{submit ? ` 검색 결과: ` + keyword : null}
-					</div>
-					{sharing && (
-						<ShareVideo
-							videoName={Object.keys(share)[0]}
-							locInfo={videos.locInfo[0]}
-						></ShareVideo>
-					)}
-					{submit && videos.videoInfo.length > 0 ? (
-						<div>
-							<div className="subtitle">
-								<FontAwesomeIcon icon={faYoutube} />
-								&nbsp; Video
-							</div>
-							<SearchResult
-								share={share}
-								sharing={sharing}
-								setShare={setShare}
-								setSharing={setSharing}
-								videos={videos.videoInfo}
-							></SearchResult>
+				<Grid item xs={6} md={8} alignItems={"baseline"}>
+					<ResultWrapper>
+						<div className="title">
+							<FontAwesomeIcon icon={faGlobe} />
+							{submit ? ` 검색 결과: ` + keyword : null}
 						</div>
-					) : (
-						<div>" 검색어를 입력하여 주세요"</div>
-					)}
-					<Divider></Divider>
-					{submit && imgs.length && (
-						<div>
-							<div className="subtitle">
-								<FontAwesomeIcon icon={faImage} /> &nbsp; Image
+						{sharing && (
+							<ShareVideo
+								videoName={Object.keys(share)[0]}
+								locInfo={videos.locInfo[0]}
+							></ShareVideo>
+						)}
+						{submit && videos.videoInfo.length > 0 ? (
+							<div>
+								<div className="subtitle">
+									<FontAwesomeIcon icon={faYoutube} />
+									&nbsp; Video
+								</div>
+								<SearchResult
+									share={share}
+									sharing={sharing}
+									setShare={setShare}
+									setSharing={setSharing}
+									videos={videos.videoInfo}
+								></SearchResult>
 							</div>
-							<SearchImgResult imgs={imgs}></SearchImgResult>
-						</div>
-					)}
-				</ResultWrapper>
+						) : (
+							<div>결과 없음</div>
+						)}
+						<Divider></Divider>
+						{submit && imgs.length && (
+							<div>
+								<div className="subtitle">
+									<FontAwesomeIcon icon={faImage} /> &nbsp; Image
+								</div>
+								<SearchImgResult imgs={imgs}></SearchImgResult>
+							</div>
+						)}
+					</ResultWrapper>
+				</Grid>
 			</Grid>
-		</Grid>
+		</>
 	);
 };
 
