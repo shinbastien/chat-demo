@@ -253,8 +253,8 @@ export { getPositionFromData };
 export default function NewMapwindow(props) {
 	//map
 	const [map, setMap] = useState(null);
-	const [latitude, setLatitude] = useState(0);
-	const [longtitude, setLongtitude] = useState(0);
+	// const [latitude, setLatitude] = useState(0);
+	// const [longtitude, setLongtitude] = useState(0);
 	const { userName, color } = props;
 
 	//root-tracking
@@ -271,7 +271,8 @@ export default function NewMapwindow(props) {
 	const [markerE, setMarkerE] = useState(null);
 	const [markerC, setMarkerC] = useState(null);
 
-	const [markerList, setMarkerList] = useState({});
+	const [myPosition, setMyPosition] = useState([]);
+	const [markersObj, setMarkersObj] = useState({});
 	const [userLocObj, setUserLocObj] = useState({});
 	const [countMarker, setCountMarker] = useState(0);
 
@@ -320,9 +321,7 @@ export default function NewMapwindow(props) {
 		sendShare,
 		setSendShare,
 	} = useContext(ReceiveContext);
-
-	const { otherLoaction, setOtherLoaction } = useContext(LocationContext);
-
+ 
 	// const [receiveShare, setReceiveShare] = useState(false);
 	const [sharingRecVideo, setSharingRecVideo] = useState(false);
 	const [sharingIndividual, setSharingIndividual] = useState(false);
@@ -335,11 +334,10 @@ export default function NewMapwindow(props) {
 
 	const { socket, connected } = useSocket();
 
-	const initMap = (participants, userName) => {
-		let lat = 0;
-		let lng = 0;
-
-		if (Object.keys(participants).length === 1) {
+	const initMap = (participants) => {
+		var lat = 0;
+		var lng = 0;
+		if (Object.keys(participants).length == 1) {
 			lat = 37.56653180179; //을지로 입구역 좌표
 			lng = 126.98295133464485;
 		} else if (Object.keys(participants).length === 2) {
@@ -350,32 +348,50 @@ export default function NewMapwindow(props) {
 			lng = 127.35049303;
 		}
 
-		socket.emit("start mapwindow", lat, lng);
+		socket.emit("set StartLocation", lat, lng);
+		setMyPosition([lat, lng]);
 		console.log("send location info to server", [lat, lng]);
+		var center = new Tmapv2.LatLng(lat, lng);
 
-		let center = new Tmapv2.LatLng(lat, lng);
+		setMap(
+			new Tmapv2.Map("map_div", {
+				center: center,
+				width: "100%",
+				height: "100vh",
+				zoom: 18,
+				zoomControl: true,
+				scrollwheel: true,
+				pinchZoom: true,
+			}),
+		);
 
-		if (userName === props.userName) {
-			setLatitude(lat);
-			setLongtitude(lng);
-			setMap(
-				new Tmapv2.Map("map_div", {
-					center: center,
-					width: "100%",
-					height: "100vh",
-					zoom: 18,
-					zoomControl: true,
-					scrollwheel: true,
-					pinchZoom: true,
-				}),
-			);
-		}
+		createOtherMarker(participants);
 	};
 
+	const createOtherMarker = async (participants) => {
+		const newMarkerObj = {};
+		Object.keys(participants).filter(x => x!=userName)
+		.forEach(x => {
+			const marker = new Tmapv2.Marker({
+				position: new Tmapv2.LatLng(participants[x].location[0], participants[x].location[1]),
+				icon: Car,
+				iconSize: new Tmapv2.Size(30, 30),
+				title: "현재위치",
+				map: map,
+				label:
+					"<span style='background-color: #ff6f00; color:white'>" +
+					"시작위치" +
+					x +
+					"</span>",
+			});
+			newMarkerObj[x] = marker;
+		} )
+		setMarkersObj(newMarkerObj);
+	}
 	//current point
 	useEffect(() => {
-		const lat = latitude;
-		const lng = longtitude;
+		const lat = myPosition[0];
+		const lng = myPosition[1];
 
 		console.log("lat is: ", lat);
 		console.log("lng is: ", lng);
@@ -393,7 +409,7 @@ export default function NewMapwindow(props) {
 					"</span>",
 			}),
 		);
-	}, [latitude, longtitude, map]);
+	}, [map]);
 
 	// 출발 -- 도착 자동 이동
 	useEffect(() => {
@@ -460,9 +476,15 @@ export default function NewMapwindow(props) {
 							}
 						}
 					}
+					console.log("MarkerC position change check", [markerC.getPosition()._lat, markerC.getPosition()._lng]);
+					setMyPosition([markerC.getPosition()._lat, markerC.getPosition()._lng]);
+					console.log("moving position", myPosition);
+
 					return currTick;
 				});
 			}, duration * 1000);
+
+
 
 			return () => {
 				clearInterval(interval);
@@ -1022,151 +1044,131 @@ export default function NewMapwindow(props) {
 	};
 
 	useEffect(() => {
-		const handleUserLocation = (data) => {
-			const newLocObj = {};
-			Object.keys(data)
-				.filter((x) => x != userName)
-				.map((name) => {
-					newLocObj[name] = data[name].location;
+		const handleUserJoin = (participants, joinName) => {
+			if (joinName == userName) {
+				initMap(participants);
+			}
+			else {
+				setUserLocObj(participants);
+				const markerItem = new Tmapv2.Marker({
+					position: new Tmapv2.LatLng(participants[joinName].location[0], participants[joinName].location[1]),
+					icon: Car,
+					iconSize: new Tmapv2.Size(30, 30),
+					title: "현재위치",
+					map: map,
+					label:
+						"<span style='background-color: #ff6f00; color:white'>" +
+						"시작위치" +
+						joinName +
+						"</span>",
 				});
+				console.log(`markerItem for : ${joinName} is loaded`, markerItem.isLoaded());
+				setMarkersObj({...markersObj, [joinName]: markerItem});
+			} 
+		}
 
-			setUserLocObj(newLocObj);
+		const updateUserLocation = (movedUserName, participants, isSharing) => {
+			console.log(participants);
+			setUserLocObj(participants);
+			if (Object.keys(markersObj).includes(movedUserName)) {
+				markersObj[movedUserName].setVisible(false);
+				markersObj[movedUserName].setMap(null);
+			}
+			const markerItem = new Tmapv2.Marker({
+				position: new Tmapv2.LatLng(participants[movedUserName].location[0], participants[movedUserName].location[1]),
+				icon: Car,
+				iconSize: new Tmapv2.Size(30, 30),
+				title: "현재위치",
+				map: map,
+				label:
+					"<span style='background-color: #ff6f00; color:white'>" +
+					"현재위치" +
+					movedUserName +
+					"</span>",
+			});
+
+			if (isSharing) {
+				map.setCenter(new Tmapv2.LatLng(participants[movedUserName].location[0], participants[movedUserName].location[1]));
+			}
+			setMarkersObj({...markersObj, [movedUserName]: markerItem})
+
+
 		};
 
 		const handleUserDisconnect = (participants, userName) => {
-			if (Object.keys(userLocObj).includes(userName)) {
-				delete userLocObj[userName];
+			setUserLocObj(participants);
+			
+			const deleteMarker = (obj,name) => {
+				if (Object.keys(obj).includes(name)) {
+					obj[name].setMap(null);
+					obj[name].setVisible(false);
+					delete obj[name];
+				}
+				return obj;
 			}
-			if (Object.keys(markerList).includes(userName)) {
-				markerList[userName].setMap(null);
-				markerList[userName].setVisible(false);
-				delete markerList[userName];
-			}
-		};
+			setMarkersObj((obj) => deleteMarker(obj, userName));
+
+		}
 
 		if (socket && connected) {
-			socket.on("joinResponse", initMap);
+			socket.on("joinResponse", handleUserJoin);
 			// initMap();
-			socket.on("bring userLocationInfo", handleUserLocation);
+			socket.on("bring userLocationInfo", updateUserLocation);
 			socket.on("disconnectResponse", handleUserDisconnect);
 		}
 
 		return () => {
 			if (socket && connected) {
-				// socket.off("joinResponse", initMap);
-				// socket.off("bring userLocationInfo", handleUserLocation);
+				socket.off("joinResponse", handleUserJoin);
+				socket.off("bring userLocationInfo", updateUserLocation);
+				socket.off("disconnectResponse", handleUserDisconnect);
 			}
 		};
-	}, [connected, socket]);
+	}, [userLocObj, markersObj, connected, socket]);
 
 	useEffect(() => {
-		console.log("userLocObj at setMarkerList", userLocObj);
-		if (Object.keys(userLocObj).length > 0) {
-			Object.keys(userLocObj)
-				.filter((x) => {
-					if (Object.keys(markerList).includes(x)) {
-						return (
-							userLocObj[x][0] !== markerList[x].getPosition._lat ||
-							userLocObj[x][1] !== markerList[x].getPosition._lng
-						);
-					} else {
-						return true;
-					}
-				})
-				.map((x) => {
-					console.log("check userLocObj", x);
-					if (Object.keys(markerList).includes(x)) {
-						// const loc = new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]);
-						console.log(userLocObj[x]);
-						console.log(markerList[x]);
-						markerList[x].setMap(null);
-						markerList[x].setVisible(false);
-					}
+		console.log("userlocObj", userLocObj);
+		console.log("markersObj", markersObj);
+		
+	}, [userLocObj, markersObj])
 
-					// Marker List 만들기
-					const markerItem = new Tmapv2.Marker({
-						position: new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]),
-						icon: Car,
-						iconSize: new Tmapv2.Size(30, 30),
-
-						map: map,
-						label:
-							"<span style='background-color: #46414E; color:white'>" +
-							"현재위치1" +
-							"</span>",
-					});
-					console.log("markerItem is loaded", markerItem.isLoaded());
-					setMarkerList({ ...markerList, [x]: markerItem });
-				});
-		}
-	}, [userLocObj]);
-
-	const onLoadOtherCurrent = (e) => {
-		console.log("markerList: ", markerList);
-		const currentMarkerItem = Object.keys(markerList)[countMarker];
-		console.log("currentMarkerItem", currentMarkerItem);
-		const currentMarker = markerList[currentMarkerItem];
-		const currentPosition = currentMarker.getPosition();
-		console.log("currentPosition", currentPosition);
-
-		if (!currentMarker.isLoaded()) {
-			currentMarker.setMap(map);
-		}
-
-		map.setCenter(currentPosition);
-
-		if (
-			countMarker >= Object.keys(markerList).length - 1 ||
-			Object.keys(markerList).length === 0
-		) {
-			setCountMarker(0);
-		} else {
-			setCountMarker(countMarker + 1);
-		}
-		console.log(countMarker);
-	};
 	useEffect(() => {
 		if (socket && connected && markerC) {
-			socket.emit("user moved", markerC.getPosition());
+			socket.on("get mapCenter", onLoadOtherCurrent);
 		}
-	}, [markerC, connected, socket]);
+	}, [markersObj, socket, connected]); 
+
+	const onLoadOtherCurrent = (name) => {
+		console.log("markersObj: ", markersObj);
+		if (name == userName) {
+			const currentPosition = markerC.getPosition();
+			map.setCenter(currentPosition);
+			console.log("clicked myself");
+		}
+		else {
+			if (Object.keys(markersObj).includes(name)) {
+				const currentMarker = markersObj[name];
+				const currentPosition = currentMarker.getPosition();
+				console.log("currentPosition", currentPosition);
+				
+
+				if (!currentMarker.isLoaded()) {
+					currentMarker.setMap(map);
+				}
+				map.setCenter(currentPosition);
+			}
+			console.log("clicked other", name)
+		}
+	};
 
 	useEffect(() => {
-		const handleMarkerChange = (name, position) => {
-			console.log("position: ", position);
-			console.log("handleMarkerChange, userLocObj: ", userLocObj);
-
-			if (Object.keys(markerList).includes(name)) {
-				console.log("socket markerlist", markerList[name]);
-				markerList[name].setMap(null);
-				markerList[name].setVisible(false);
-			}
-
-			const markerItem = new Tmapv2.Marker({
-				position: new Tmapv2.LatLng(position[0], position[1]),
-				icon: Car,
-				iconSize: new Tmapv2.Size(30, 30),
-				map: map,
-				label:
-					"<span style='background-color: #ff6f00; color:white'>" +
-					"현재위치2" +
-					name +
-					"</span>",
-			});
-			setMarkerList({ ...markerList, [name]: markerItem });
-			setUserLocObj({ ...userLocObj, [name]: position });
-			console.log(name);
-		};
-		if (socket && connected && markerList) {
-			socket.on("bring changed location of user", handleMarkerChange);
+		if (socket && connected && markerC) {
+			socket.emit("user moved", myPosition);
+			console.log("user is moving");
 		}
-
-		return () => {
-			if (socket && connected && markerList) {
-				socket.off("bring changed location of user", handleMarkerChange);
-			}
-		};
-	}, [markerList, userLocObj, socket, connected]);
+		console.log("hello");
+		console.log("myposition is:", myPosition);
+	}, [myPosition, connected, socket]);
 
 	const onShareCurrent = (e) => {
 		// clicked share button
@@ -1176,6 +1178,7 @@ export default function NewMapwindow(props) {
 			} else {
 				socket.emit("finish sendShare request");
 				setSendShare(!sendShare);
+				
 				// alert("you finished sharing");
 			}
 		}
@@ -1395,7 +1398,8 @@ export default function NewMapwindow(props) {
 
 			socket.on("finish sharemode", (user) => {
 				setReceiveShare(false);
-				// alert(`${user} finished sharing`);
+				alert(`${user} finished sharing`);
+				map.setCenter(new Tmapv2.LatLng(myPosition[0], myPosition[1]))
 			});
 
 			socket.on("receive sharedvideoLoc", (videoLoc) => {
