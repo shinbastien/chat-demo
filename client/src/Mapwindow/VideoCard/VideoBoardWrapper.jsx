@@ -5,7 +5,7 @@ const VideoBoardWrapper = (props) => {
 	const { receiveShare, recvideoLoc, searching, pixelPath } = props;
 
 	return (
-		<div>
+		<>
 			<VideoCardBoard
 				receiveShare={receiveShare}
 				recvideoLoc={recvideoLoc}
@@ -20,7 +20,7 @@ const VideoBoardWrapper = (props) => {
 				pixelPath={pixelPath[1]}
 				name={"음식점"}
 			></VideoCardBoard>
-		</div>
+		</>
 	);
 };
 

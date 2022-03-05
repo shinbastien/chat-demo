@@ -144,9 +144,8 @@ const Search = (props) => {
 	const { socket, connected } = useSocket();
 
 	const filterWords = (data) => {
-		console.log(data);
-		data.filter((prop) => prop.name.includes("주차장") === false);
-		return data;
+		const m = data.filter((prop) => prop.name.includes("주차장") === false);
+		return m;
 	};
 
 	const currentResult = useMemo(() => filterWords(props.value), [props.value]);
@@ -154,6 +153,8 @@ const Search = (props) => {
 		() => props.end && filterWords(props.end),
 		[props.end],
 	);
+
+	console.log(currentResult);
 
 	const onClickFocus = (event) => {
 		event.preventDefault();

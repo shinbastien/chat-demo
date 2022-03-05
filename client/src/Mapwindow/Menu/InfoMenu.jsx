@@ -5,7 +5,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Divider } from "@mui/material";
 import styled from "styled-components";
 import point2 from "../../Styles/source/point2.png";
-import youtubelogo from "../../Styles/source/youtube-square-brands.svg";
+// import youtubelogo from "../../Styles/source/youtube-square-brands.svg";
+import storelogo from "../../Styles/source/location-pin-solid_store.svg";
+import cuplogo from "../../Styles/source/location-pin-solid_cup.svg";
+
 import {
 	faAngleDown,
 	faAngleUp,
@@ -18,6 +21,7 @@ import Draggable from "react-draggable"; // The default
 import { firebaseInstance } from "../../lib/functions/firebase";
 import { ref, getDatabase } from "firebase/database";
 import { useList } from "react-firebase-hooks/database";
+import { useCallback } from "react";
 
 const MenuWrapper = styled.div`
 	width: ${(props) => (props.keepOpen ? "400px" : "600px")};
@@ -163,14 +167,13 @@ const database = getDatabase(firebaseApp);
 const KeepPlaceCard = (props) => {
 	const { coords, date, id, title, videoInfo, visited } = props.info;
 	const { map } = props;
-	const [infoMarker, setInfomarker] = useState([]);
 
 	const onClickKeep = (coords, title) => {
 		const { _lat, _long } = coords;
 		const keepLocation = new Tmapv2.LatLng(_lat, _long);
 		const newMarker = new Tmapv2.Marker({
 			position: keepLocation,
-			icon: youtubelogo,
+			icon: storelogo,
 			iconSize: new Tmapv2.Size(24, 24),
 			map: map,
 			title: title,
@@ -213,14 +216,68 @@ const InfoMenu = (props) => {
 	const { map, totalDaytime, start, end } = props;
 	const [keepOpen, setKeepOpen] = useState(false);
 	const [snapshots, loading, error] = useList(ref(database, "keeps"));
-
-	console.log(start);
+	const [keepMarkerList, setKeepMarkerList] = useState([]);
 
 	useEffect(() => {
 		if (start || end) {
 			setKeepOpen(true);
 		}
 	}, [start, end]);
+
+	useEffect(() => {
+		let active = true;
+		mapping();
+		return () => {
+			active = false;
+		};
+
+		function mapping() {
+			if (keepMarkerList) {
+				keepMarkerList.map((point) => {
+					point.setMap(null);
+				});
+				setKeepMarkerList([]);
+			}
+			snapshots.forEach((v) => {
+				const { coords, date, id, title, videoInfo, visited } = v.val();
+				const { _lat, _long } = coords;
+				const keepLocation = new Tmapv2.LatLng(_lat, _long);
+
+				const newMarker = new Tmapv2.Marker({
+					position: keepLocation,
+					icon: storelogo,
+					iconSize: new Tmapv2.Size(30, 30),
+					map: map,
+					title: title,
+				});
+				newMarker.setMap(map);
+
+				const createInfo = new Tmapv2.InfoWindow({
+					position: keepLocation,
+					content: `<img src=${videoInfo.thumnails.url} width="300px" height="auto"></img>`,
+					type: 2,
+					map: map,
+					visible: false,
+					zIndex: 3,
+				});
+
+				newMarker.addListener("mouseenter", function (evt) {
+					createInfo.setVisible(true);
+				});
+
+				newMarker.addListener("mouseleave", function (evt) {
+					createInfo.setVisible(false);
+				});
+
+				setKeepMarkerList((keepMarkerList) => [...keepMarkerList, newMarker]);
+			});
+			if (!active) {
+				return;
+			}
+		}
+	}, [snapshots]);
+
+	console.log(keepMarkerList);
 
 	return (
 		<Draggable>
@@ -302,6 +359,16 @@ const InfoMenu = (props) => {
 									</div>
 								) : null}
 							</span>
+							<img
+								src={storelogo}
+								style={{ width: "30px", height: "30px" }}
+							></img>{" "}
+							쇼핑몰
+							<img
+								src={cuplogo}
+								style={{ width: "30px", height: "30px" }}
+							></img>{" "}
+							카페
 							<div style={{ display: keepOpen ? "inline-block" : "none" }}>
 								{snapshots !== undefined &&
 									snapshots.map((list) => (
