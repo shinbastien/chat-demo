@@ -94,26 +94,25 @@ io.on("connection", (socket) => {
 	// ------------------------MAP----------------------
 
 	// socket connection for MapWindow
-	socket.on("start mapwindow", (lat, lng) => {
+	socket.on("set StartLocation", (lat, lng) => {
 		console.log("latitude is: ", lat);
 		console.log("longitude is: ", lng);
 		// console.log(users[socket.roomName]);
-		if (!users[socket.roomName].participants) {
-			users[socket.roomName].participants[socket.userName].location = [lat, lng];
-		}
+
+		users[socket.roomName].participants[socket.userName].location = [lat, lng];
 		console.log(
 			"updated user info of current socket: ",
 			users[socket.roomName].participants[socket.userName],
 		);
 
-		io.to(socket.roomName).emit("bring userLocationInfo", users[socket.roomName].participants);
+		socket.broadcast.to(socket.roomName).emit("bring userLocationInfo", socket.userName, users[socket.roomName].participants, socket.share);
 	});
 
 	socket.on("user moved", (position) => {
 		console.log("moved user is: ", socket.userName);
-		console.log("position is: ", [position._lat, position._lng]);
-
-		socket.broadcast.to(socket.roomName).emit("bring changed location of user", socket.userName, [position._lat, position._lng]);
+		console.log("position is: ", position);
+		users[socket.roomName].participants[socket.userName].location = position;
+		socket.broadcast.to(socket.roomName).emit("bring userLocationInfo", socket.userName, users[socket.roomName].participants, socket.share);
 	})
 
 
