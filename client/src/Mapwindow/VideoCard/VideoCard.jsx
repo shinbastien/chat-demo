@@ -63,7 +63,7 @@ const VideoCard = ({ info, setLocation, setVideoName, setOpen, open }) => {
 	return (
 		<>
 			{id.videoId && (
-				<VideoWrapper onClick={() => onLoadVideo(id.videoId, locInfo)}>
+				<VideoWrapper>
 					<iframe
 						title="youtubeTrailer"
 						width="100%"
@@ -73,7 +73,10 @@ const VideoCard = ({ info, setLocation, setVideoName, setOpen, open }) => {
 						allow="accelerometer; autoplay;"
 						allowFullScreen
 					/>
-					{open && <Cover />}
+					<button onClick={() => onLoadVideo(id.videoId, locInfo)}>
+						같이 보기
+					</button>
+					{/* {open && <Cover />} */}
 				</VideoWrapper>
 			)}
 		</>
