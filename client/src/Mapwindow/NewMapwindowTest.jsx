@@ -39,7 +39,7 @@ import { LocationContext } from "../lib/Context/LocationContext";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
-	cursor: ${(props) => (props.searching ? "crosshair" : "grab")};
+	cursor: ${(props) => (props.searching === true ? "crosshair" : "grab")};
 `;
 
 const ResultList = styled.div`
@@ -114,6 +114,26 @@ const BoardWrapper = styled.div`
 			}
 		}
 	}
+
+	.subboard {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+
+		.subsubboard {
+			display: flex;
+			flex-direction: row;
+			> button {
+				&:active {
+					color: ${(props) => props.theme.primaryColor};
+				}
+				&.active {
+					color: ${(props) => props.theme.primaryColor};
+				}
+			}
+		}
+	}
 `;
 
 const CurrentLocationWrapper = styled.div`
@@ -126,12 +146,14 @@ const CurrentLocationWrapper = styled.div`
 const ShareWrapper = styled.div`
 	bottom: 0;
 	z-index: 222;
-	margin: auto 0;
-	background-color: #ccdbdc;
+	margin: 2%;
+
+	background-color: ${(props) => props.theme.color1};
 	border-radius: 50%;
 	width: 50px;
 	height: 50px;
 	text-align: center;
+	font-size: 1.5vw;
 `;
 
 const ButtonWrapper = styled.button`
@@ -481,7 +503,7 @@ export default function NewMapwindow(props) {
 						// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
 						setrecvideoLoc((recvideoLoc) => [
 							...recvideoLoc,
-							{ [recvideo[i].name]: video },
+							{ [recvideo[i].name]: { video: video, locInfo: recvideo[i] } },
 						]);
 					}
 				}
@@ -492,6 +514,8 @@ export default function NewMapwindow(props) {
 			}
 		}
 	}, [recvideo]);
+
+	console.log(recvideoLoc);
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -1064,7 +1088,7 @@ export default function NewMapwindow(props) {
 						position: new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]),
 						icon: Car,
 						iconSize: new Tmapv2.Size(30, 30),
-						title: "현재위치",
+
 						map: map,
 						label:
 							"<span style='background-color: #46414E; color:white'>" +
@@ -1206,6 +1230,7 @@ export default function NewMapwindow(props) {
 			setDrawObject(null);
 		}
 		if (searching) {
+			setSearching(false);
 			setrecvideoLoc([]);
 			setChosenEmoji([]);
 		}
@@ -1536,7 +1561,10 @@ export default function NewMapwindow(props) {
 									onClick={onShareCurrent}
 									disabled={receiveShare ? true : false}
 								>
-									<FontAwesomeIcon icon={sendShare ? faEyeSlash : faEye} />
+									<FontAwesomeIcon
+										style={{ color: "white" }}
+										icon={sendShare ? faEyeSlash : faEye}
+									/>
 								</IconButton>
 							</ShareWrapper>
 							<IconButton

@@ -2,17 +2,18 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import PropTypes from "prop-types";
 import { Rnd } from "react-rnd";
-import youtubePlayImg from "../../Styles/source/youtube_play.png";
 
 const VideoWrapper = styled.div`
-	width: 100%;
+	width: 180px;
 	aspect-ratio: 16 / 9;
-	background-color: ${(props) => props.theme.color4};
-	padding: 8px 8px 10px 8px;
-	margin-bottom: 5%;
+	background-color: ${(props) => props.theme.color2};
+	padding: 8px 8px 8px 8px;
+	margin: 2%;
 	border-top-right-radius: 16px;
 	border-top-left-radius: 16px;
-	box-shadow: 0 0 5em -1em black;
+	display: inline-block;
+	// box-shadow: 0 0 5em -1em black;
+	cursor: pointer;
 `;
 
 // const DeleteVideoButton = styled.div`
@@ -46,29 +47,36 @@ const Cover = styled.div`
 	display: block;
 `;
 
-const YoutubeLogo = styled.img`
-	height: 12px;
-`;
+const VideoCard = ({ info, setLocation, setVideoName, setOpen, open }) => {
+	const { id } = Object.values(info)[0].video;
+	const { locInfo } = Object.values(info)[0];
 
-const VideoCard = ({ info }) => {
-	const { id } = Object.values(info)[0];
+	const onLoadVideo = (id, locInfo) => {
+		if (open) {
+			setOpen(true);
+		}
+		setVideoName(id);
+		setLocation(locInfo);
+		setOpen(true);
+	};
 
 	return (
-		id.videoId && (
-			<VideoWrapper>
-				<iframe
-					title="youtubeTrailer"
-					width="100%"
-					height="100%"
-					src={`https://www.youtube.com/embed/${id.videoId}`}
-					frameBorder="0"
-					allow="accelerometer; autoplay;"
-					allowFullScreen
-				/>
-				<Cover />
-				<YoutubeLogo src={youtubePlayImg} alt="youtubePlay" />
-			</VideoWrapper>
-		)
+		<>
+			{id.videoId && (
+				<VideoWrapper onClick={() => onLoadVideo(id.videoId, locInfo)}>
+					<iframe
+						title="youtubeTrailer"
+						width="100%"
+						height="100%"
+						src={`https://www.youtube.com/embed/${id.videoId}`}
+						frameBorder="0"
+						allow="accelerometer; autoplay;"
+						allowFullScreen
+					/>
+					{open && <Cover />}
+				</VideoWrapper>
+			)}
+		</>
 	);
 };
 export default React.memo(VideoCard);

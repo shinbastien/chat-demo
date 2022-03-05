@@ -12,6 +12,7 @@ const VideoWrapper = styled.div`
 
 		> button {
 			display: flex;
+			font-size: 25px;
 			&:active {
 				color: #151ca2;
 			}

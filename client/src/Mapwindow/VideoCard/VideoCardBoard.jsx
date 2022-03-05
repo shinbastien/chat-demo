@@ -8,16 +8,21 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VideoCard from "./VideoCard";
 import { Rnd } from "react-rnd";
 import styled from "styled-components";
+import ShareVideo from "../ShareVideo/ShareVideo";
 
 const BoardWrapper = styled.div`
 	width: 100%;
 	height: 100%;
-	// background-color: white;
+	background-color: ${(props) => props.theme.color4};
 	padding: 8px 8px 25px 8px;
 	margin-bottom: 5%;
 	border-top-right-radius: 16px;
 	border-top-left-radius: 16px;
-	// box-shadow: 0 0 5em -1em black;
+	box-shadow: 0 0 5em -1em black;
+
+	.title {
+		display: block;
+	}
 `;
 
 const DeleteVideoButton = styled.div`
@@ -45,11 +50,15 @@ const VideoCardBoard = (props) => {
 	const { receiveShare, recvideoLoc, searching, name, pixelPath } = props;
 	const [hover, setHover] = useState(false);
 	const [loading, setLoading] = useState(true);
+	const [open, setOpen] = useState(false);
+
+	const [location, setLocation] = useState();
+	const [videoName, setVideoName] = useState();
 
 	const [data, setData] = useState({
-		x: pixelPath.x + Math.floor(Math.random() * 30),
-		y: pixelPath.y + Math.floor(Math.random() * 20),
-		width: 160,
+		x: pixelPath.x,
+		y: pixelPath.y,
+		width: 420,
 	});
 
 	return (
@@ -63,7 +72,7 @@ const VideoCardBoard = (props) => {
 					bottom: false,
 					left: false,
 					topRight: false,
-					bottomRight: true,
+					bottomRight: false,
 					bottomLeft: false,
 					topLeft: false,
 				}}
@@ -72,19 +81,35 @@ const VideoCardBoard = (props) => {
 					onMouseEnter={() => setHover(true)}
 					onMouseLeave={() => setHover(false)}
 				>
-					<FontAwesomeIcon
-						icon={name === "카페" ? faMugSaucer : faBasketShopping}
-					/>{" "}
-					{name}
+					<div className="title">
+						<FontAwesomeIcon
+							icon={name === "카페" ? faMugSaucer : faBasketShopping}
+						/>{" "}
+						{name}
+					</div>
 					{receiveShare
 						? recvideoLoc.length > 0 &&
 						  recvideoLoc.map((list, idx) => (
-								<VideoCard key={idx} info={list}></VideoCard>
+								<VideoCard
+									key={idx}
+									info={list}
+									setOpen={setOpen}
+									open={open}
+									setLocation={setLocation}
+									setVideoName={setVideoName}
+								></VideoCard>
 						  ))
 						: searching &&
 						  recvideoLoc.length > 0 &&
 						  recvideoLoc.map((list, idx) => (
-								<VideoCard key={idx} info={list}></VideoCard>
+								<VideoCard
+									key={idx}
+									info={list}
+									setOpen={setOpen}
+									open={open}
+									setLocation={setLocation}
+									setVideoName={setVideoName}
+								></VideoCard>
 						  ))}
 					{hover && (
 						<DeleteVideoButton onClick={() => setLoading(false)}>
@@ -99,6 +124,9 @@ const VideoCardBoard = (props) => {
 						</DeleteVideoButton>
 					)}
 				</BoardWrapper>
+				{open && (
+					<ShareVideo videoName={videoName} locInfo={location}></ShareVideo>
+				)}
 			</Rnd>
 		)
 	);

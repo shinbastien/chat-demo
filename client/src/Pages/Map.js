@@ -26,8 +26,6 @@ function Map() {
 	const [receiveShare, setReceiveShare] = useState(false);
 	const [receiveUser, setReceiveUser] = useState(null);
 
-	const [open, setOpen] = useState(false);
-
 	const { groupID, userName } = location.state;
 	console.log("groupID obtained from Home is: ", groupID);
 	console.log("userName obtained from Home is: ", userName);
@@ -44,8 +42,6 @@ function Map() {
 			console.log("joining group");
 		}
 	}, [connected, socket]);
-
-	console.log(otherLoaction);
 
 	return (
 		<>
