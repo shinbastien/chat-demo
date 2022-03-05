@@ -11,7 +11,6 @@ import Draggable from "react-draggable"; // The default
 import Car from "../Styles/source/car-solid.svg";
 import {
 	faHand,
-	faVectorSquare,
 	faPencil,
 	faFaceSmile,
 	faLocationDot,
@@ -20,9 +19,10 @@ import {
 	faEye,
 	faEyeSlash,
 	faStreetView,
+	faPhotoFilm,
+	faVectorSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import VideoCard from "./VideoCard/VideoCard";
 import { searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas/CanvasV2";
@@ -30,11 +30,16 @@ import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
-import { HostContext } from "../lib/Context/HostContext";
-import { filterWords } from "../Individual/Search/Search";
+import { ReceiveContext } from "../lib/Context/ReceiveContext";
+
+import Snackbar from "@mui/material/Snackbar";
+import { Alert } from "../Pages/Map";
+import VideoBoardWrapper from "./VideoCard/VideoBoardWrapper";
+import { LocationContext } from "../lib/Context/LocationContext";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
+	cursor: ${(props) => (props.searching ? "crosshair" : "grab")};
 `;
 
 const ResultList = styled.div`
@@ -119,10 +124,14 @@ const CurrentLocationWrapper = styled.div`
 `;
 
 const ShareWrapper = styled.div`
-	position: absolute;
 	bottom: 0;
 	z-index: 222;
-	margin: 0 0 80px 20px;
+	margin: auto 0;
+	background-color: #ccdbdc;
+	border-radius: 50%;
+	width: 50px;
+	height: 50px;
+	text-align: center;
 `;
 
 const ButtonWrapper = styled.button`
@@ -188,7 +197,7 @@ const EmojiWrapper = styled.div`
 	bottom: 7%;
 	display: flex;
 	z-index: 222;
-	left: 43%;
+	left: 38%;
 `;
 
 ResultList.Item = styled.div`
@@ -278,12 +287,22 @@ export default function NewMapwindow(props) {
 		nelng: "",
 		swlat: "",
 		swlng: "",
+		pixelPath: null,
 	});
 
 	// sharingItems
-	const [sendShare, setSendShare] = useContext(HostContext);
+	const {
+		receiveShare,
+		setReceiveShare,
+		receiveUser,
+		setReceiveUser,
+		sendShare,
+		setSendShare,
+	} = useContext(ReceiveContext);
 
-	const [receiveShare, setReceiveShare] = useState(false);
+	const { otherLoaction, setOtherLoaction } = useContext(LocationContext);
+
+	// const [receiveShare, setReceiveShare] = useState(false);
 	const [sharingRecVideo, setSharingRecVideo] = useState(false);
 	const [sharingIndividual, setSharingIndividual] = useState(false);
 	const [sharingLocation, setSharingLocation] = useState(false);
@@ -291,6 +310,7 @@ export default function NewMapwindow(props) {
 	const [individual, setIndividual] = useState(false);
 	const [simulbutton, setSimulButton] = useState(true);
 	const [open, setOpen] = useState(false);
+	const [searchingMessage, setSearchingMessage] = useState(false);
 
 	const { socket, connected } = useSocket();
 
@@ -300,23 +320,17 @@ export default function NewMapwindow(props) {
 		if (Object.keys(participants).length == 1) {
 			lat = 37.56653180179; //을지로 입구역 좌표
 			lng = 126.98295133464485;
-		}
-
-		else if (Object.keys(participants).length == 2) {
-			lat = 36.36832150  // 파스쿠찌 대전카이스트점 좌표
+		} else if (Object.keys(participants).length === 2) {
+			lat = 36.3683215; // 파스쿠찌 대전카이스트점 좌표
 			lng = 127.36479713;
-		}
-
-		else  {
+		} else {
 			lat = 36.36187754;
 			lng = 127.35049303;
 		}
-		
 
 		socket.emit("set StartLocation", lat, lng);
 		setMyPosition([lat, lng]);
 		console.log("send location info to server", [lat, lng]);
-
 		var center = new Tmapv2.LatLng(lat, lng);
 
 		setMap(
@@ -354,7 +368,6 @@ export default function NewMapwindow(props) {
 		} )
 		setMarkersObj(newMarkerObj);
 	}
-
 	//current point
 	useEffect(() => {
 		const lat = myPosition[0];
@@ -362,9 +375,6 @@ export default function NewMapwindow(props) {
 
 		console.log("lat is: ", lat);
 		console.log("lng is: ", lng);
-
-		// setLatitude(lat);
-		// setLongtitude(lng);
 
 		setMarkerC(
 			new Tmapv2.Marker({
@@ -496,7 +506,6 @@ export default function NewMapwindow(props) {
 						setrecvideoLoc((recvideoLoc) => [
 							...recvideoLoc,
 							{ [recvideo[i].name]: video },
-							// { [recvideo[i].name]: video[0] },
 						]);
 					}
 				}
@@ -528,7 +537,6 @@ export default function NewMapwindow(props) {
 				trafficInfo: "Y",
 			},
 		});
-		console.log(res);
 
 		resettingMap();
 
@@ -944,20 +952,23 @@ export default function NewMapwindow(props) {
 
 	useEffect(() => {
 		if (searching === true && drawObject !== null) {
-			drawObject.drawRectangle();
 			map.addListener("click", onTouchDrawing);
+			drawObject.drawRectangle();
 		}
 	}, [searching, drawObject]);
 
 	const onTouchDrawing = (e) => {
 		const { _data } = drawObject;
+
 		if (map && searching === true && drawObject !== null) {
 			if (drawObject._data.shapeArray.length > 0) {
+				console.log(_data.shapeArray[0]);
 				setSearchPoint({
 					nelat: _data.shapeArray[0]._shape_data.bounds._ne._lat,
 					nelng: _data.shapeArray[0]._shape_data.bounds._ne._lng,
 					swlat: _data.shapeArray[0]._shape_data.bounds._sw._lat,
 					swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
+					pixelPath: _data.shapeArray[0]._shape_data.pixelPath,
 				});
 
 				setShowInfo(true);
@@ -983,17 +994,18 @@ export default function NewMapwindow(props) {
 				method: "get",
 				url: "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&format=json&callback=result",
 				params: {
-					categories: "카페;음식점;",
+					categories: "카페;쇼핑몰;",
 					appKey: process.env.REACT_APP_TMAP_API_KEY,
-					reqLevel: 15,
-					radius: 1,
-					centerLon: searchPoint.nelng,
-					centerLat: searchPoint.nelat,
+					radius: 4,
+					centerLon: (searchPoint.nelng + searchPoint.swlng) / 2,
+					centerLat: (searchPoint.nelat + searchPoint.swlat) / 2,
 					reqCoordType: "WGS84GEO",
 					resCoordType: "WGS84GEO",
 					count: 5,
+					sort: "score",
 				},
 			});
+			console.log(items);
 			setrecvideo(items.searchPoiInfo.pois.poi);
 		} catch (err) {
 			console.log(err);
@@ -1097,60 +1109,19 @@ export default function NewMapwindow(props) {
 		console.log("markersObj", markersObj);
 	}, [userLocObj, markersObj])
 
-	// useEffect(() => {
-	// 	console.log("userLocObj at setMarkerList", userLocObj);
-	// 	if (Object.keys(userLocObj).length > 0) {
-	// 		Object.keys(userLocObj)
-	// 			.filter((x) => {
-	// 				if (Object.keys(markerList).includes(x)) {
-	// 					return (
-	// 						userLocObj[x][0] != markerList[x].getPosition._lat ||
-	// 						userLocObj[x][1] != markerList[x].getPosition._lng
-	// 					);
-	// 				} else {
-	// 					return true;
-	// 				}
-	// 			})
-	// 			.map((x) => {
-	// 				console.log("check userLocObj", x);
-	// 				if (Object.keys(markerList).includes(x)) {
-	// 					// const loc = new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]);
-	// 					console.log(userLocObj[x]);
-	// 					console.log(markerList[x]);
-	// 					markerList[x].setMap(null);
-	// 					markerList[x].setVisible(false);
-	// 				}
-
-	// 				// Marker List 만들기
-	// 				const markerItem = new Tmapv2.Marker({
-	// 					position: new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]),
-	// 					icon: Car,
-	// 					iconSize: new Tmapv2.Size(30, 30),
-	// 					title: "현재위치",
-	// 					map: map,
-	// 					label:
-	// 						"<span style='background-color: #46414E; color:white'>" +
-	// 						"현재위치1" +
-	// 						"</span>",
-	// 				});
-	// 				console.log("markerItem is loaded", markerItem.isLoaded());
-	// 				setMarkerList({ ...markerList, [x]: markerItem });
-	// 			});
-	// 	}
-	// }, [userLocObj]);
 
 	const onLoadOtherCurrent = (e) => {
 		console.log("markersObj: ", markersObj);
 		const currentMarkerItem = Object.keys(markersObj)[countMarker];
 		console.log("currentMarkerItem", currentMarkerItem);
 		const currentMarker = markersObj[currentMarkerItem];
-
 		const currentPosition = currentMarker.getPosition();
-		console.log(currentPosition);
 		console.log("currentPosition", currentPosition);
+
 		if (!currentMarker.isLoaded()) {
 			currentMarker.setMap(map);
 		}
+
 		map.setCenter(currentPosition);
 
 		if (
@@ -1171,7 +1142,6 @@ export default function NewMapwindow(props) {
 		console.log("hello");
 		console.log("myposition is:", myPosition);
 	}, [myPosition, connected, socket]);
-
 
 	const onShareCurrent = (e) => {
 		// clicked share button
@@ -1230,15 +1200,21 @@ export default function NewMapwindow(props) {
 
 	const onHandleSearchObject = () => {
 		if (drawObject !== null) {
+			drawObject._status.isDrawing = false;
 			drawObject.clear();
+			setSearchingMessage(false);
 			setDrawObject(null);
 		}
 		if (searching) {
-			setSearching(false);
 			setrecvideoLoc([]);
+			setChosenEmoji([]);
 		}
 		if (individual) {
 			setIndividual(false);
+			setDrawObject(null);
+			setSearchingMessage(false);
+			setrecvideoLoc([]);
+			setChosenEmoji([]);
 		}
 	};
 
@@ -1257,6 +1233,7 @@ export default function NewMapwindow(props) {
 				break;
 			case "search":
 				setActive("search");
+				setSearchingMessage(true);
 				setSearching(true);
 				onHandleSearchObject();
 				if (drawObject === null) {
@@ -1386,8 +1363,9 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		if (socket && connected) {
 			socket.on("start sharemode", (user) => {
-				alert(`${user} is now sharing!`);
+				// alert(`${user} is now sharing!`);
 				setReceiveShare(true);
+				setReceiveUser(user);
 			});
 
 			socket.on("finish sharemode", (user) => {
@@ -1414,18 +1392,31 @@ export default function NewMapwindow(props) {
 		};
 	}, [receiveShare, socket, connected]);
 
+	const handleClose = (event, reason) => {
+		if (reason === "clickaway") {
+			return;
+		}
+
+		setSearchingMessage(false);
+	};
+
 	return (
 		<React.Fragment>
-			{receiveShare
-				? recvideoLoc.length > 0 &&
-				  recvideoLoc.map((list, idx) => (
-						<VideoCard key={idx} info={list}></VideoCard>
-				  ))
-				: searching &&
-				  recvideoLoc.length > 0 &&
-				  recvideoLoc.map((list, idx) => (
-						<VideoCard key={idx} info={list}></VideoCard>
-				  ))}
+			{
+				<Snackbar
+					anchorOrigin={{ vertical: "top", horizontal: "center" }}
+					open={searchingMessage}
+					onClose={handleClose}
+					autoHideDuration={6000}
+				>
+					<Alert severity="info" sx={{ width: "100%" }}>
+						지도에서 관련 영상을 찾고 싶은 구역을{" "}
+						<FontAwesomeIcon icon={faVectorSquare} /> 로 표시한 후 해당 영역을
+						클릭하세요.
+					</Alert>
+				</Snackbar>
+			}
+
 			{chosenEmoji.length > 0 &&
 				chosenEmoji.map((emojiObject, idx) => (
 					<EmojiReaction
@@ -1465,16 +1456,26 @@ export default function NewMapwindow(props) {
 					/>
 				</IndividualWrapper>
 			)}
+			{searching && recvideoLoc.length > 0 && (
+				<VideoBoardWrapper
+					receiveShare={receiveShare}
+					recvideoLoc={recvideoLoc}
+					searching={searching}
+					pixelPath={searchPoint.pixelPath}
+				></VideoBoardWrapper>
+			)}
 			<MapButtonWrapper>
 				<SearchForm>
-					<Draggable>
-						<InputWrapper onSubmit={handleSubmit}>
-							<input type="text" value={searchKey} onChange={handleChange} />
-							<IconButton variant="contained" type="submit">
-								<FontAwesomeIcon icon={faMagnifyingGlass} />
-							</IconButton>
-						</InputWrapper>
-					</Draggable>
+					{start && end ? null : (
+						<Draggable>
+							<InputWrapper onSubmit={handleSubmit}>
+								<input type="text" value={searchKey} onChange={handleChange} />
+								<IconButton variant="contained" type="submit">
+									<FontAwesomeIcon icon={faMagnifyingGlass} />
+								</IconButton>
+							</InputWrapper>
+						</Draggable>
+					)}
 					{searchResult.length > 0 && openResult && (
 						<ResultList>
 							{searchResult.map((result, idx) => (
@@ -1492,7 +1493,6 @@ export default function NewMapwindow(props) {
 						</ResultList>
 					)}
 				</SearchForm>
-
 				<InfoMenu
 					map={map}
 					totalDaytime={totalDaytime}
@@ -1524,22 +1524,30 @@ export default function NewMapwindow(props) {
 
 							<IconButton
 								style={{ cursor: "pointer" }}
-								className={active === "search" ? "active" : ""}
-								onClick={() => onHandleClick("search")}
-							>
-								<FontAwesomeIcon
-									style={{ fontSize: "3vw" }}
-									icon={faVectorSquare}
-								/>
-							</IconButton>
-							<IconButton
-								style={{ cursor: "pointer" }}
 								className={active === "emoji" ? "active" : ""}
 								onClick={() => onHandleClick("emoji")}
 							>
 								<FontAwesomeIcon
 									style={{ fontSize: "3vw" }}
 									icon={faFaceSmile}
+								/>
+							</IconButton>
+							<ShareWrapper>
+								<IconButton
+									onClick={onShareCurrent}
+									disabled={receiveShare ? true : false}
+								>
+									<FontAwesomeIcon icon={sendShare ? faEyeSlash : faEye} />
+								</IconButton>
+							</ShareWrapper>
+							<IconButton
+								style={{ cursor: "pointer" }}
+								className={active === "search" ? "active" : ""}
+								onClick={() => onHandleClick("search")}
+							>
+								<FontAwesomeIcon
+									style={{ fontSize: "3vw" }}
+									icon={faMapLocationDot}
 								/>
 							</IconButton>
 							<IconButton
@@ -1549,7 +1557,7 @@ export default function NewMapwindow(props) {
 							>
 								<FontAwesomeIcon
 									style={{ fontSize: "3vw" }}
-									icon={faMapLocationDot}
+									icon={faPhotoFilm}
 								/>
 							</IconButton>
 						</Stack>
@@ -1561,22 +1569,11 @@ export default function NewMapwindow(props) {
 					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
 				</IconButton>
 
-				<IconButton onClick={onLoadOtherCurrent}>
+				{/* <IconButton onClick={onLoadOtherCurrent}>
 					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faStreetView} />
-				</IconButton>
+				</IconButton> */}
 			</CurrentLocationWrapper>
 
-			<ShareWrapper>
-				<IconButton
-					onClick={onShareCurrent}
-					disabled={receiveShare ? true : false}
-				>
-					<FontAwesomeIcon
-						style={{ fontSize: "3vw" }}
-						icon={sendShare ? faEyeSlash : faEye}
-					/>
-				</IconButton>
-			</ShareWrapper>
 			{active === "emoji" && emojiResult && (
 				<EmojiWrapper>
 					<Picker
@@ -1590,7 +1587,8 @@ export default function NewMapwindow(props) {
 			{active === "draw" ? (
 				<Canvas width={2000} height={1000} color={color}></Canvas>
 			) : null}
-			<MapWrapper id="map_div"></MapWrapper>
+
+			<MapWrapper searching={searching} id="map_div"></MapWrapper>
 		</React.Fragment>
 	);
 }

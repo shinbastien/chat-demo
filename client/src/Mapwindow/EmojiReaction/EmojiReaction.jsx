@@ -16,7 +16,7 @@ const bounceAnimation = keyframes`
     opacity: 0;
     display: none;
 	position: absolute;
-	z-index: -1;
+	 z-index: -1000;
 	  }
 `;
 
@@ -41,7 +41,7 @@ const EmojiDisplayWrapper = styled.div`
 			padding: 0.4vw;
 			font-size: 1.8vw;
 			color: white;
-			background-color: ${(props) => (props.color)};
+			background-color: ${(props) => (props.color ? props.color : "#FF4E6C")};
 			border-radius: 4px;
 			margin-top: -20%;
 		}
@@ -49,11 +49,11 @@ const EmojiDisplayWrapper = styled.div`
 `;
 
 const EmojiReaction = (props) => {
-	const { state, emoji, userName, position, color } = props;
+	const { state, emoji, userName, position } = props;
 
 	return (
 		state && (
-			<EmojiDisplayWrapper position={position} color={color}>
+			<EmojiDisplayWrapper position={position}>
 				<div>
 					{emoji}
 					<div>{userName}</div>
