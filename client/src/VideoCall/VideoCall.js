@@ -1,14 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { StyledVideo, Video, videoConstraints } from "./videostyle";
 import { useSocket } from "../lib/socket";
 import Grid from "@mui/material/Grid";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
 import { Divider } from "@mui/material";
-
-import Typography from "@mui/material/Typography";
-import logoWhite from "../Styles/source/logo_w.png";
-import Box from "@mui/material/Box";
+import { LocationContext } from "../lib/Context/LocationContext";
 
 import {
 	createPeer,
@@ -21,6 +18,7 @@ import styled from "styled-components";
 import {
 	faUserGroup,
 	faArrowUpRightFromSquare,
+	faMagnifyingGlassLocation,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -42,6 +40,8 @@ const CurrentUserWrapper = styled.div`
 `;
 
 function VideoCall(props) {
+	const { otherLoaction, setOtherLoaction } = useContext(LocationContext);
+
 	// let is_ncons location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();ew = true;
 	// const location = useLocation();
 	// const {groupID, userName}= location.state;
@@ -176,24 +176,10 @@ function VideoCall(props) {
 		alert("url이 복사되었습니다.");
 	};
 
-	{
-		/* <AppBar style={{ backgroundColor: "#003249" }}>
-				<Typography
-					variant="h5"
-					noWrap
-					component="div"
-					sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
-				>
-					<ImgWrapper src={logoWhite}></ImgWrapper>
-					<IconButton style={{ color: "white" }} onClick={onHandleCopy}>
-						<FontAwesomeIcon icon={faArrowUpRightFromSquare} />
-					</IconButton>
-					<Box sx={{ flexGrow: 1 }}></Box>
+	const onLoadName = (userName) => {
+		setOtherLoaction(userName);
+	};
 
-					<TextWrapper>{groupID}&nbsp; 그룹 화면</TextWrapper>
-				</Typography>
-			</AppBar> */
-	}
 	return (
 		<div>
 			<CurrentUserWrapper>
@@ -216,35 +202,40 @@ function VideoCall(props) {
 						ref={userVideo}
 						autoPlay
 						playsInline
-						id={props.userName}
+						id={userName}
 					/>
 					{/* {console.log("1", peers)} */}
 					<Grid container direction="row" justifyContent="space-between">
 						<Grid item>
 							<Stack direction="row" spacing={2}>
 								<Avatar sx={{ bgcolor: props.userColor }}>
-									{props.userName.slice(0, 1).toUpperCase()}
+									{userName.slice(0, 1).toUpperCase()}
 								</Avatar>
 								<TextWrapper>
-									{props.userName} &nbsp; &nbsp;
+									{userName} &nbsp; &nbsp;
 									<span style={{ color: "red" }}>나</span>
 								</TextWrapper>
-								<IconButton>
-									<FontAwesomeIcon
-										icon={faUserGroup}
-										style={{ fontSize: "3vw" }}
-									/>
-								</IconButton>
 							</Stack>
 						</Grid>
 						<Grid item>
-							<IconButton onClick={() => console.log("test")}></IconButton>
+							<IconButton onClick={() => onLoadName(userName)}>
+								<FontAwesomeIcon
+									icon={faMagnifyingGlassLocation}
+									style={{ fontSize: "2vw" }}
+								/>
+							</IconButton>{" "}
 						</Grid>
 					</Grid>
 				</Grid>
 				{Object.keys(peers).map((key) => {
 					return (
-						<Grid item key={key} style={{ padding: "1.5rem" }}>
+						<Grid
+							container
+							direction="row"
+							justifyContent="space-between"
+							key={key}
+							style={{ padding: "1.5rem" }}
+						>
 							<Video peer={peers[key].peer} userName={key} />
 							<Grid item>
 								<Stack direction="row" spacing={2}>
@@ -255,10 +246,10 @@ function VideoCall(props) {
 								</Stack>
 							</Grid>
 							<Grid item>
-								<IconButton>
+								<IconButton onClick={onLoadName(key)}>
 									<FontAwesomeIcon
-										icon={faUserGroup}
-										style={{ fontSize: "3vw" }}
+										icon={faMagnifyingGlassLocation}
+										style={{ fontSize: "2vw" }}
 									/>
 								</IconButton>{" "}
 							</Grid>

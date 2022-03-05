@@ -23,7 +23,6 @@ import {
 	faVectorSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import VideoCard from "./VideoCard/VideoCard";
 import { searchOnYoutube } from "../lib/functions/firebase";
 import { useSocket } from "../lib/socket";
 import Canvas from "./Canvas/CanvasV2";
@@ -31,19 +30,16 @@ import Individual from "../Individual/Individual";
 import Picker from "emoji-picker-react";
 import InfoMenu from "./Menu/InfoMenu";
 import EmojiReaction from "./EmojiReaction/EmojiReaction";
-import { HostContext } from "../lib/Context/HostContext";
 import { ReceiveContext } from "../lib/Context/ReceiveContext";
 
 import Snackbar from "@mui/material/Snackbar";
 import { Alert } from "../Pages/Map";
+import VideoBoardWrapper from "./VideoCard/VideoBoardWrapper";
+import { LocationContext } from "../lib/Context/LocationContext";
 
 const MapWrapper = styled.div`
-	z-index: 2;
-`;
-
-const Wrapper = styled.div`
 	z-index: -1000;
-	cursor: ${(props) => (props.searching ? "crosshair" : "auto")};
+	cursor: ${(props) => (props.searching ? "crosshair" : "grab")};
 `;
 
 const ResultList = styled.div`
@@ -128,10 +124,14 @@ const CurrentLocationWrapper = styled.div`
 `;
 
 const ShareWrapper = styled.div`
-	position: absolute;
 	bottom: 0;
 	z-index: 222;
-	margin: 0 0 80px 20px;
+	margin: auto 0;
+	background-color: #ccdbdc;
+	border-radius: 50%;
+	width: 50px;
+	height: 50px;
+	text-align: center;
 `;
 
 const ButtonWrapper = styled.button`
@@ -287,11 +287,20 @@ export default function NewMapwindow(props) {
 		nelng: "",
 		swlat: "",
 		swlng: "",
+		pixelPath: null,
 	});
 
 	// sharingItems
-	const [sendShare, setSendShare] = useContext(HostContext);
-	const [receiveShare, setReceiveShare] = useContext(ReceiveContext);
+	const {
+		receiveShare,
+		setReceiveShare,
+		receiveUser,
+		setReceiveUser,
+		sendShare,
+		setSendShare,
+	} = useContext(ReceiveContext);
+
+	const { otherLoaction, setOtherLoaction } = useContext(LocationContext);
 
 	// const [receiveShare, setReceiveShare] = useState(false);
 	const [sharingRecVideo, setSharingRecVideo] = useState(false);
@@ -322,8 +331,7 @@ export default function NewMapwindow(props) {
 		socket.emit("set StartLocation", lat, lng);
 		setMyPosition([lat, lng]);
 		console.log("send location info to server", [lat, lng]);
-
-		let center = new Tmapv2.LatLng(lat, lng);
+		var center = new Tmapv2.LatLng(lat, lng);
 
 		setMap(
 			new Tmapv2.Map("map_div", {
@@ -360,7 +368,6 @@ export default function NewMapwindow(props) {
 		} )
 		setMarkersObj(newMarkerObj);
 	}
-
 	//current point
 	useEffect(() => {
 		const lat = myPosition[0];
@@ -945,8 +952,8 @@ export default function NewMapwindow(props) {
 
 	useEffect(() => {
 		if (searching === true && drawObject !== null) {
-			drawObject.drawRectangle();
 			map.addListener("click", onTouchDrawing);
+			drawObject.drawRectangle();
 		}
 	}, [searching, drawObject]);
 
@@ -961,6 +968,7 @@ export default function NewMapwindow(props) {
 					nelng: _data.shapeArray[0]._shape_data.bounds._ne._lng,
 					swlat: _data.shapeArray[0]._shape_data.bounds._sw._lat,
 					swlng: _data.shapeArray[0]._shape_data.bounds._sw._lng,
+					pixelPath: _data.shapeArray[0]._shape_data.pixelPath,
 				});
 
 				setShowInfo(true);
@@ -997,6 +1005,7 @@ export default function NewMapwindow(props) {
 					sort: "score",
 				},
 			});
+			console.log(items);
 			setrecvideo(items.searchPoiInfo.pois.poi);
 		} catch (err) {
 			console.log(err);
@@ -1100,54 +1109,12 @@ export default function NewMapwindow(props) {
 		console.log("markersObj", markersObj);
 	}, [userLocObj, markersObj])
 
-	// useEffect(() => {
-	// 	console.log("userLocObj at setMarkerList", userLocObj);
-	// 	if (Object.keys(userLocObj).length > 0) {
-	// 		Object.keys(userLocObj)
-	// 			.filter((x) => {
-	// 				if (Object.keys(markerList).includes(x)) {
-	// 					return (
-	// 						userLocObj[x][0] != markerList[x].getPosition._lat ||
-	// 						userLocObj[x][1] != markerList[x].getPosition._lng
-	// 					);
-	// 				} else {
-	// 					return true;
-	// 				}
-	// 			})
-	// 			.map((x) => {
-	// 				console.log("check userLocObj", x);
-	// 				if (Object.keys(markerList).includes(x)) {
-	// 					// const loc = new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]);
-	// 					console.log(userLocObj[x]);
-	// 					console.log(markerList[x]);
-	// 					markerList[x].setMap(null);
-	// 					markerList[x].setVisible(false);
-	// 				}
-
-	// 				// Marker List 만들기
-	// 				const markerItem = new Tmapv2.Marker({
-	// 					position: new Tmapv2.LatLng(userLocObj[x][0], userLocObj[x][1]),
-	// 					icon: Car,
-	// 					iconSize: new Tmapv2.Size(30, 30),
-	// 					title: "현재위치",
-	// 					map: map,
-	// 					label:
-	// 						"<span style='background-color: #46414E; color:white'>" +
-	// 						"현재위치1" +
-	// 						"</span>",
-	// 				});
-	// 				console.log("markerItem is loaded", markerItem.isLoaded());
-	// 				setMarkerList({ ...markerList, [x]: markerItem });
-	// 			});
-	// 	}
-	// }, [userLocObj]);
 
 	const onLoadOtherCurrent = (e) => {
 		console.log("markersObj: ", markersObj);
 		const currentMarkerItem = Object.keys(markersObj)[countMarker];
 		console.log("currentMarkerItem", currentMarkerItem);
 		const currentMarker = markersObj[currentMarkerItem];
-
 		const currentPosition = currentMarker.getPosition();
 		console.log("currentPosition", currentPosition);
 
@@ -1175,7 +1142,6 @@ export default function NewMapwindow(props) {
 		console.log("hello");
 		console.log("myposition is:", myPosition);
 	}, [myPosition, connected, socket]);
-
 
 	const onShareCurrent = (e) => {
 		// clicked share button
@@ -1234,6 +1200,7 @@ export default function NewMapwindow(props) {
 
 	const onHandleSearchObject = () => {
 		if (drawObject !== null) {
+			drawObject._status.isDrawing = false;
 			drawObject.clear();
 			setSearchingMessage(false);
 			setDrawObject(null);
@@ -1396,8 +1363,9 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		if (socket && connected) {
 			socket.on("start sharemode", (user) => {
-				alert(`${user} is now sharing!`);
+				// alert(`${user} is now sharing!`);
 				setReceiveShare(true);
+				setReceiveUser(user);
 			});
 
 			socket.on("finish sharemode", (user) => {
@@ -1443,20 +1411,12 @@ export default function NewMapwindow(props) {
 				>
 					<Alert severity="info" sx={{ width: "100%" }}>
 						지도에서 관련 영상을 찾고 싶은 구역을{" "}
-						<FontAwesomeIcon icon={faVectorSquare} /> 로 표시해보세요
+						<FontAwesomeIcon icon={faVectorSquare} /> 로 표시한 후 해당 영역을
+						클릭하세요.
 					</Alert>
 				</Snackbar>
 			}
-			{receiveShare
-				? recvideoLoc.length > 0 &&
-				  recvideoLoc.map((list, idx) => (
-						<VideoCard key={idx} info={list}></VideoCard>
-				  ))
-				: searching &&
-				  recvideoLoc.length > 0 &&
-				  recvideoLoc.map((list, idx) => (
-						<VideoCard key={idx} info={list}></VideoCard>
-				  ))}
+
 			{chosenEmoji.length > 0 &&
 				chosenEmoji.map((emojiObject, idx) => (
 					<EmojiReaction
@@ -1495,6 +1455,14 @@ export default function NewMapwindow(props) {
 						markerC={markerC}
 					/>
 				</IndividualWrapper>
+			)}
+			{searching && recvideoLoc.length > 0 && (
+				<VideoBoardWrapper
+					receiveShare={receiveShare}
+					recvideoLoc={recvideoLoc}
+					searching={searching}
+					pixelPath={searchPoint.pixelPath}
+				></VideoBoardWrapper>
 			)}
 			<MapButtonWrapper>
 				<SearchForm>
@@ -1564,6 +1532,14 @@ export default function NewMapwindow(props) {
 									icon={faFaceSmile}
 								/>
 							</IconButton>
+							<ShareWrapper>
+								<IconButton
+									onClick={onShareCurrent}
+									disabled={receiveShare ? true : false}
+								>
+									<FontAwesomeIcon icon={sendShare ? faEyeSlash : faEye} />
+								</IconButton>
+							</ShareWrapper>
 							<IconButton
 								style={{ cursor: "pointer" }}
 								className={active === "search" ? "active" : ""}
@@ -1593,22 +1569,11 @@ export default function NewMapwindow(props) {
 					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faLocationDot} />
 				</IconButton>
 
-				<IconButton onClick={onLoadOtherCurrent}>
+				{/* <IconButton onClick={onLoadOtherCurrent}>
 					<FontAwesomeIcon style={{ fontSize: "3vw" }} icon={faStreetView} />
-				</IconButton>
+				</IconButton> */}
 			</CurrentLocationWrapper>
 
-			<ShareWrapper>
-				<IconButton
-					onClick={onShareCurrent}
-					disabled={receiveShare ? true : false}
-				>
-					<FontAwesomeIcon
-						style={{ fontSize: "3vw" }}
-						icon={sendShare ? faEyeSlash : faEye}
-					/>
-				</IconButton>
-			</ShareWrapper>
 			{active === "emoji" && emojiResult && (
 				<EmojiWrapper>
 					<Picker
@@ -1622,9 +1587,8 @@ export default function NewMapwindow(props) {
 			{active === "draw" ? (
 				<Canvas width={2000} height={1000} color={color}></Canvas>
 			) : null}
-			<MapWrapper>
-				<Wrapper searching={searching} id="map_div"></Wrapper>
-			</MapWrapper>
+
+			<MapWrapper searching={searching} id="map_div"></MapWrapper>
 		</React.Fragment>
 	);
 }

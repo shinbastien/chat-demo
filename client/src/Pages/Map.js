@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import NewMapwindow from "../Mapwindow/NewMapwindowTest";
 import VideoCall from "../VideoCall/VideoCall";
 import Grid from "@mui/material/Grid";
-import { HostContext } from "../lib/Context/HostContext";
+import { LocationContext } from "../lib/Context/LocationContext";
 import { ReceiveContext } from "../lib/Context/ReceiveContext";
 
 import Snackbar from "@mui/material/Snackbar";
@@ -21,12 +21,11 @@ export { Alert };
 function Map() {
 	const location = useLocation();
 	const [onloading, setonLoading] = useState(false);
-	// const [hostUser, setHostUser] = useState({
-	// 	type: "host",
-	// 	userName: "abc",
-	// });
+	const [otherLoaction, setOtherLoaction] = useState(null);
 	const [sendShare, setSendShare] = useState(false);
 	const [receiveShare, setReceiveShare] = useState(false);
+	const [receiveUser, setReceiveUser] = useState(null);
+
 	const [open, setOpen] = useState(false);
 
 	const { groupID, userName } = location.state;
@@ -46,17 +45,21 @@ function Map() {
 		}
 	}, [connected, socket]);
 
-	// const handleClose = (event, reason) => {
-	// 	if (reason === "clickaway") {
-	// 		return;
-	// 	}
-	// 	setOpen(false);
-	// };
+	console.log(otherLoaction);
 
 	return (
 		<>
-			<ReceiveContext.Provider value={[receiveShare, setReceiveShare]}>
-				<HostContext.Provider value={[sendShare, setSendShare]}>
+			<ReceiveContext.Provider
+				value={{
+					receiveShare,
+					setReceiveShare,
+					setReceiveUser,
+					receiveUser,
+					sendShare,
+					setSendShare,
+				}}
+			>
+				<LocationContext.Provider value={{ otherLoaction, setOtherLoaction }}>
 					<Grid container spacing={2}>
 						<Grid item xs={6} md={9}>
 							<NewMapwindow userName={userName} color={randomColor} />
@@ -76,11 +79,21 @@ function Map() {
 							open={sendShare}
 						>
 							<Alert severity="success" sx={{ width: "100%" }}>
-								You are sharing your window.
+								지금 화면을 공유하고 있습니다.
 							</Alert>
 						</Snackbar>
 					)}
-				</HostContext.Provider>
+					{receiveShare && (
+						<Snackbar
+							anchorOrigin={{ vertical: "top", horizontal: "center" }}
+							open={receiveShare}
+						>
+							<Alert severity="info" sx={{ width: "100%" }}>
+								{receiveUser} 님이 화면을 공유하고 있습니다.
+							</Alert>
+						</Snackbar>
+					)}
+				</LocationContext.Provider>
 			</ReceiveContext.Provider>
 		</>
 	);
