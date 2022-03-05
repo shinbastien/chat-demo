@@ -35,6 +35,7 @@ import { ReceiveContext } from "../lib/Context/ReceiveContext";
 import Snackbar from "@mui/material/Snackbar";
 import { Alert } from "../Pages/Map";
 import VideoBoardWrapper from "./VideoCard/VideoBoardWrapper";
+import { LocationContext } from "../lib/Context/LocationContext";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
@@ -297,6 +298,8 @@ export default function NewMapwindow(props) {
 		sendShare,
 		setSendShare,
 	} = useContext(ReceiveContext);
+
+	const { otherLoaction, setOtherLoaction } = useContext(LocationContext);
 
 	// const [receiveShare, setReceiveShare] = useState(false);
 	const [sharingRecVideo, setSharingRecVideo] = useState(false);
