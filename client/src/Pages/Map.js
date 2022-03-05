@@ -21,7 +21,7 @@ export { Alert };
 function Map() {
 	const location = useLocation();
 	const [onloading, setonLoading] = useState(false);
-	const [otherLoaction, setOtherLoaction] = useState(null);
+	// const [otherLocation, setOtherLocation] = useState(null);
 	const [sendShare, setSendShare] = useState(false);
 	const [receiveShare, setReceiveShare] = useState(false);
 	const [receiveUser, setReceiveUser] = useState(null);
@@ -45,8 +45,6 @@ function Map() {
 		}
 	}, [connected, socket]);
 
-	console.log(otherLoaction);
-
 	return (
 		<>
 			<ReceiveContext.Provider
@@ -59,41 +57,39 @@ function Map() {
 					setSendShare,
 				}}
 			>
-				<LocationContext.Provider value={{ otherLoaction, setOtherLoaction }}>
-					<Grid container spacing={2}>
-						<Grid item xs={6} md={9}>
-							<NewMapwindow userName={userName} color={randomColor} />
-						</Grid>
-						<Grid item xs={6} md={3}>
-							<VideoCall
-								roomName={groupID}
-								userName={userName}
-								userColor={randomColor}
-								loading={onloading}
-							></VideoCall>
-						</Grid>
+				<Grid container spacing={2}>
+					<Grid item xs={6} md={9}>
+						<NewMapwindow userName={userName} color={randomColor} />
 					</Grid>
-					{sendShare && (
-						<Snackbar
-							anchorOrigin={{ vertical: "top", horizontal: "center" }}
-							open={sendShare}
-						>
-							<Alert severity="success" sx={{ width: "100%" }}>
-								지금 화면을 공유하고 있습니다.
-							</Alert>
-						</Snackbar>
-					)}
-					{receiveShare && (
-						<Snackbar
-							anchorOrigin={{ vertical: "top", horizontal: "center" }}
-							open={receiveShare}
-						>
-							<Alert severity="info" sx={{ width: "100%" }}>
-								{receiveUser} 님이 화면을 공유하고 있습니다.
-							</Alert>
-						</Snackbar>
-					)}
-				</LocationContext.Provider>
+					<Grid item xs={6} md={3}>
+						<VideoCall
+							roomName={groupID}
+							userName={userName}
+							userColor={randomColor}
+							loading={onloading}
+						></VideoCall>
+					</Grid>
+				</Grid>
+				{sendShare && (
+					<Snackbar
+						anchorOrigin={{ vertical: "top", horizontal: "center" }}
+						open={sendShare}
+					>
+						<Alert severity="success" sx={{ width: "100%" }}>
+							지금 화면을 공유하고 있습니다.
+						</Alert>
+					</Snackbar>
+				)}
+				{receiveShare && (
+					<Snackbar
+						anchorOrigin={{ vertical: "top", horizontal: "center" }}
+						open={receiveShare}
+					>
+						<Alert severity="info" sx={{ width: "100%" }}>
+							{receiveUser} 님이 화면을 공유하고 있습니다.
+						</Alert>
+					</Snackbar>
+				)}
 			</ReceiveContext.Provider>
 		</>
 	);

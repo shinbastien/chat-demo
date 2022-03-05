@@ -299,9 +299,7 @@ export default function NewMapwindow(props) {
 		sendShare,
 		setSendShare,
 	} = useContext(ReceiveContext);
-
-	const { otherLoaction, setOtherLoaction } = useContext(LocationContext);
-
+ 
 	// const [receiveShare, setReceiveShare] = useState(false);
 	const [sharingRecVideo, setSharingRecVideo] = useState(false);
 	const [sharingIndividual, setSharingIndividual] = useState(false);
@@ -1107,33 +1105,38 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		console.log("userlocObj", userLocObj);
 		console.log("markersObj", markersObj);
+		
 	}, [userLocObj, markersObj])
 
+	useEffect(() => {
+		if (socket && connected && markerC) {
+			socket.on("get mapCenter", onLoadOtherCurrent);
+		}
+	}, [markersObj, socket, connected]); 
 
-	const onLoadOtherCurrent = (e) => {
+	const onLoadOtherCurrent = (name) => {
 		console.log("markersObj: ", markersObj);
-		const currentMarkerItem = Object.keys(markersObj)[countMarker];
-		console.log("currentMarkerItem", currentMarkerItem);
-		const currentMarker = markersObj[currentMarkerItem];
-		const currentPosition = currentMarker.getPosition();
-		console.log("currentPosition", currentPosition);
-
-		if (!currentMarker.isLoaded()) {
-			currentMarker.setMap(map);
+		if (name == userName) {
+			const currentPosition = markerC.getPosition();
+			map.setCenter(currentPosition);
+			console.log("clicked myself");
 		}
+		else {
+			if (Object.keys(markersObj).includes(name)) {
+				const currentMarker = markersObj[name];
+				const currentPosition = currentMarker.getPosition();
+				console.log("currentPosition", currentPosition);
+				
 
-		map.setCenter(currentPosition);
-
-		if (
-			countMarker >= Object.keys(markersObj).length - 1 ||
-			Object.keys(markersObj).length == 0
-		) {
-			setCountMarker(0);
-		} else {
-			setCountMarker(countMarker + 1);
+				if (!currentMarker.isLoaded()) {
+					currentMarker.setMap(map);
+				}
+				map.setCenter(currentPosition);
+			}
+			console.log("clicked other", name)
 		}
-		console.log(countMarker);
 	};
+
 	useEffect(() => {
 		if (socket && connected && markerC) {
 			socket.emit("user moved", myPosition);

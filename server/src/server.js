@@ -11,8 +11,8 @@ const io = require("socket.io")(server, {
 	},
 });
 
-// const port = process.env.PORT || 3000;
-const PORT = 4000;
+const port = process.env.PORT || 3000;
+// const PORT = 4000;
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 const REMOVE_CHAT = "removeChat";
 
@@ -115,6 +115,10 @@ io.on("connection", (socket) => {
 		socket.broadcast.to(socket.roomName).emit("bring userLocationInfo", socket.userName, users[socket.roomName].participants, socket.share);
 	})
 
+	socket.on("set mapCenter", (userName) => {
+		socket.emit("get mapCenter", userName);
+		console.log("get mapCenter: ", userName);
+	})
 
 	// ---------------------------EMOJI---------------------
 	// Listen for Emoji sending
@@ -226,10 +230,10 @@ io.on("connection", (socket) => {
 	});
 });
 
-// server.listen(port, () => {
-// 	console.log(`Listening on port ${port}`);
-// });
-
-server.listen(PORT, () => {
-	console.log(`Listening on port ${PORT}`);
+server.listen(port, () => {
+	console.log(`Listening on port ${port}`);
 });
+
+// server.listen(PORT, () => {
+// 	console.log(`Listening on port ${PORT}`);
+// });
