@@ -61,6 +61,9 @@ const VideoCardBoard = (props) => {
 		width: 420,
 	});
 
+	console.log("VideoCardBoard receiveShare: ", receiveShare);
+	console.log("VideoCardBoard recvideoLoc: ", recvideoLoc);
+
 	return (
 		loading && (
 			<Rnd

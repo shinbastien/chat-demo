@@ -334,6 +334,7 @@ export default function NewMapwindow(props) {
 
 	const { socket, connected } = useSocket();
 
+	console.log("NewMapWindow, receiveShare", receiveShare);
 	const initMap = (participants) => {
 		var lat = 0;
 		var lng = 0;
@@ -1484,7 +1485,7 @@ export default function NewMapwindow(props) {
 					/>
 				</IndividualWrapper>
 			)}
-			{searching && recvideoLoc.length > 0 && (
+			{(searching || receiveShare) && recvideoLoc.length > 0 && (
 				<VideoBoardWrapper
 					receiveShare={receiveShare}
 					recvideoLoc={recvideoLoc}
