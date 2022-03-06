@@ -230,6 +230,7 @@ const Search = (props) => {
 			socket.off("receive sharevideo");
 		};
 	}, [props.share, share, sharing, socket, connected]);
+
 	async function searchOnYoutube() {
 		const API_URL = "https://www.googleapis.com/youtube/v3/search";
 		// console.log(inputRef.current.value, keyword);
@@ -242,7 +243,7 @@ const Search = (props) => {
 					key: process.env.REACT_APP_YOUTUBE_API_KEY,
 					part: "snippet",
 					q:
-						`-집 맛집 | 가볼만한 곳 ` + inputRef.current.value
+						`가볼만한 곳 ` + inputRef.current.value
 							? inputRef.current.value
 							: keyword,
 					videoEmbeddable: "true",
@@ -251,7 +252,9 @@ const Search = (props) => {
 			});
 
 			setVideos({
-				locInfo: currentResult.filter((i) => i.name.includes(keyword)),
+				locInfo: inputRef.current.value
+					? await loadlocInfo(inputRef.current.value)
+					: currentResult.filter((i) => i.name.includes(keyword)),
 				videoInfo: items,
 			});
 
@@ -261,6 +264,28 @@ const Search = (props) => {
 			console.log(err);
 		}
 	}
+
+	const loadlocInfo = async (keyword) => {
+		try {
+			const { data: items } = await axios({
+				method: "get",
+				url: "https://apis.openapi.sk.com/tmap/pois?version=1&format=json&callback=result",
+				params: {
+					appKey: process.env.REACT_APP_TMAP_API_KEY,
+					searchKeyword: keyword,
+					reqCoordType: "WGS84GEO",
+					resCoordType: "WGS84GEO",
+					count: 1,
+				},
+			});
+
+			return items;
+		} catch (err) {
+			console.log(err);
+		}
+	};
+
+	console.log(videos);
 
 	return (
 		<>
