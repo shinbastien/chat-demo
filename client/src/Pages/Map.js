@@ -27,8 +27,8 @@ function Map() {
 	const [receiveUser, setReceiveUser] = useState(null);
 
 	const { groupID, userName } = location.state;
-	console.log("groupID obtained from Home is: ", groupID);
-	console.log("userName obtained from Home is: ", userName);
+	// console.log("groupID obtained from Home is: ", groupID);
+	// console.log("userName obtained from Home is: ", userName);
 
 	const { socket, connected } = useSocket();
 	console.log("connected is: ", connected);

@@ -337,7 +337,7 @@ export default function NewMapwindow(props) {
 
 	const { socket, connected } = useSocket();
 
-	console.log("NewMapWindow, receiveShare", receiveShare);
+	// console.log("NewMapWindow, receiveShare", receiveShare);
 	const initMap = (participants) => {
 		var lat = 0;
 		var lng = 0;
@@ -354,7 +354,7 @@ export default function NewMapwindow(props) {
 
 		socket.emit("set StartLocation", lat, lng);
 		setMyPosition([lat, lng]);
-		console.log("send location info to server", [lat, lng]);
+		// console.log("send location info to server", [lat, lng]);
 		var center = new Tmapv2.LatLng(lat, lng);
 
 		setMap(
@@ -401,8 +401,8 @@ export default function NewMapwindow(props) {
 		const lat = myPosition[0];
 		const lng = myPosition[1];
 
-		console.log("lat is: ", lat);
-		console.log("lng is: ", lng);
+		// console.log("lat is: ", lat);
+		// console.log("lng is: ", lng);
 
 		setMarkerC(
 			new Tmapv2.Marker({
@@ -429,13 +429,13 @@ export default function NewMapwindow(props) {
 					const lastAccTime = pathMetaData[pathMetaData.length - 1].accTime;
 					const finishTime = lastAccTime[lastAccTime.length - 1];
 
-					console.log(`I am moving...: ${currTick}`);
+					// console.log(`I am moving...: ${currTick}`);
 
 					for (let i = 0; i < pathMetaData.length; i++) {
 						const { accTime, coordinates } = pathMetaData[i];
 						for (let j = 0; j - 1 < accTime.length; j++) {
 							if (accTime[j] <= currTick && currTick < accTime[j + 1]) {
-								console.log(pathMetaData[i]);
+								// console.log(pathMetaData[i]);
 								const timediff = accTime[j + 1] - accTime[j];
 								const ratio = (currTick - accTime[j]) / timediff;
 								const coord = coordinates[j];
@@ -450,8 +450,11 @@ export default function NewMapwindow(props) {
 								const lng = projection._lng;
 
 								//when car move, the map will move
-								map.setCenter(new Tmapv2.LatLng(lat, lng));
-								map.setZoom(18);
+								if (!receiveShare) {
+									map.setCenter(new Tmapv2.LatLng(lat, lng));
+								}
+								
+								// map.setZoom(18);
 								var seconds = finishTime - currTick;
 
 								if (finishTime - currTick / 60 > 1) {
@@ -484,15 +487,15 @@ export default function NewMapwindow(props) {
 							}
 						}
 					}
-					console.log("MarkerC position change check", [
-						markerC.getPosition()._lat,
-						markerC.getPosition()._lng,
-					]);
+					// console.log("MarkerC position change check", [
+					// 	markerC.getPosition()._lat,
+					// 	markerC.getPosition()._lng,
+					// ]);
 					setMyPosition([
 						markerC.getPosition()._lat,
 						markerC.getPosition()._lng,
 					]);
-					console.log("moving position", myPosition);
+					// console.log("moving position", myPosition);
 
 					return currTick;
 				});
@@ -584,14 +587,14 @@ export default function NewMapwindow(props) {
 
 		const totalTime = (resultData[0].properties.totalTime / 60).toFixed(0);
 
-		console.log(
-			totalTime,
-			resultData
-				.filter(({ geometry }) => geometry.type === "LineString")
-				.reduce((acc, curr) => {
-					return acc + curr.properties.time;
-				}, 0),
-		);
+		// console.log(
+		// 	totalTime,
+		// 	resultData
+		// 		.filter(({ geometry }) => geometry.type === "LineString")
+		// 		.reduce((acc, curr) => {
+		// 			return acc + curr.properties.time;
+		// 		}, 0),
+		// );
 
 		setTotalDaytime({ totalD: totalDistance, totalTime: totalTime });
 
@@ -1083,7 +1086,7 @@ export default function NewMapwindow(props) {
 		};
 
 		const updateUserLocation = (movedUserName, participants, isSharing) => {
-			console.log(participants);
+			// console.log(participants);
 			setUserLocObj(participants);
 			if (Object.keys(markersObj).includes(movedUserName)) {
 				markersObj[movedUserName].setVisible(false);
@@ -1147,8 +1150,8 @@ export default function NewMapwindow(props) {
 	}, [userLocObj, markersObj, connected, socket]);
 
 	useEffect(() => {
-		console.log("userlocObj", userLocObj);
-		console.log("markersObj", markersObj);
+		// console.log("userlocObj", userLocObj);
+		// console.log("markersObj", markersObj);
 	}, [userLocObj, markersObj]);
 
 	useEffect(() => {
@@ -1158,33 +1161,31 @@ export default function NewMapwindow(props) {
 	}, [markersObj, socket, connected]);
 
 	const onLoadOtherCurrent = (name) => {
-		console.log("markersObj: ", markersObj);
+		// console.log("markersObj: ", markersObj);
 		if (name == userName) {
 			const currentPosition = markerC.getPosition();
 			map.setCenter(currentPosition);
-			console.log("clicked myself");
+			// console.log("clicked myself");
 		} else {
 			if (Object.keys(markersObj).includes(name)) {
 				const currentMarker = markersObj[name];
 				const currentPosition = currentMarker.getPosition();
-				console.log("currentPosition", currentPosition);
+				// console.log("currentPosition", currentPosition);
 
 				if (!currentMarker.isLoaded()) {
 					currentMarker.setMap(map);
 				}
 				map.setCenter(currentPosition);
 			}
-			console.log("clicked other", name);
+			// console.log("clicked other", name);
 		}
 	};
 
 	useEffect(() => {
 		if (socket && connected && markerC) {
 			socket.emit("user moved", myPosition);
-			console.log("user is moving");
+			// console.log("user is moving");
 		}
-		console.log("hello");
-		console.log("myposition is:", myPosition);
 	}, [myPosition, connected, socket]);
 
 	const onShareCurrent = (e) => {
@@ -1359,16 +1360,16 @@ export default function NewMapwindow(props) {
 	useEffect(() => {
 		const handleCanvas = () => {
 			setActive("draw");
-			console.log("handleCanvas");
+			// console.log("handleCanvas");
 		};
 		if (socket && connected) {
 			socket.on("open canvas", handleCanvas);
-			console.log("start canvas", active);
+			// console.log("start canvas", active);
 		}
 		return () => {
 			if (socket && connected) {
 				socket.off("open canvas", handleCanvas);
-				console.log("active changed", active);
+				// console.log("active changed", active);
 			}
 		};
 	}, [active, socket, connected]);

@@ -102,9 +102,9 @@ function VideoCall(props) {
 		};
 	}, [isNew, participants, socket, connected]);
 
-	useEffect(() => {
-		console.log("\n\n\t Test Peers", peers);
-	}, [peers]);
+	// useEffect(() => {
+		// console.log("\n\n\t Test Peers", peers);
+	// }, [peers]);
 
 	useEffect(() => {
 		navigator.mediaDevices
