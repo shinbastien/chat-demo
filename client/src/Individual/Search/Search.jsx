@@ -21,6 +21,7 @@ import ShareVideo from "../../Mapwindow/ShareVideo/ShareVideo";
 import { Divider } from "@mui/material";
 import { SearchImgResult } from "./SearchResult";
 import { useSocket } from "../../lib/socket";
+import { e_videoList } from "../../_data";
 
 const InputWrapper = styled.div`
 	margin: 0 0 0 0;
@@ -251,12 +252,14 @@ const Search = (props) => {
 				},
 			});
 
-			setVideos({
-				locInfo: inputRef.current.value
-					? await loadlocInfo(inputRef.current.value)
-					: currentResult.filter((i) => i.name.includes(keyword)),
-				videoInfo: items,
-			});
+			setVideos(e_videoList);
+
+			// setVideos({
+			// 	locInfo: inputRef.current.value
+			// 		? await loadlocInfo(inputRef.current.value)
+			// 		: currentResult.filter((i) => i.name.includes(keyword)),
+			// 	videoInfo: items,
+			// });
 
 			setSubmit(true);
 			console.log("videos after searchOnYoutube :", videos);
@@ -284,8 +287,6 @@ const Search = (props) => {
 			console.log(err);
 		}
 	};
-
-	console.log(videos);
 
 	return (
 		<>

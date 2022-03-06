@@ -4,7 +4,8 @@ import VideoCardBoard from "./VideoCardBoard";
 const VideoBoardWrapper = (props) => {
 	const { receiveShare, recvideoLoc, searching, pixelPath } = props;
 
-	console.log(recvideoLoc);
+	console.log("recvideoLoc", recvideoLoc);
+	console.log("pixelpat", pixelPath);
 
 	return (
 		<>

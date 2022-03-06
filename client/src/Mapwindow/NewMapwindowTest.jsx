@@ -245,6 +245,8 @@ const getPositionFromData = (data) => {
 	const projectionCng = new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(
 		pointCng,
 	);
+
+	// console.log(projectionCng);
 	const lat = projectionCng._lat;
 	const lon = projectionCng._lng;
 
@@ -387,7 +389,7 @@ export default function NewMapwindow(props) {
 					title: "현재위치",
 					map: map,
 					label:
-						"<span style='background-color: #ff6f00; color:white'>" +
+						"<span style='border-radius: 12px; padding: 2px; font-size: 20px; background-color:#ff6f00; color:white'>" +
 						"시작위치" +
 						x +
 						"</span>",
@@ -412,7 +414,7 @@ export default function NewMapwindow(props) {
 				title: "현재위치",
 				map: map,
 				label:
-					"<span style='border-radius: 12px; padding: 2px; font-size: 24px; background-color: #007ea7; color:white'>" +
+					"<span style='border-radius: 12px; padding: 2px; font-size: 20px; background-color: #007ea7; color:white'>" +
 					"현재위치" +
 					"</span>",
 			}),
@@ -451,7 +453,7 @@ export default function NewMapwindow(props) {
 
 								//when car move, the map will move
 								map.setCenter(new Tmapv2.LatLng(lat, lng));
-								
+
 								// map.setZoom(18);
 								var seconds = finishTime - currTick;
 
@@ -504,7 +506,7 @@ export default function NewMapwindow(props) {
 				setTrackSimulationTicker(0);
 			};
 		}
-	}, [receiveShare,pathMetaData]);
+	}, [receiveShare, pathMetaData]);
 
 	useEffect(() => {
 		if (socket && connected) {
@@ -527,13 +529,14 @@ export default function NewMapwindow(props) {
 				for (let i = 0; i < recvideo.length; i++) {
 					if (recvideo[i].name.includes("주차장") === false) {
 						let video = await searchOnYoutube(recvideo[i].name);
-						console.log(recvideo[i]);
+						// console.log(recvideo[i]);
 
 						if (video === undefined) {
 							video = {
 								id: { kind: null, videoId: null },
 							};
 						}
+						console.log("recvideo", recvideo);
 
 						// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
 						setrecvideoLoc((recvideoLoc) => [
@@ -550,7 +553,7 @@ export default function NewMapwindow(props) {
 		}
 	}, [recvideo]);
 
-	console.log(recvideoLoc);
+	// console.log(recvideoLoc);
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -660,7 +663,7 @@ export default function NewMapwindow(props) {
 		resultData.map((item, i) => {
 			const { geometry, properties } = item;
 			// path information
-			console.log(item);
+			// console.log(item);
 
 			if (geometry.type === "LineString") {
 				const { coordinates, traffic } = geometry;
@@ -924,6 +927,8 @@ export default function NewMapwindow(props) {
 		});
 		const result = response.data.searchPoiInfo.pois.poi;
 		setSearchResult(result);
+
+		// console.log(response.data);
 		const positionBounds = new Tmapv2.LatLngBounds();
 
 		setSearchMarkers(
@@ -1035,7 +1040,7 @@ export default function NewMapwindow(props) {
 					centerLat: (searchPoint.nelat + searchPoint.swlat) / 2,
 					reqCoordType: "WGS84GEO",
 					resCoordType: "WGS84GEO",
-					count: 5,
+					count: 10,
 					sort: "score",
 				},
 			});
