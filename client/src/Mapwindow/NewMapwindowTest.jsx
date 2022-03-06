@@ -450,9 +450,7 @@ export default function NewMapwindow(props) {
 								const lng = projection._lng;
 
 								//when car move, the map will move
-								if (!receiveShare) {
-									map.setCenter(new Tmapv2.LatLng(lat, lng));
-								}
+								map.setCenter(new Tmapv2.LatLng(lat, lng));
 								
 								// map.setZoom(18);
 								var seconds = finishTime - currTick;
@@ -506,7 +504,7 @@ export default function NewMapwindow(props) {
 				setTrackSimulationTicker(0);
 			};
 		}
-	}, [pathMetaData]);
+	}, [receiveShare,pathMetaData]);
 
 	useEffect(() => {
 		if (socket && connected) {

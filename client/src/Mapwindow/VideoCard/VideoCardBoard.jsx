@@ -57,8 +57,14 @@ const VideoCardBoard = (props) => {
 	console.log(pixelPath);
 
 	const [data, setData] = useState({
-		x: pixelPath === null ? 656 : pixelPath.x,
-		y: pixelPath === null ? 357 : pixelPath.y,
+		x:
+			pixelPath === null
+				? 356 + 100 * (Math.random() < 0.5 ? -1 : 1)
+				: pixelPath.x,
+		y:
+			pixelPath === null
+				? 357 + 70 * (Math.random() < 0.5 ? -1 : 1)
+				: pixelPath.y,
 		width: 420,
 	});
 
