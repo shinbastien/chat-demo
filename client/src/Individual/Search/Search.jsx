@@ -356,7 +356,7 @@ const Search = (props) => {
 						{sharing && (
 							<ShareVideo
 								videoName={Object.keys(share)[0]}
-								locInfo={videos.locInfo[0]}
+								locInfo={videos.locInfo.searchPoiInfo}
 							></ShareVideo>
 						)}
 						{submit && videos.videoInfo.length > 0 ? (
