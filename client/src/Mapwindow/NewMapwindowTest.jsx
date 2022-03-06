@@ -164,7 +164,10 @@ const ButtonWrapper = styled.button`
 	text-align: center;
 	left: 40%;
 	transform: translateX(-50%);
-	background-color: white;
+
+	background-color: ${(props) => props.theme.primaryColor};
+	top: 20%;
+	color: white;
 	padding: 1.5%;
 	border-radius: 10px;
 	margin: 2%;
@@ -207,7 +210,7 @@ const IndividualWrapper = styled.div`
 	left: 50%;
 	background-color: white;
 	height: 600px;
-	width: 50%;
+	width: 70%;
 	border-radius: 12px;
 	-webkit-box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
 	box-shadow: 6px 7px 7px 0px rgba(0, 0, 0, 0.47);
@@ -216,7 +219,7 @@ const IndividualWrapper = styled.div`
 
 const EmojiWrapper = styled.div`
 	position: fixed;
-	bottom: 7%;
+	bottom: 9%;
 	display: flex;
 	z-index: 222;
 	left: 38%;
@@ -1017,13 +1020,13 @@ export default function NewMapwindow(props) {
 		setOpenResult(false);
 	};
 
-	const loadpointInfo = async (lat, lng) => {
+	const loadpointInfo = async (searchPoint, name) => {
 		try {
 			const { data: items } = await axios({
 				method: "get",
 				url: "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&format=json&callback=result",
 				params: {
-					categories: "카페;쇼핑몰;",
+					categories: "카페;",
 					appKey: process.env.REACT_APP_TMAP_API_KEY,
 					radius: 4,
 					centerLon: (searchPoint.nelng + searchPoint.swlng) / 2,
@@ -1034,7 +1037,6 @@ export default function NewMapwindow(props) {
 					sort: "score",
 				},
 			});
-			console.log(items);
 			setrecvideo(items.searchPoiInfo.pois.poi);
 		} catch (err) {
 			console.log(err);
@@ -1475,7 +1477,10 @@ export default function NewMapwindow(props) {
 			{drawObject ? (
 				[
 					showInfo ? (
-						<ButtonWrapper onClick={() => onSearchedPoint()}>
+						<ButtonWrapper
+							pixelPath={searchPoint}
+							onClick={() => onSearchedPoint()}
+						>
 							정보 찾기
 						</ButtonWrapper>
 					) : (
