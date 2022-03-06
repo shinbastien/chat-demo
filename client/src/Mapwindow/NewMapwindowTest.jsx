@@ -545,6 +545,8 @@ export default function NewMapwindow(props) {
 		}
 	}, [recvideo]);
 
+	console.log(recvideoLoc);
+
 	useEffect(async () => {
 		if (!start || !end) {
 			return;
