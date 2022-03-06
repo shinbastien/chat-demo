@@ -98,8 +98,9 @@ io.on("connection", (socket) => {
 		console.log("latitude is: ", lat);
 		console.log("longitude is: ", lng);
 		// console.log(users[socket.roomName]);
-
-		users[socket.roomName].participants[socket.userName].location = [lat, lng];
+		if (users[socket.roomName].participants) {
+			users[socket.roomName].participants[socket.userName].location = [lat, lng];
+		}
 		console.log(
 			"updated user info of current socket: ",
 			users[socket.roomName].participants[socket.userName],
@@ -111,8 +112,10 @@ io.on("connection", (socket) => {
 	socket.on("user moved", (position) => {
 		console.log("moved user is: ", socket.userName);
 		console.log("position is: ", position);
-		users[socket.roomName].participants[socket.userName].location = position;
-		socket.broadcast.to(socket.roomName).emit("bring userLocationInfo", socket.userName, users[socket.roomName].participants, socket.share);
+		if (users[socket.roomName] && socket.userName) {
+			users[socket.roomName].participants[socket.userName].location = position;
+			socket.broadcast.to(socket.roomName).emit("bring userLocationInfo", socket.userName, users[socket.roomName].participants, socket.share);
+		}
 	})
 
 	socket.on("set mapCenter", (userName) => {
@@ -214,7 +217,7 @@ io.on("connection", (socket) => {
 		console.log("current socket is: ", socket.id);
 		console.log("current socket room is: ", socket.roomName);
 		console.log("current socket userName is: ", socket.userName);
-		if (socket.roomName && socket.userName) {
+		if (socket.roomName && socket.userName && users[socket.roomName].participants) {
 			delete users[socket.roomName].participants[socket.userName];
 			if (Object.keys(users[socket.roomName].participants).length === 0) {
 				delete users[socket.roomName];

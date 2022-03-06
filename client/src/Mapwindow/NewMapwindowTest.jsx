@@ -1120,7 +1120,7 @@ export default function NewMapwindow(props) {
 			const deleteMarker = (obj, name) => {
 				if (Object.keys(obj).includes(name)) {
 					obj[name].setMap(null);
-					obj[name].setVisible(false);
+					// obj[name].setVisible(false);
 					delete obj[name];
 				}
 				return obj;

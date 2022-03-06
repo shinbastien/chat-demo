@@ -75,7 +75,7 @@ function VideoCall(props) {
 	useEffect(() => {
 		const handleJoinParticipants = async (members, name) => {
 			console.log("isnew is", isNew);
-			setParticipants([...participants, Object.keys(members)]);
+			setParticipants(Object.keys(members));
 
 			if (isNew) {
 				setPeers((peers) => {
@@ -151,7 +151,7 @@ function VideoCall(props) {
 			}
 		};
 		const handleDisconnectResponse = (participants, userName) => {
-			setParticipants(participants);
+			setParticipants(Object.keys(participants));
 			console.log("disconnect Peer of :", userName);
 			setPeers((peers) => {
 				return disconnectPeer(peers, userName);

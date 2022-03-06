@@ -63,7 +63,7 @@ function Map() {
 						<VideoCall
 							roomName={groupID}
 							userName={userName}
-							userColor={randomColor}
+							userColor={randomColor ? randomColor : '#bc2020'}
 							loading={onloading}
 						></VideoCall>
 					</Grid>
