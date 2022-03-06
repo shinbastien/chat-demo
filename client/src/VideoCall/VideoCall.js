@@ -40,7 +40,7 @@ const CurrentUserWrapper = styled.div`
 `;
 
 function VideoCall(props) {
-	const { otherLoaction, setOtherLoaction } = useContext(LocationContext);
+	// const { otherLocation, setOtherLocation } = useContext(LocationContext);
 
 	// let is_ncons location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();const location = useLocation();ew = true;
 	// const location = useLocation();
@@ -177,7 +177,8 @@ function VideoCall(props) {
 	};
 
 	const onLoadName = (userName) => {
-		setOtherLoaction(userName);
+		console.log("clicked name is : ", userName);
+		socket.emit("set mapCenter", userName);
 	};
 
 	return (
@@ -246,7 +247,7 @@ function VideoCall(props) {
 								</Stack>
 							</Grid>
 							<Grid item>
-								<IconButton onClick={onLoadName(key)}>
+								<IconButton onClick={() => onLoadName(key)}>
 									<FontAwesomeIcon
 										icon={faMagnifyingGlassLocation}
 										style={{ fontSize: "2vw" }}
