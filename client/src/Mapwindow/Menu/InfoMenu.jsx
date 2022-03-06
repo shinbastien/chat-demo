@@ -171,30 +171,7 @@ const KeepPlaceCard = (props) => {
 	const onClickKeep = (coords, title) => {
 		const { _lat, _long } = coords;
 		const keepLocation = new Tmapv2.LatLng(_lat, _long);
-		const newMarker = new Tmapv2.Marker({
-			position: keepLocation,
-			icon: storelogo,
-			iconSize: new Tmapv2.Size(24, 24),
-			map: map,
-			title: title,
-		});
 
-		const createInfo = new Tmapv2.InfoWindow({
-			position: keepLocation,
-			content: `<img src=${videoInfo.thumnails.url} width="300px" height="auto"></img>`,
-			type: 2,
-			map: map,
-		});
-
-		newMarker.addListener("mouseenter", function (evt) {
-			createInfo.setVisible(true);
-		});
-
-		newMarker.addListener("mouseleave", function (evt) {
-			createInfo.setVisible(false);
-		});
-
-		newMarker.setMap(map);
 		map.setCenter(keepLocation);
 	};
 
@@ -240,44 +217,75 @@ const InfoMenu = (props) => {
 			}
 			snapshots.forEach((v) => {
 				const { coords, date, id, title, videoInfo, visited } = v.val();
-				const { _lat, _long } = coords;
-				const keepLocation = new Tmapv2.LatLng(_lat, _long);
 
-				const newMarker = new Tmapv2.Marker({
-					position: keepLocation,
-					icon: storelogo,
-					iconSize: new Tmapv2.Size(30, 30),
-					map: map,
-					title: title,
-				});
-				newMarker.setMap(map);
+				if (visited) {
+					const { _lat, _long } = coords;
+					const keepLocation = new Tmapv2.LatLng(_lat, _long);
 
-				const createInfo = new Tmapv2.InfoWindow({
-					position: keepLocation,
-					content: `<img src=${videoInfo.thumnails.url} width="300px" height="auto"></img>`,
-					type: 2,
-					map: map,
-					visible: false,
-					zIndex: 3,
-				});
+					const newMarker = new Tmapv2.Marker({
+						position: keepLocation,
+						icon: storelogo,
+						iconSize: new Tmapv2.Size(30, 30),
+						map: map,
+						title: title,
+					});
+					newMarker.setMap(map);
 
-				newMarker.addListener("mouseenter", function (evt) {
-					createInfo.setVisible(true);
-				});
+					const createInfo = new Tmapv2.InfoWindow({
+						position: keepLocation,
+						content: `<img src=${videoInfo.thumnails.url} width="300px" height="auto"></img>`,
+						type: 2,
+						map: map,
+						visible: false,
+						zIndex: 3,
+					});
 
-				newMarker.addListener("mouseleave", function (evt) {
-					createInfo.setVisible(false);
-				});
+					newMarker.addListener("mouseenter", function (evt) {
+						createInfo.setVisible(true);
+					});
 
-				setKeepMarkerList((keepMarkerList) => [...keepMarkerList, newMarker]);
+					newMarker.addListener("mouseleave", function (evt) {
+						createInfo.setVisible(false);
+					});
+
+					setKeepMarkerList((keepMarkerList) => [...keepMarkerList, newMarker]);
+				} else {
+					const { _lat, _long } = coords;
+					const keepLocation = new Tmapv2.LatLng(_lat, _long);
+
+					const newMarker = new Tmapv2.Marker({
+						position: keepLocation,
+						icon: cuplogo,
+						iconSize: new Tmapv2.Size(30, 30),
+						map: map,
+						title: title,
+					});
+					newMarker.setMap(map);
+
+					const createInfo = new Tmapv2.InfoWindow({
+						position: keepLocation,
+						content: `<img src=${videoInfo.thumnails.url} width="300px" height="auto"></img>`,
+						type: 2,
+						map: map,
+						visible: false,
+						zIndex: 3,
+					});
+
+					newMarker.addListener("mouseenter", function (evt) {
+						createInfo.setVisible(true);
+					});
+
+					newMarker.addListener("mouseleave", function (evt) {
+						createInfo.setVisible(false);
+					});
+					setKeepMarkerList((keepMarkerList) => [...keepMarkerList, newMarker]);
+				}
 			});
 			if (!active) {
 				return;
 			}
 		}
 	}, [snapshots]);
-
-	console.log(keepMarkerList);
 
 	return (
 		<Draggable>
@@ -364,6 +372,19 @@ const InfoMenu = (props) => {
 								style={{ width: "30px", height: "30px" }}
 							></img>{" "}
 							쇼핑몰
+							<div style={{ display: keepOpen ? "inline-block" : "none" }}>
+								{snapshots !== undefined &&
+									snapshots.map(
+										(list) =>
+											list.val().visited && (
+												<MemoKeepPlaceCard
+													key={list.key}
+													map={map}
+													info={list.val()}
+												></MemoKeepPlaceCard>
+											),
+									)}
+							</div>
 							<img
 								src={cuplogo}
 								style={{ width: "30px", height: "30px" }}
@@ -371,13 +392,16 @@ const InfoMenu = (props) => {
 							카페
 							<div style={{ display: keepOpen ? "inline-block" : "none" }}>
 								{snapshots !== undefined &&
-									snapshots.map((list) => (
-										<MemoKeepPlaceCard
-											key={list.key}
-											map={map}
-											info={list.val()}
-										></MemoKeepPlaceCard>
-									))}
+									snapshots.map(
+										(list) =>
+											list.val().visited === false && (
+												<MemoKeepPlaceCard
+													key={list.key}
+													map={map}
+													info={list.val()}
+												></MemoKeepPlaceCard>
+											),
+									)}
 							</div>
 						</SubsubmenuWrapper>
 					</SubmenuWrapper>

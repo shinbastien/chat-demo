@@ -93,7 +93,7 @@ function YTDurationToSeconds(duration) {
 	return hours * 3600 + minutes * 60 + seconds;
 }
 
-function ShareVideo({ stateChanger, userName, videoName, locInfo }) {
+function ShareVideo({ userName, videoName, locInfo }) {
 	const { socket, connected } = useSocket();
 	const youtubePlayer = useRef();
 	const userVideo = useRef();
@@ -163,6 +163,8 @@ function ShareVideo({ stateChanger, userName, videoName, locInfo }) {
 			const { thumbnails, title } = obj[0].snippet;
 			const { id } = obj[0];
 
+			console.log(obj);
+
 			const changeToDate = YTDurationToSeconds(duration);
 
 			setVideoContent({
@@ -170,11 +172,11 @@ function ShareVideo({ stateChanger, userName, videoName, locInfo }) {
 				duration: changeToDate,
 				thumbnails: thumbnails.medium,
 				title: title,
-				placeID: locInfo.id,
-				placeName: locInfo.name,
+				placeID: locInfo.pois.poi[0].id,
+				placeName: locInfo.pois.poi[0].name,
 				coords: {
-					_lat: locInfo.noorLat,
-					_long: locInfo.noorLon,
+					_lat: locInfo.pois.poi[0].noorLat,
+					_long: locInfo.pois.poi[0].noorLon,
 				},
 			});
 		});
