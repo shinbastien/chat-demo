@@ -196,7 +196,7 @@ const Search = (props) => {
 				console.log("host");
 			} else if (props.share === "receiver") {
 				socket.on("receive searched videos", async (videos, keyword) => {
-					// setVideos(videos);
+					setVideos(videos);
 					setKeyword(keyword);
 					if (keyword) {
 						searchOnYoutube();

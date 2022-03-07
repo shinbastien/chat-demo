@@ -100,11 +100,12 @@ export default function Individual({
 		if (socket && connected) {
 			if (share == "host") {
 				if (recvideo.length > 0) {
-					socket.emit("share individual searchlist", recvideo);
+					socket.emit("share individual searchlist", recvideo, endrecvideo);
 				}
 			} else if (share == "receiver") {
-				socket.on("receive individual searchlist", (recvideo) => {
+				socket.on("receive individual searchlist", (recvideo, endrecvideo) => {
 					setrecvideo(recvideo);
+					setendrecvideo(endrecvideo);
 				});
 			}
 		}

@@ -11,8 +11,8 @@ const io = require("socket.io")(server, {
 	},
 });
 
-const port = process.env.PORT || 3000;
-// const PORT = 4000;
+// const port = process.env.PORT || 3000;
+const PORT = 4000;
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 const REMOVE_CHAT = "removeChat";
 
@@ -192,10 +192,10 @@ io.on("connection", (socket) => {
 		socket.broadcast.to(socket.roomName).emit("receive share individual");
 	});
 
-	socket.on("share individual searchlist", (recvideo) => {
+	socket.on("share individual searchlist", (recvideo, endrecvideo) => {
 		socket.broadcast
 			.to(socket.roomName)
-			.emit("receive individual searchlist", recvideo);
+			.emit("receive individual searchlist", recvideo, endrecvideo);
 	});
 
 	socket.on("send keyword individual search", (keyword) => {
