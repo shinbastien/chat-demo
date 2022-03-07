@@ -35,7 +35,7 @@ import { ReceiveContext } from "../lib/Context/ReceiveContext";
 import Snackbar from "@mui/material/Snackbar";
 import { Alert } from "../Pages/Map";
 import VideoBoardWrapper from "./VideoCard/VideoBoardWrapper";
-import { LocationContext } from "../lib/Context/LocationContext";
+import { videoCardList } from "../_data";
 
 const MapWrapper = styled.div`
 	z-index: -1000;
@@ -246,7 +246,7 @@ const getPositionFromData = (data) => {
 		pointCng,
 	);
 
-	// console.log(projectionCng);
+	console.log(projectionCng);
 	const lat = projectionCng._lat;
 	const lon = projectionCng._lng;
 
@@ -519,7 +519,10 @@ export default function NewMapwindow(props) {
 
 	useMemo(async () => {
 		let active = true;
-		fetchData();
+		if (recvideo.length > 0) {
+			setrecvideoLoc(videoCardList);
+		}
+		// fetchData();
 		return () => {
 			active = false;
 		};
@@ -538,7 +541,6 @@ export default function NewMapwindow(props) {
 						}
 						console.log("recvideo", recvideo);
 
-						// setrecvideoLoc((recvideoLoc) => [...recvideoLoc, video[0]]);
 						setrecvideoLoc((recvideoLoc) => [
 							...recvideoLoc,
 							{ [recvideo[i].name]: { video: video, locInfo: recvideo[i] } },
@@ -552,8 +554,6 @@ export default function NewMapwindow(props) {
 			}
 		}
 	}, [recvideo]);
-
-	// console.log(recvideoLoc);
 
 	useEffect(async () => {
 		if (!start || !end) {
@@ -954,6 +954,7 @@ export default function NewMapwindow(props) {
 
 	const handleStartSetting = (data) => {
 		setStart(data);
+		console.log(data);
 		const markerPosition = getPositionFromData(data);
 
 		if (markerS !== null) {

@@ -21,7 +21,7 @@ import ShareVideo from "../../Mapwindow/ShareVideo/ShareVideo";
 import { Divider } from "@mui/material";
 import { SearchImgResult } from "./SearchResult";
 import { useSocket } from "../../lib/socket";
-import { e_videoList } from "../../_data";
+import { n_videoList, currentLocList, endLocList } from "../../_data";
 
 const InputWrapper = styled.div`
 	margin: 0 0 0 0;
@@ -145,17 +145,25 @@ const Search = (props) => {
 	const { socket, connected } = useSocket();
 
 	const filterWords = (data) => {
-		const m = data.filter((prop) => prop.name.includes("주차장") === false);
+		const m = currentLocList;
+		// const m = data.filter((prop) => prop.name.includes("주차장") === false);
+		return m;
+	};
+
+	const filterWords_ = (data) => {
+		const m = endLocList;
+		// const m = data.filter((prop) => prop.name.includes("주차장") === false);
 		return m;
 	};
 
 	const currentResult = useMemo(() => filterWords(props.value), [props.value]);
+
 	const endResult = useMemo(
-		() => props.end && filterWords(props.end),
+		() => props.end && filterWords_(props.end),
 		[props.end],
 	);
 
-	console.log(currentResult);
+	console.log(endResult);
 
 	const onClickFocus = (event) => {
 		event.preventDefault();
@@ -252,8 +260,9 @@ const Search = (props) => {
 				},
 			});
 
-			setVideos(e_videoList);
+			setVideos(n_videoList);
 
+			//! comment out for dummy data
 			// setVideos({
 			// 	locInfo: inputRef.current.value
 			// 		? await loadlocInfo(inputRef.current.value)
@@ -264,6 +273,10 @@ const Search = (props) => {
 			setSubmit(true);
 			console.log("videos after searchOnYoutube :", videos);
 		} catch (err) {
+			setVideos(n_videoList);
+			setSubmit(true);
+			console.log("videos after searchOnYoutube :", videos);
+
 			console.log(err);
 		}
 	}
