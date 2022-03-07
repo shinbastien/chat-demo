@@ -75,7 +75,7 @@ function VideoCall(props) {
 	useEffect(() => {
 		const handleJoinParticipants = async (members, name) => {
 			console.log("isnew is", isNew);
-			setParticipants([...participants, Object.keys(members)]);
+			setParticipants(Object.keys(members));
 
 			if (isNew) {
 				setPeers((peers) => {
