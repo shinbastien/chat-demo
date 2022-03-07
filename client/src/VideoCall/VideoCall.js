@@ -247,7 +247,7 @@ function VideoCall(props) {
 								</Stack>
 							</Grid>
 							<Grid item>
-								<IconButton onClick={onLoadName(key)}>
+								<IconButton onClick={() => onLoadName(key)}>
 									<FontAwesomeIcon
 										icon={faMagnifyingGlassLocation}
 										style={{ fontSize: "2vw" }}

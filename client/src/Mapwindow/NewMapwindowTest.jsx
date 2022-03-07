@@ -454,7 +454,7 @@ export default function NewMapwindow(props) {
 								//when car move, the map will move
 								map.setCenter(new Tmapv2.LatLng(lat, lng));
 
-								// map.setZoom(18);
+								map.setZoom(18);
 								var seconds = finishTime - currTick;
 
 								if (finishTime - currTick / 60 > 1) {
@@ -1162,7 +1162,7 @@ export default function NewMapwindow(props) {
 		if (socket && connected && markerC) {
 			socket.on("get mapCenter", onLoadOtherCurrent);
 		}
-	}, [markersObj, socket, connected]);
+	}, [map, markersObj, socket, connected]);
 
 	const onLoadOtherCurrent = (name) => {
 		// console.log("markersObj: ", markersObj);
