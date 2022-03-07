@@ -216,7 +216,7 @@ const InfoMenu = (props) => {
 				setKeepMarkerList([]);
 			}
 			snapshots.forEach((v) => {
-				const { coords, date, id, title, videoInfo, visited } = v.val();
+				const { coords, date, id, placeName, videoInfo, visited } = v.val();
 
 				if (visited) {
 					const { _lat, _long } = coords;
@@ -225,9 +225,13 @@ const InfoMenu = (props) => {
 					const newMarker = new Tmapv2.Marker({
 						position: keepLocation,
 						icon: storelogo,
-						iconSize: new Tmapv2.Size(30, 30),
+						iconSize: new Tmapv2.Size(50, 50),
 						map: map,
-						title: title,
+						title: videoInfo.title,
+						label:
+							"<span style='border-radius: 12px; padding: 2px; font-size: 20px; background-color:#ff6f00; color:white'>" +
+							placeName +
+							"</span>",
 					});
 					newMarker.setMap(map);
 
@@ -256,9 +260,13 @@ const InfoMenu = (props) => {
 					const newMarker = new Tmapv2.Marker({
 						position: keepLocation,
 						icon: cuplogo,
-						iconSize: new Tmapv2.Size(30, 30),
+						iconSize: new Tmapv2.Size(50, 50),
 						map: map,
-						title: title,
+						title: videoInfo.title,
+						label:
+							"<span style='border-radius: 12px; padding: 2px; font-size: 20px; background-color:#ff6f00; color:white'>" +
+							placeName +
+							"</span>",
 					});
 					newMarker.setMap(map);
 

@@ -1,10 +1,12 @@
 import React from "react";
 import VideoCardBoard from "./VideoCardBoard";
+import { storeList } from "../../_data";
 
 const VideoBoardWrapper = (props) => {
 	const { receiveShare, recvideoLoc, searching, pixelPath } = props;
 
-	console.log(recvideoLoc);
+	console.log("recvideoLoc", recvideoLoc);
+	console.log("pixelpath", pixelPath);
 
 	return (
 		<>
@@ -17,10 +19,10 @@ const VideoBoardWrapper = (props) => {
 			></VideoCardBoard>
 			<VideoCardBoard
 				receiveShare={receiveShare}
-				recvideoLoc={recvideoLoc}
+				recvideoLoc={recvideoLoc ? storeList : null}
 				searching={searching}
 				pixelPath={pixelPath ? pixelPath[1] : null}
-				name={"음식점"}
+				name={"쇼핑몰"}
 			></VideoCardBoard>
 		</>
 	);

@@ -134,6 +134,8 @@ export default function Individual({
 				},
 			});
 
+			console.log(items);
+
 			return items.searchPoiInfo.pois.poi;
 		} catch (err) {
 			console.log(err);

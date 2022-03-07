@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid";
 import styled from "styled-components";
+import { e_videoList } from "../../_data";
 
 const VideoWrapper = styled.div`
 	aspect-ratio: 16 / 9;
@@ -54,6 +55,8 @@ const SearchResult = ({ share, sharing, setShare, setSharing, videos }) => {
 		setSharing(!sharing);
 	}
 
+	console.log(videos);
+
 	return (
 		<>
 			<Grid container spacing={2}>
@@ -65,8 +68,7 @@ const SearchResult = ({ share, sharing, setShare, setSharing, videos }) => {
 								width="100%"
 								height="100%"
 								src={`https://www.youtube.com/embed/${video.id.videoId}`}
-								frameBorder="0"
-								allow="accelerometer; autoplay;"
+								frameBorder="1"
 							/>
 							<div>
 								<button
