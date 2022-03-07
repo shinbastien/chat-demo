@@ -84,11 +84,13 @@ async function searchOnYoutube(props) {
 			},
 		});
 
-		console.log(items);
+		// console.log(items);
 
 		return items[0];
 	} catch (err) {
 		console.log(err);
+
+		return null;
 	}
 }
 

@@ -110,6 +110,8 @@ function ShareVideo({ userName, videoName, locInfo }) {
 	const [start, setStart] = useState(false);
 	const [save, setSave] = useState(false);
 
+	console.log(locInfo);
+
 	console.log("videoName is: ", videoID);
 
 	useMemo(() => {

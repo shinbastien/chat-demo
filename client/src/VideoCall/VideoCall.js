@@ -75,7 +75,7 @@ function VideoCall(props) {
 	useEffect(() => {
 		const handleJoinParticipants = async (members, name) => {
 			console.log("isnew is", isNew);
-			setParticipants(Object.keys(members));
+			setParticipants([...participants, Object.keys(members)]);
 
 			if (isNew) {
 				setPeers((peers) => {
@@ -102,9 +102,9 @@ function VideoCall(props) {
 		};
 	}, [isNew, participants, socket, connected]);
 
-	// useEffect(() => {
-		// console.log("\n\n\t Test Peers", peers);
-	// }, [peers]);
+	useEffect(() => {
+		console.log("\n\n\t Test Peers", peers);
+	}, [peers]);
 
 	useEffect(() => {
 		navigator.mediaDevices
@@ -151,7 +151,7 @@ function VideoCall(props) {
 			}
 		};
 		const handleDisconnectResponse = (participants, userName) => {
-			setParticipants(Object.keys(participants));
+			setParticipants(participants);
 			console.log("disconnect Peer of :", userName);
 			setPeers((peers) => {
 				return disconnectPeer(peers, userName);
@@ -247,7 +247,7 @@ function VideoCall(props) {
 								</Stack>
 							</Grid>
 							<Grid item>
-								<IconButton onClick={() => onLoadName(key)}>
+								<IconButton onClick={onLoadName(key)}>
 									<FontAwesomeIcon
 										icon={faMagnifyingGlassLocation}
 										style={{ fontSize: "2vw" }}
