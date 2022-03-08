@@ -145,21 +145,21 @@ const Search = (props) => {
 	const { socket, connected } = useSocket();
 
 	const filterWords = (data) => {
-		const m = currentLocList;
-		// const m = data.filter((prop) => prop.name.includes("주차장") === false);
+		// const m = currentLocList;
+		const m = data.filter((prop) => prop.name.includes("주차장") === false);
 		return m;
 	};
 
-	const filterWords_ = (data) => {
-		const m = endLocList;
-		// const m = data.filter((prop) => prop.name.includes("주차장") === false);
-		return m;
-	};
+	// const filterWords_ = (data) => {
+	// 	const m = endLocList;
+	// 	// const m = data.filter((prop) => prop.name.includes("주차장") === false);
+	// 	return m;
+	// };
 
 	const currentResult = useMemo(() => filterWords(props.value), [props.value]);
 
 	const endResult = useMemo(
-		() => props.end && filterWords_(props.end),
+		() => props.end && filterWords(props.end),
 		[props.end],
 	);
 
@@ -252,23 +252,24 @@ const Search = (props) => {
 					key: process.env.REACT_APP_YOUTUBE_API_KEY,
 					part: "snippet",
 					q:
-						`가볼만한 곳 ` + inputRef.current.value
+						`브이로그 ` + inputRef.current.value
 							? inputRef.current.value
 							: keyword,
 					videoEmbeddable: "true",
 					type: "video",
+					safeSearch: "strict",
 				},
 			});
 
-			setVideos(n_videoList);
+			// setVideos(n_videoList);
 
 			//! comment out for dummy data
-			// setVideos({
-			// 	locInfo: inputRef.current.value
-			// 		? await loadlocInfo(inputRef.current.value)
-			// 		: currentResult.filter((i) => i.name.includes(keyword)),
-			// 	videoInfo: items,
-			// });
+			setVideos({
+				locInfo: inputRef.current.value
+					? await loadlocInfo(inputRef.current.value)
+					: currentResult.filter((i) => i.name.includes(keyword)),
+				videoInfo: items,
+			});
 
 			setSubmit(true);
 			console.log("videos after searchOnYoutube :", videos);
