@@ -54,7 +54,7 @@ const VideoCardBoard = (props) => {
 
 	const [location, setLocation] = useState();
 	const [videoName, setVideoName] = useState();
-	console.log(pixelPath);
+	// console.log(pixelPath);
 
 	const [data, setData] = useState({
 		x:
